@@ -5,9 +5,6 @@
  *      Author: oyvindteig
  */
 
-
-
-
 #define INCLUDES
 #ifdef INCLUDES
     #include <xs1.h>
@@ -22,10 +19,12 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.900" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.910" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
+// 23May2026 0.0.910 ch_ba_knock -> ch_ab_knock
+//                   DEADLOCK_NO_STREAMING_CHAN is new
 // 21May2026 0.0.900 Initial version. Sent to Antonio
 
 // =============================================================================================
@@ -36,7 +35,14 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
                              // XC/XMOS 100 MHz increment every 10 ns for max 2exp32 = 4294967296,
                              // ie. divide by 100 mill = 42.9.. seconds
 
-#define DEBUG_F_PATTERN_KNOCKCOME 1
+#define DEBUG_KNOCKCOME            1
+#define DEADLOCK_NO_STREAMING_CHAN 0
+
+#if (DEADLOCK_NO_STREAMING_CHAN==0)
+    #define STREAMING streaming // ch_ab_knock
+#else // DEADLOCK_NO_STREAMING_CHAN 1
+    #define STREAMING // ch_ab_knock not buffered will cause deadlock!
+#endif
 
 /*
 State machine for the KnockCome (Knock-Come, Knock_Come) pattern
@@ -79,9 +85,10 @@ typedef enum {           // NEEDS
     KC_TYP_SM_DATA       // Slave sends data to Master. Knock-Come Sequence finished
 } KnockCome_Message_Type_e;
 
+
 typedef struct {
     KnockCome_Message_Type_e KnockCome_Message_Type; // KC_TYP_SM_KNOCK only
-} ch_ba_knock_t;
+} ch_ab_knock_t;
 
 typedef enum {
     // We don't need a KNOCKCOME_KNOCKSEND_PENDING_TO_SEND_KNOCK_A since we can always send immediately,
@@ -119,7 +126,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 // SLAVE_SET_KNOCKCOME_STATE  (PresentState,NewState)
 // MASTER_SET_KNOCKCOME_STATE (PresentState,NewState)
 //
-#if (DEBUG_F_PATTERN_KNOCKCOME == 1)
+#if (DEBUG_KNOCKCOME == 1)
     #define SLAVE_SET_KNOCKCOME_STATE(PresentState,NewState)  PresentState = Slave_Set_KnockCome_State (PresentState,NewState)
     #define MASTER_SET_KNOCKCOME_STATE(PresentState,NewState) PresentState = Master_Set_KnockCome_State(PresentState,NewState)
 #else
@@ -139,7 +146,7 @@ Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS d
 {
     KnockCome_State_e NextState;
 
-    #if (DEBUG_F_PATTERN_KNOCKCOME == 1)
+    #if (DEBUG_KNOCKCOME == 1)
         //  State transition verification
         {
             bool Ok = true;
@@ -187,7 +194,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 {
     KnockCome_State_e NextState;
 
-    #if (DEBUG_F_PATTERN_KNOCKCOME == 1)
+    #if (DEBUG_KNOCKCOME == 1)
         //  State transition verification
         {
             bool Ok = true;
@@ -225,12 +232,12 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 }
 
-// ===
 
 typedef enum {
     task_a,
     task_b
 } ab_src_e;
+
 
 // Between task_a_slave and task_b_master
 // task_a_slave sends important data and task_b_master some times adds like new menu changes
@@ -244,7 +251,7 @@ typedef struct {
     } data;
 } ch_ab_bidir_t;
 
-#if (DEBUG_F_PATTERN_KNOCKCOME==1)
+#if (DEBUG_KNOCKCOME==1)
     #define RANDOM_VAL_MAX_MS 100
 #else
     #define RANDOM_VAL_MAX_MS  10
@@ -255,28 +262,32 @@ typedef struct {
 #define RANDOM_SEED_SLAVE  5678
 #define RANDOM_SEED_MASTER 8765
 
+#define DATA_FIRST_AND_INC 1
+
 // Must wait knock response to send
 void task_a_slave (
     chanend           ch_ab_bidir, // ch_ab_bidir_t
-    streaming chanend ch_ba_knock) // ch_ba_knock_t
+    STREAMING chanend ch_ab_knock) // ch_ab_knock_t
 {
     timer             tmr;
     time32_t          time_ticks;
     ch_ab_bidir_t     data_ch_ab_bidir;
     KnockCome_State_e KnockCome_State;
-    ch_ba_knock_t     data_ch_ba_knock;
-    unsigned          random_seed     = random_create_generator_from_seed(RANDOM_SEED_SLAVE); // xmos
-    unsigned          random_delay_ms = random_seed % RANDOM_VAL_MAX_MS;
+    ch_ab_knock_t     data_ch_ab_knock;
+    unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
+    unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
+    unsigned          random_seed             = random_create_generator_from_seed(RANDOM_SEED_SLAVE); // xmos
+    unsigned          random_delay_ms         = random_seed % RANDOM_VAL_MAX_MS;
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
-    data_ch_ba_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
+    data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
 
     tmr :> time_ticks;
 
     while (true) {
        [[ordered]] // Needed even if LIMIT_USED_TICKS used. TODO why?
        select {
-           case ch_ab_bidir :> data_ch_ab_bidir : {
+           case ch_ab_bidir :> data_ch_ab_bidir : { // RECEIVE
                bool knockCome_send_data = false;
                bool got_data            = false;
 
@@ -294,15 +305,18 @@ void task_a_slave (
                }
 
                if (got_data) {
-                   const unsigned data = data_ch_ab_bidir.data.data_from_task_b_master;
-                   // No use for it
+                   const unsigned data_from_task_b_master_now = data_ch_ab_bidir.data.data_from_task_b_master;
+                   xassert (data_from_task_b_master_now == data_from_task_b_master + DATA_FIRST_AND_INC);
+                   data_from_task_b_master = data_from_task_b_master_now;
+
                } else if (knockCome_send_data) {
                    SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_GOT_COME);
                    // Fill data_ch_ab_bidir with data
                    data_ch_ab_bidir.source = task_a;
 
-                   data_ch_ab_bidir.data.data_from_task_a_slave = random_delay_ms;
-                   ch_ab_bidir <: data_ch_ab_bidir;
+                   data_ch_ab_bidir.data.data_from_task_a_slave = data_from_task_a_slave;
+                   ch_ab_bidir <: data_ch_ab_bidir; // SEND
+                   data_from_task_a_slave = data_from_task_a_slave + DATA_FIRST_AND_INC;
 
                    SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
                } else {}
@@ -317,7 +331,7 @@ void task_a_slave (
 
                if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
 
-                   ch_ba_knock <: data_ch_ba_knock;
+                   ch_ab_knock <: data_ch_ab_knock;
 
                    // We don't need a KNOCKCOME_KNOCKSEND_PENDING_TO_SEND_KNOCK_A since we can always send immediately,
                    // since it's a SIGNAL-type asynch non-blocking sending
@@ -390,25 +404,31 @@ void print_and_clear_cnts (cnts_t &cnts) {
 // Can send any time
 void task_a_master (
     chanend           ch_ab_bidir, // ch_ab_bidir_t
-    streaming chanend ch_ba_knock) // ch_ba_knock_t
+    STREAMING chanend ch_ab_knock) // ch_ab_knock_t
 {
     timer         tmr;
     time32_t      time_ticks;
     ch_ab_bidir_t data_ch_ab_bidir;
-    ch_ba_knock_t data_ch_ba_knock;
-    unsigned      random_seed     = random_create_generator_from_seed(RANDOM_SEED_MASTER); // xmos
-    unsigned      random_delay_ms = random_seed % RANDOM_VAL_MAX_MS;
+    ch_ab_knock_t data_ch_ab_knock;
+    unsigned      data_from_task_b_master = DATA_FIRST_AND_INC;
+    unsigned      data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
+    unsigned      random_seed             = random_create_generator_from_seed(RANDOM_SEED_MASTER); // xmos
+    unsigned      random_delay_ms         = random_seed % RANDOM_VAL_MAX_MS;
     cnts_t        cnts;
 
     init_cnts (cnts);
 
-    #if (DEBUG_F_PATTERN_KNOCKCOME==1)
+    #if (DEBUG_KNOCKCOME==1)
         printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u ms, cnt events at %u (Teig)\n\n",
                 XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
                 KNOCK_COME_VERSION_STR,
                 KNOCK_COME_DATE, KNOCK_COME_TIME,
                 RANDOM_VAL_MAX_MS, MAX_SUM_CNT);
         print_and_clear_cnts (cnts);
+        #if (DEADLOCK_NO_STREAMING_CHAN==1)
+            printf ("ch_ab_knock is not buffered, system will deadlock.\n"
+                    "This is last print. Wait one minute to confirm.\n\n");
+        #endif
     #endif
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
@@ -418,8 +438,8 @@ void task_a_master (
     while (true) {
         [[ordered]] // Ok, but not strictly necessary
         select {
-            case ch_ba_knock :> data_ch_ba_knock : {
-                xassert (data_ch_ba_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+            case ch_ab_knock :> data_ch_ab_knock : {
+                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
                 // Build response
                 data_ch_ab_bidir.source = task_b;
                 // No need to add any data here, so       KC_TYP_MS_COME_DATA is never used:
@@ -431,15 +451,20 @@ void task_a_master (
 
                 ch_ab_bidir <: data_ch_ab_bidir; // SEND
                 ch_ab_bidir :> data_ch_ab_bidir; // RECEIVE
+
+                unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
+                xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
+                data_from_task_a_slave = data_from_task_a_slave_now;
+
                 cnts.rec_cnt++;
                 cnts.rec_sent_cnt++;
                 cnts.sum_rec_cnt++;
 
                 // Analyze reponse
                 xassert (data_ch_ab_bidir.source == task_a);
-                xassert (data_ch_ba_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
 
-                #if (DEBUG_F_PATTERN_KNOCKCOME==1)
+                #if (DEBUG_KNOCKCOME==1)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_cnts (cnts);
@@ -454,14 +479,15 @@ void task_a_master (
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_MS_NONE_DATA;
                 data_ch_ab_bidir.source = task_b;
 
-                data_ch_ab_bidir.data.data_from_task_b_master = random_delay_ms;
+                data_ch_ab_bidir.data.data_from_task_b_master = data_from_task_b_master;
+                ch_ab_bidir <: data_ch_ab_bidir; // SEND
+                data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
 
-                ch_ab_bidir <: data_ch_ab_bidir;
                 cnts.sent_cnt++;
                 cnts.rec_sent_cnt++;
                 cnts.sum_sent_cnt++;
 
-                #if (DEBUG_F_PATTERN_KNOCKCOME==1)
+                #if (DEBUG_KNOCKCOME==1)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_cnts (cnts);
@@ -475,17 +501,17 @@ void task_a_master (
 
 int main()
 {
-    streaming chan ch_ba_knock ; // ch_ba_knock_t
+    STREAMING chan ch_ab_knock ; // ch_ab_knock_t
     chan           ch_ab_bidir ; // ch_ab_bidir_t or ch_ab_struct_with_array_t
     par {
         on tile[0]:{
             par {
                 task_a_slave (    // Must wait knock response to send
                     ch_ab_bidir,  // ch_ab_bidir_t
-                    ch_ba_knock); // ch_ba_knock_t
+                    ch_ab_knock); // ch_ab_knock_t
                 task_a_master (   // Can send any time
                     ch_ab_bidir,  // ch_ab_bidir_t
-                    ch_ba_knock); // ch_ba_knock_t
+                    ch_ab_knock); // ch_ab_knock_t
             }
         }
     }
