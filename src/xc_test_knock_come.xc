@@ -19,10 +19,13 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.910" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.911" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
+// 24May2026 0.0.911 print_and_clear_cnts added last > = <
+//                   print_welcome_banner is new
+//                   Conditional printing done in macros
 // 23May2026 0.0.910 ch_ba_knock -> ch_ab_knock
 //                   DEADLOCK_NO_STREAMING_CHAN is new
 // 21May2026 0.0.900 Initial version. Sent to Antonio
@@ -182,7 +185,7 @@ Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS d
     NextState = NewState;
 
     return NextState;
-}
+} // Slave_Set_KnockCome_State
 
 
 KnockCome_State_e
@@ -230,7 +233,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     NextState = NewState;
 
     return NextState;
-}
+} // Master_Set_KnockCome_State
 
 
 typedef enum {
@@ -263,6 +266,92 @@ typedef struct {
 #define RANDOM_SEED_MASTER 8765
 
 #define DATA_FIRST_AND_INC 1
+
+typedef struct {
+    unsigned sent_cnt;
+    unsigned rec_cnt;
+    unsigned rec_sent_cnt;
+    unsigned rec_gt_sent_cnt;
+    unsigned rec_eq_sent_cnt;
+    unsigned rec_lt_sent_cnt;
+    unsigned sum_sent_cnt;
+    unsigned sum_rec_cnt;
+} cnts_t;
+
+
+void init_cnts (cnts_t &cnts) {
+    cnts.sent_cnt          = 0;
+    cnts.rec_cnt           = 0;
+    cnts.rec_sent_cnt      = 0;
+    cnts.rec_gt_sent_cnt   = 0;
+    cnts.rec_eq_sent_cnt   = 0;
+    cnts.rec_lt_sent_cnt   = 0;
+    cnts.sum_sent_cnt      = 0;
+    cnts.sum_rec_cnt       = 0;
+} // init_cnts
+
+
+void update_fairness_cnts (cnts_t &cnts) {
+
+    if (cnts.rec_cnt > cnts.sent_cnt) {
+        cnts.rec_gt_sent_cnt++;
+    } else if (cnts.rec_cnt < cnts.sent_cnt) {
+        cnts.rec_lt_sent_cnt++;
+    } else {
+        cnts.rec_eq_sent_cnt++;
+    }
+} // update_fairness_cnts
+
+
+void print_welcome_banner() {
+    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u ms, cnt events at %u (Teig)\n\n",
+            XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
+            KNOCK_COME_VERSION_STR,
+            KNOCK_COME_DATE, KNOCK_COME_TIME,
+            RANDOM_VAL_MAX_MS, MAX_SUM_CNT);
+} // print_welcome_banner
+
+
+void print_and_clear_cnts (cnts_t &cnts) {
+   printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\n",
+           cnts.rec_cnt,
+           cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
+           cnts.sent_cnt,
+           cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
+           cnts.sum_rec_cnt,
+          (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
+           cnts.sum_sent_cnt);
+
+   cnts.sent_cnt        = 0;
+   cnts.rec_cnt         = 0;
+   cnts.rec_sent_cnt    = 0;
+   cnts.rec_gt_sent_cnt = 0;
+   cnts.rec_eq_sent_cnt = 0;
+   cnts.rec_lt_sent_cnt = 0;
+   // cnts.sum_sent_cnt, cnts.rec_cnt don't touch
+} // print_and_clear_cnts
+
+
+#if (DEBUG_KNOCKCOME==1)
+    #define PRINT_AND_CLEAR_CNTS(cnts) print_and_clear_cnts(cnts)
+    #define PRINT_WELCOME_BANNER       print_welcome_banner()
+#else
+    #define PRINT_AND_CLEAR_CNTS(cnts)
+    #define PRINT_WELCOME_BANNER
+#endif
+
+
+void print_deadlock_banner() {
+    printf ("ch_ab_knock is not buffered, system will deadlock.\n"
+            "This is last print. Wait one minute to confirm.\n\n");
+} // print_deadlock_banner
+
+
+#if (DEADLOCK_NO_STREAMING_CHAN==1)
+    #define PRINT_DEADLOCK_BANNER print_deadlock_banner()
+#else
+    #define PRINT_DEADLOCK_BANNER
+#endif
 
 // Must wait knock response to send
 void task_a_slave (
@@ -343,62 +432,7 @@ void task_a_slave (
            } break;
        }
     }
-}
-
-
-typedef struct {
-    unsigned sent_cnt;
-    unsigned rec_cnt;
-    unsigned rec_sent_cnt;
-    unsigned rec_gt_sent_cnt;
-    unsigned rec_eq_sent_cnt;
-    unsigned rec_lt_sent_cnt;
-    unsigned sum_sent_cnt;
-    unsigned sum_rec_cnt;
-} cnts_t;
-
-
-void init_cnts (cnts_t &cnts) {
-    cnts.sent_cnt          = 0;
-    cnts.rec_cnt           = 0;
-    cnts.rec_sent_cnt      = 0;
-    cnts.rec_gt_sent_cnt   = 0;
-    cnts.rec_eq_sent_cnt   = 0;
-    cnts.rec_lt_sent_cnt   = 0;
-    cnts.sum_sent_cnt      = 0;
-    cnts.sum_rec_cnt       = 0;
-}
-
-
-void update_fairness_cnts (cnts_t &cnts) {
-
-    if (cnts.rec_cnt > cnts.sent_cnt) {
-        cnts.rec_gt_sent_cnt++;
-    } else if (cnts.rec_cnt < cnts.sent_cnt) {
-        cnts.rec_lt_sent_cnt++;
-    } else {
-        cnts.rec_eq_sent_cnt++;
-    }
-}
-
-
-void print_and_clear_cnts (cnts_t &cnts) {
-
-   printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u SENT %u)\n",
-           cnts.rec_cnt,
-           cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
-           cnts.sent_cnt,
-           cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
-           cnts.sum_rec_cnt, cnts.sum_sent_cnt);
-
-   cnts.sent_cnt        = 0;
-   cnts.rec_cnt         = 0;
-   cnts.rec_sent_cnt    = 0;
-   cnts.rec_gt_sent_cnt = 0;
-   cnts.rec_eq_sent_cnt = 0;
-   cnts.rec_lt_sent_cnt = 0;
-   // cnts.sum_sent_cnt, cnts.rec_cnt don't touch
-}
+} // task_a_slave
 
 
 // Can send any time
@@ -418,18 +452,9 @@ void task_a_master (
 
     init_cnts (cnts);
 
-    #if (DEBUG_KNOCKCOME==1)
-        printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u ms, cnt events at %u (Teig)\n\n",
-                XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
-                KNOCK_COME_VERSION_STR,
-                KNOCK_COME_DATE, KNOCK_COME_TIME,
-                RANDOM_VAL_MAX_MS, MAX_SUM_CNT);
-        print_and_clear_cnts (cnts);
-        #if (DEADLOCK_NO_STREAMING_CHAN==1)
-            printf ("ch_ab_knock is not buffered, system will deadlock.\n"
-                    "This is last print. Wait one minute to confirm.\n\n");
-        #endif
-    #endif
+    PRINT_WELCOME_BANNER;
+    PRINT_AND_CLEAR_CNTS (cnts);
+    PRINT_DEADLOCK_BANNER;
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
@@ -496,7 +521,7 @@ void task_a_master (
             } break;
         }
     }
-}
+} // task_a_master
 
 
 int main()
@@ -516,5 +541,5 @@ int main()
         }
     }
     return 0;
-}
+} // main
 
