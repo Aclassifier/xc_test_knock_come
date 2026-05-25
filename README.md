@@ -5,7 +5,7 @@ The XC language I have blogged some about, see red coloured notes at at https://
 This means that this code only runs on the XMOS XCORE architecture.
 
 This code really is an exercise to demonstrate the language and the problems that systems built with tasks that communicate (almost) only over 
-synchronous non-buffered channels may encounter if two of those tasks spontanenously decide to send to each other, simultaneously - causing a deadlock.
+synchronous non-buffered channels may encounter if two of those tasks spontaneously decide to send to each other, simultaneously - causing a deadlock.
 
 The "knock-come" pattern solves this with the addition of a data-less asynch channel (instead of a buffer task).
 
