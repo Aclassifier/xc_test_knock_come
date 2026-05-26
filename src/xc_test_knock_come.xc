@@ -47,7 +47,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
-// 26May2026 0.0.913 No code change, another XCore Exchange entry referenced
+// 26May2026 0.0.913 No code change, another XCore Exchange entry referenced. Some empty lines
 // 26May2026 0.0.913 No change of code, more comments
 // 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
 //                   TEST_NOT_ORDERED_PRI_SELECT is new
@@ -132,6 +132,7 @@ typedef enum {        // NEEDS
 typedef struct {
     KnockCome_Message_Type_e KnockCome_Message_Type; // KC_TYP_SM_KNOCK only
 } ch_ab_knock_t;
+
 
 typedef enum {
     // We don't need a KNOCKCOME_KNOCKSEND_PENDING_TO_SEND_KNOCK_A since we can always send immediately,
@@ -357,7 +358,6 @@ void print_ordered_banner()
     #define PRINT_AND_CLEAR_CNTS(cnts)
     #define PRINT_WELCOME_BANNER
 #endif
-
 
 #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
     #define PRINT_DEADLOCK_BANNER print_deadlock_banner()
