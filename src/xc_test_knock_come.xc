@@ -45,8 +45,9 @@
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
-// VERSIONS
+// VERSIONS / COMMITS
 // =============================================================================================
+// 26May2026 0.0.913 No change of code, more comments
 // 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
 //                   TEST_NOT_ORDERED_PRI_SELECT is new
 // 25May2026 0.0.912 was committed by GitHub desktop on macOS Tahoe and then
@@ -364,7 +365,10 @@ void print_ordered_banner()
 #endif
 
 
-// Must wait knock response to send
+// =========================================================================================================================
+// Can only KNOCK to task_b_master and then wait for COME from task_b_master and then atomic send its DATA to task_b_master.
+// Must be able to accept DATA from task_b_master any time.
+//
 void task_a_slave (
     chanend           ch_ab_bidir, // ch_ab_bidir_t
     STREAMING chanend ch_ab_knock) // ch_ab_knock_t
@@ -415,7 +419,7 @@ void task_a_slave (
                    data_ch_ab_bidir.source = task_a;
 
                    data_ch_ab_bidir.data.data_from_task_a_slave = data_from_task_a_slave;
-                   ch_ab_bidir <: data_ch_ab_bidir; // SEND
+                   ch_ab_bidir <: data_ch_ab_bidir; // ATOMIC SEND
                    data_from_task_a_slave = data_from_task_a_slave + DATA_FIRST_AND_INC;
 
                    SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
@@ -443,10 +447,13 @@ void task_a_slave (
            } break;
        }
     }
-} // task_a_slave
+} // task_a_slave 
 
 
-// Can send any time
+// ===================================================================================================================
+// task_b_master can send its DATA to task_a_slave any time, 
+// but if KNOCK is received it must respond with atomic send COME to task_a_slave and wait for DATA from task_a_slave.
+//
 void task_b_master (
     chanend           ch_ab_bidir, // ch_ab_bidir_t
     STREAMING chanend ch_ab_knock) // ch_ab_knock_t
@@ -482,12 +489,12 @@ void task_b_master (
                 // No need to add any data here, so       KC_TYP_COME_DATA is never used:
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_COME;
 
-                // =============================================================
-                // INSIDE THIS CASE CONTIUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
-                // =============================================================
+                // ==============================================================
+                // INSIDE THIS CASE CONTINUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
+                // ==============================================================
 
-                ch_ab_bidir <: data_ch_ab_bidir; // SEND
-                ch_ab_bidir :> data_ch_ab_bidir; // RECEIVE
+                ch_ab_bidir <: data_ch_ab_bidir; // SEND and ATOMIC..
+                ch_ab_bidir :> data_ch_ab_bidir; // ..RECEIVE
 
                 unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
                 xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
