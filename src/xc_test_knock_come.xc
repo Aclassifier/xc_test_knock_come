@@ -40,13 +40,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.913" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.914" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 26May2026 0.0.914 Welcome printing different sequence
 // 26May2026 0.0.913 No code change, another XCore Exchange entry referenced. Some empty lines
 // 26May2026 0.0.913 No change of code, more comments
 // 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
@@ -74,7 +75,7 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
 #define DEBUG_KNOCKCOME                  1 // 0 default no printing, 1 log produced
 #define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
-#define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
+#define TEST_NOT_ORDERED_PRI_SELECT      1 // 0 default, 1 to test
 
 #if ((TEST_DEADLOCK_NO_STREAMING_CHAN==0) or (DEBUG_KNOCKCOME==0)) 
     #define STREAMING streaming // Default. ch_ab_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
@@ -478,9 +479,9 @@ void task_b_master (
     init_debug_cnts (cnts);
 
     PRINT_WELCOME_BANNER;
-    PRINT_AND_CLEAR_CNTS (cnts);
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
+    PRINT_AND_CLEAR_CNTS (cnts);
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
