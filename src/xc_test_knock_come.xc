@@ -47,6 +47,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 26May2026 0.0.913 No code change, another XCore Exchange entry referenced
 // 26May2026 0.0.913 No change of code, more comments
 // 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
 //                   TEST_NOT_ORDERED_PRI_SELECT is new
@@ -77,7 +78,13 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
 
 #if ((TEST_DEADLOCK_NO_STREAMING_CHAN==0) or (DEBUG_KNOCKCOME==0)) 
     #define STREAMING streaming // Default. ch_ab_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
-    // https://www.xcore.com/viewtopic.php?t=3737
+    // See https://www.xcore.com/viewtopic.php?t=9298 "XC and the size of streaming chan buffer" on XCore Exchange
+    //   Is there some list anywhere about the size of streaming chan buffer on the different architectures X1, X2, X3?
+    //   And is a buffer element always 32 bits wide?
+    //   Also, is there some library out there to test this?
+    //   I have done some basic coding now and see that for the X2 the buffer is at least two words. 
+    //   I have also experimented some with [[ordered]] select in that code. It's the "knock-come" pattern.
+    // And https://www.xcore.com/viewtopic.php?t=3737 on XCore Exchange
     //   A normal channel end sets up and closes the connection each time data is transferred.
     //   A streaming channel end sets up the connection, and keeps it open within the scope of the function.
     //   It's a bit like packet switched vs. circuit switched. It means a streaming chan is faster (although both are pretty fast) 
