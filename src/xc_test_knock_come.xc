@@ -3,6 +3,27 @@
  *
  *  Created on: 20. mai 2026
  *      Author: oyvindteig
+ *      This knock-come pattern implementation is described in-line here.
+ *
+ * The algorithm / implementations are also described from these links:
+ *   [The "knock-come" deadlock free pattern]
+ *       https://www.teigfam.net/oyvind/home/technology/009-the-knock-come-deadlock-free-pattern/
+ *   [xc_test_knock_come]
+ *       https://github.com/Aclassifier/xc_test_knock_come/tree/master
+ *   [My Beep-BRRR notes - Decoupling slave_task_a and master_task_b - Implementation D]
+ *       https://www.teigfam.net/oyvind/home/technology/219-my-beep-brrr-notes/#implementation_d
+ *
+ * Some discussion here:
+ * slave_task_a and master_task_b want to spontaneously send to the other part. With only synchronous non-buffered
+ * channels available we either could introduce a one element buffer task in one of the channels, and make sure
+ * that sending to this buffer task never overflows it. This is how it would have been solved in occam.
+ * For the XC language by XMOS, on the XCORE architecture, a channel may be tagged as "streaming"
+ * (see above) - making up for a one-element buffer task. This channel carries the data-less "knock" from
+ * the slave_task_ak, which cannot just send data on a zero-buffered synchronous channel in fear of a deadlock
+ * with a master_task_b. Both tasks trigger themselves to initiate send (knock) or actually send (data)
+ * with an internal timer, with pseudo-random timeout valuse, inlcuding immediate action.
+ * 
+ * See the full description of the algorithm in the above referenced blog note.
  */
 
 #define INCLUDES
@@ -19,21 +40,26 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.912" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.913" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS
 // =============================================================================================
+// 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
+//                   TEST_NOT_ORDERED_PRI_SELECT is new
+// 25May2026 0.0.912 was committed by GitHub desktop on macOS Tahoe and then
+//                   https://github.com/Aclassifier/xc_test_knock_come/tree/master created
+//                   Then ChronoSync'ed back to the xTIMEcomposer 2010 mac Mini. No code change
 // 24May2026 0.0.912 URL to blog note updated
 //                   Description uodated and some renaming
 //                   task_a_master -> task_b_master
-// 24May2026 0.0.911 print_and_clear_cnts added last > = <
+// 24May2026 0.0.911 print_and_clear_debug_cnts added last > = <
 //                   print_welcome_banner is new
 //                   Conditional printing done in macros
 // 23May2026 0.0.910 ch_ba_knock -> ch_ab_knock
-//                   DEADLOCK_NO_STREAMING_CHAN is new
+//                   TEST_DEADLOCK_NO_STREAMING_CHAN is new
 // 21May2026 0.0.900 Initial version. Sent to Antonio
 // =============================================================================================
 
@@ -43,12 +69,13 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
                              // XC/XMOS 100 MHz increment every 10 ns for max 2exp32 = 4294967296,
                              // ie. divide by 100 mill = 42.9.. seconds
 
-#define DEBUG_KNOCKCOME                  1 // 0 no printing, 1 log produced
-#define DEADLOCK_NO_STREAMING_CHAN       0 // 0 (to get it to work), 1 (deadlocks)
-#define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 standard single send on streaming ch_ab_knock, 1 double send will cause double COME and crash
+#define DEBUG_KNOCKCOME                  1 // 0 default no printing, 1 log produced
+#define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
+#define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
+#define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
 
-#if (DEADLOCK_NO_STREAMING_CHAN==0)
-    #define STREAMING streaming // ch_ab_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
+#if ((TEST_DEADLOCK_NO_STREAMING_CHAN==0) or (DEBUG_KNOCKCOME==0)) 
+    #define STREAMING streaming // Default. ch_ab_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
     // https://www.xcore.com/viewtopic.php?t=3737
     //   A normal channel end sets up and closes the connection each time data is transferred.
     //   A streaming channel end sets up the connection, and keeps it open within the scope of the function.
@@ -57,56 +84,40 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
     //   tile where you are only limited by chanends count, but in dual tile systems you typically get only 4 paths from tile to tile,
     //   so streaming channels should be used cautiously across tiles. This code uses single tile, so streaming chan use is fine.
     //   The protocol is different so you cannot mix streaming/no streaming channel end types.
-#else // DEADLOCK_NO_STREAMING_CHAN 1
+#else 
     #define STREAMING // ch_ab_knock not buffered will cause deadlock!
+    #warning Not streaming knock chan!
 #endif
 
-/*
-State machine for the KnockCome (Knock-Come, Knock_Come) pattern
+#if ((TEST_STREAMING_CHAN_DOUBLE_KNOCK==0) or (DEBUG_KNOCKCOME==0))
+    #define DOUBLE_KNOCK 0 // Default
+#else 
+    #define DOUBLE_KNOCK 1
+    #warning Double knock!
+#endif
 
-The knock-come pattern is described in the documentation of the code.
-See usage in the files and in the data-flow diagram below
-
-It is also described in these blog notes:
-   [The "knock-come" deadlock free pattern]
-       https://www.teigfam.net/oyvind/home/technology/009-the-knock-come-deadlock-free-pattern/
-   [My Beep-BRRR notes - Decoupling slave_task_a and master_task_b - Implementation D]
-       https://www.teigfam.net/oyvind/home/technology/219-my-beep-brrr-notes/#implementation_d
-
-But here's an example as well. Purpose: slave_task_a and master_task_b want to spontaneously send to the other part:
-
-slave_task_a and master_task_b can both spontaneously initiate sending to each other this way,
-and they will never deadlock since the KNOCK channel from slave_task_a to master_task_b comprises a
-streaming chan in XC. The XCORE processor has a buffer of at least one 32-bit variable for the nessage,
-which
-
-KNOCK: ch_ab_knock carries the "KNOCK" data-less "message"
-    slave_task_a initiates every communication with first sending a signal (no data)
-    on the signal streaming ch_ab_knock chan  (no data, it never blocks since it si streaming
-    and the XCORE buffers at least one word) to master_task_b. This is the "knock".
-    ("_ab_" means from slave_task_a to master_task_b)
-
-    ch_ab_bidir carries "COME" message
-    When the master_task_b is ready to take full data it sends a "come" message back. The slave_task_a
-    receives this "come". ("_ba_" means from master_task_b to slave_task_a)
-
-ch_ab_bidir carries the data
-> master_task_b expects to see only the data in return, so it can wait for it in the "next line" after Come.
-> slave_task_a then immediately, by contract, in the "next line" must send off the data set it originally wanted to.
-> slave_task_a, after it sent knock, must be able to handle any message from master_task_b, because they may be other data, since
-> master_task_b is allowed to send on ch_ab_bidir *any* time
+#if ((TEST_NOT_ORDERED_PRI_SELECT==0) or (DEBUG_KNOCKCOME==0)) 
+    #define ORDERED_PRI_SELECT [[ordered]] // Default. Probably not necessary (but not proven), since KnockCome_State_e, and
+    //                                        since "unspecified" below probably is implemented as ordered anyhow
+    // 
+    // XMOS Programming Guide (2015/9/18)
+    //   Ordering
+    //     Generally there is no priority on the events in a select. If more than one event is
+    //     ready when the select executes, the chosen event is unspecified.
+    //     Sometimes it is useful to force a priority by using the [[ordered]] attribute which
+    //     says that a select is presented with events ordered in priority from highest to lowest.
+#else
+    #define ORDERED_PRI_SELECT // Seems to run just as good as the alternative
+    #warning Not [[ordered]] pri selects
+#endif
 
 
-But it's enough to use knock-come only one way. Therefore master_task_b
-only needs ch_ab_bidir to send anything, at any time (and some times it's the knock message).
-*/
-
-typedef enum {           // NEEDS
+typedef enum {        // NEEDS
     KC_TYP_NONE_DATA, // Master sends spontaneous data to Slave, not part of knock-come scheme
-    KC_TYP_SM_KNOCK,     // Slave to Master (not necessary since anything on this streaning chan makes sense)
+    KC_TYP_SM_KNOCK,  // Slave to Master (not necessary since anything on this streaning chan makes sense)
     KC_TYP_COME,      // Master sends "come!" to Slave, no piggy.backed data
     KC_TYP_COME_DATA, // Master sends "come!" to Slave, but also includes spontaneous piggy-backed data
-    KC_TYP_SM_DATA       // Slave sends data to Master. Knock-Come Sequence finished
+    KC_TYP_SM_DATA    // Slave sends data to Master. Knock-Come Sequence finished
 } KnockCome_Message_Type_e;
 
 
@@ -162,7 +173,7 @@ Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS d
             } break;
 
             case KC_STATE_SLAVE_GOT_COME: {
-                xassert (PresentState == KC_STATE_SLAVE_SENT_KNOCK); // if (TEST_STREAMING_CHAN_DOUBLE_KNOCK==1) then
+                xassert (PresentState == KC_STATE_SLAVE_SENT_KNOCK); // if (DOUBLE_KNOCK==1) then
                                                                      // PresentState = KC_STATE_SLAVE_GOT_COME, so this is #2!
             } break;
 
@@ -261,7 +272,7 @@ typedef struct {
 } cnts_t;
 
 
-void init_cnts (cnts_t &cnts)
+void init_debug_cnts (cnts_t &cnts)
 {
     cnts.sent_cnt          = 0;
     cnts.rec_cnt           = 0;
@@ -271,7 +282,7 @@ void init_cnts (cnts_t &cnts)
     cnts.rec_lt_sent_cnt   = 0;
     cnts.sum_sent_cnt      = 0;
     cnts.sum_rec_cnt       = 0;
-} // init_cnts
+} // init_debug_cnts
 
 
 void update_fairness_cnts (cnts_t &cnts)
@@ -286,17 +297,7 @@ void update_fairness_cnts (cnts_t &cnts)
 } // update_fairness_cnts
 
 
-void print_welcome_banner()
-{
-    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u ms, cnt events at %u (Teig)\n\n",
-            XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
-            KNOCK_COME_VERSION_STR,
-            KNOCK_COME_DATE, KNOCK_COME_TIME,
-            RANDOM_VAL_MAX_MS, MAX_SUM_CNT);
-} // print_welcome_banner
-
-
-void print_and_clear_cnts (cnts_t &cnts)
+void print_and_clear_debug_cnts (cnts_t &cnts)
 {
    printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\n",
            cnts.rec_cnt,
@@ -314,16 +315,17 @@ void print_and_clear_cnts (cnts_t &cnts)
    cnts.rec_eq_sent_cnt = 0;
    cnts.rec_lt_sent_cnt = 0;
    // cnts.sum_sent_cnt, cnts.rec_cnt don't touch
-} // print_and_clear_cnts
+} // print_and_clear_debug_cnts
 
 
-#if (DEBUG_KNOCKCOME==1)
-    #define PRINT_AND_CLEAR_CNTS(cnts) print_and_clear_cnts(cnts)
-    #define PRINT_WELCOME_BANNER       print_welcome_banner()
-#else
-    #define PRINT_AND_CLEAR_CNTS(cnts)
-    #define PRINT_WELCOME_BANNER
-#endif
+void print_welcome_banner()
+{
+    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u ms, cnt events at %u (Teig)\n\n",
+            XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
+            KNOCK_COME_VERSION_STR,
+            KNOCK_COME_DATE, KNOCK_COME_TIME,
+            RANDOM_VAL_MAX_MS, MAX_SUM_CNT);
+} // print_welcome_banner
 
 
 void print_deadlock_banner()
@@ -333,11 +335,34 @@ void print_deadlock_banner()
 } // print_deadlock_banner
 
 
-#if (DEADLOCK_NO_STREAMING_CHAN==1)
+void print_ordered_banner()
+{
+    printf ("[[ordered]] not used in select statements seems to have no effect\n"
+            "But watch out for stopped log\n");
+} // print_ordered_banner
+
+
+#if (DEBUG_KNOCKCOME==1)
+    #define PRINT_AND_CLEAR_CNTS(cnts) print_and_clear_debug_cnts(cnts)
+    #define PRINT_WELCOME_BANNER       print_welcome_banner()
+#else
+    #define PRINT_AND_CLEAR_CNTS(cnts)
+    #define PRINT_WELCOME_BANNER
+#endif
+
+
+#if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
     #define PRINT_DEADLOCK_BANNER print_deadlock_banner()
 #else
     #define PRINT_DEADLOCK_BANNER
 #endif
+
+#if (TEST_NOT_ORDERED_PRI_SELECT==1)
+    #define PRINT_ORDERED_BANNER print_ordered_banner()
+#else
+    #define PRINT_ORDERED_BANNER
+#endif
+
 
 // Must wait knock response to send
 void task_a_slave (
@@ -360,7 +385,7 @@ void task_a_slave (
     tmr :> time_ticks;
 
     while (true) {
-       [[ordered]] // Needed even if LIMIT_USED_TICKS used. TODO why?
+       ORDERED_PRI_SELECT
        select {
            case ch_ab_bidir :> data_ch_ab_bidir : { // RECEIVE
                bool knockCome_send_data = false;
@@ -407,7 +432,7 @@ void task_a_slave (
                if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
 
                    ch_ab_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
-                   #if (TEST_STREAMING_CHAN_DOUBLE_KNOCK==1)
+                   #if (DOUBLE_KNOCK==1)
                        ch_ab_knock <: data_ch_ab_knock; // Will be buffered as two and cause an extra COME and rash
                    #endif
 
@@ -436,10 +461,11 @@ void task_b_master (
     unsigned      random_delay_ms         = random_seed % RANDOM_VAL_MAX_MS;
     cnts_t        cnts;
 
-    init_cnts (cnts);
+    init_debug_cnts (cnts);
 
     PRINT_WELCOME_BANNER;
     PRINT_AND_CLEAR_CNTS (cnts);
+    PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
@@ -447,7 +473,7 @@ void task_b_master (
     tmr :> time_ticks; // Immediately
 
     while (true) {
-        [[ordered]] // Ok, but not strictly necessary
+        ORDERED_PRI_SELECT
         select {
             case ch_ab_knock :> data_ch_ab_knock : {
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
@@ -478,7 +504,7 @@ void task_b_master (
                 #if (DEBUG_KNOCKCOME==1)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_cnts (cnts);
+                        print_and_clear_debug_cnts (cnts);
                     } else {}
                 #endif
             } break;
@@ -501,7 +527,7 @@ void task_b_master (
                 #if (DEBUG_KNOCKCOME==1)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_cnts (cnts);
+                        print_and_clear_debug_cnts (cnts);
                     } else {}
                 #endif
             } break;

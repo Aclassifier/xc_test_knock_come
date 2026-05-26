@@ -805,9 +805,10 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="com.xmos.cdt.toolchain.1572314492.1911036076" name="_buildlog.txt" rcbsApplicability="disable" resourcePath="_buildlog.txt" toolsToInvoke=""/>
 					<fileInfo id="com.xmos.cdt.toolchain.1572314492.1249545927" name="_log.txt" rcbsApplicability="disable" resourcePath="_log.txt" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="_log.txt|.build*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="_buildlog.txt|_log.txt|.build*" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
