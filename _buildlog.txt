@@ -1,22 +1,12 @@
-09:49:01 **** Build of configuration Default for project xc_test_knock_come ****
+14:39:32 **** Incremental Build of configuration Default for project xc_test_knock_come ****
 xmake CONFIG=Default all 
 Checking build modules
 Using build modules: lib_xassert, module_random
-Rebuild .build/_iflag.rsp
-Analyzing random_init.c
 Analyzing xc_test_knock_come.xc
-Analyzing xassert.xc
-Analyzing random.xc
 Rebuild .build/_pca.rsp
 Propagating analysis
-Creating dependencies for random.xc
-Creating dependencies for xassert.xc
 Creating dependencies for xc_test_knock_come.xc
-Creating dependencies for random_init.c
-Compiling random_init.c
 Compiling xc_test_knock_come.xc
-Compiling xassert.xc
-Compiling random.xc
 Rebuild .build/_obj.rsp
 Creating xc_test_knock_come.xe
 Constraint check for tile[0]:
@@ -35,4 +25,4 @@ Constraint check for tile[1]:
 Constraints checks PASSED.
 Build Complete
 
-09:49:09 Build Finished (took 8s.57ms)
+14:39:42 Build Finished (took 9s.694ms)

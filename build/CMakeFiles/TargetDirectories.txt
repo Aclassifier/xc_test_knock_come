@@ -1,0 +1,3 @@
+/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/xc_test_knock_come.dir
+/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/edit_cache.dir
+/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,43 @@
+CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: \
+  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/src/xc_test_knock_come.xc \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/timer.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1_g4000b-512.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1_user.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs3a_user.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs3a_defines.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1_kernel.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs3a_kernel.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1_registers.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs3a_registers.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xs1_clock.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/platform.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/stdint.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/limits.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/newlib.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/config.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/machine/ieeefp.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xc/stdio.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/stdio.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/_ansi.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/clang/stddef.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/clang/stdarg.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/reent.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/_types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/machine/_types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/machine/_default_types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/lock.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/machine/types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/features.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/stdio.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/stdio.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xc/string.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/string.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/sys/string.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/string.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/xccompat.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/clang/iso646.h \
+  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_xassert/lib_xassert/api/xassert.h \
+  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/lib_random/api/random.h
+
