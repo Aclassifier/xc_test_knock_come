@@ -12,6 +12,7 @@ CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: \
   /Applications/XMOS_XTC_15.3.1/target/include/xs3a_registers.h \
   /Applications/XMOS_XTC_15.3.1/target/include/xs1_clock.h \
   /Applications/XMOS_XTC_15.3.1/target/include/platform.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/syscall.h \
   /Applications/XMOS_XTC_15.3.1/target/include/stdint.h \
   /Applications/XMOS_XTC_15.3.1/target/include/limits.h \
   /Applications/XMOS_XTC_15.3.1/target/include/newlib.h \

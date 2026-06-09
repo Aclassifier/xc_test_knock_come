@@ -88,6 +88,7 @@ CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: /Users/teig/Doc
   /Applications/XMOS_XTC_15.3.1/target/include/sys/stdio.h \
   /Applications/XMOS_XTC_15.3.1/target/include/sys/string.h \
   /Applications/XMOS_XTC_15.3.1/target/include/sys/types.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/syscall.h \
   /Applications/XMOS_XTC_15.3.1/target/include/timer.h \
   /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/stdio.h \
   /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/string.h \
@@ -111,6 +112,8 @@ CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: /Users/teig/Doc
 /Applications/XMOS_XTC_15.3.1/target/include/xc/string.h:
 
 /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/stdio.h:
+
+/Applications/XMOS_XTC_15.3.1/target/include/syscall.h:
 
 /Applications/XMOS_XTC_15.3.1/target/include/sys/types.h:
 
