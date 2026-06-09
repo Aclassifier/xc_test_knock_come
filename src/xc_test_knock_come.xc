@@ -37,10 +37,7 @@
                           // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
     #include <syscall.h>  // _XTC new for me
     #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
-    #include <stdint.h>   // uint8_t
     #include <stdio.h>    // printf
-    #include <string.h>   // memcpy
-    #include <xccompat.h> // REFERENCE_PARAM(my_app_ports_t, my_app_ports) -> my_app_ports_t &my_app_ports
     #include <iso646.h>   // not etc.
     #include <xassert.h>
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
@@ -53,6 +50,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 09Jun2026 0.0.916 Removed three not needed include files
 // 09Jun2026 0.0.916 Prettier code file here 
 // 09Jun2026 0.0.916 Possible to use ports for scope instead of logs.
 //                   <syscall.h> introduced since XTC_ExampleXCommonCMake came with it
