@@ -50,6 +50,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 10Jun2026 0.0.916 Prettier
 // 09Jun2026 0.0.916 Removed three not needed include files
 // 09Jun2026 0.0.916 Prettier code file here 
 // 09Jun2026 0.0.916 Possible to use ports for scope instead of logs.
@@ -624,23 +625,41 @@ X0D11  P1D       15   GND               16
 int main()
 {
     STREAMING chan ch_ab_knock ; // ch_ab_knock_t
-    chan           ch_ab_bidir ; // ch_ab_bidir_t or ch_ab_struct_with_array_t
-
-
+    chan           ch_ab_bidir ; // ch_ab_bidir_t
     par {
-        on tile[0]:          // .core[1]: not combinable so cannot explicitly place on core (*)
-            task_a_slave (   // Must wait knock response to send 
-                ch_ab_bidir, // ch_ab_bidir_t
-                ch_ab_knock, // ch_ab_knock_t
-                p1_out_blue_slave);
-        on tile[0]:           // .core[0]: This is how they end up, see on crash (*)
-            task_b_master (   // Can send any time
-                ch_ab_bidir,  // ch_ab_bidir_t
-                ch_ab_knock, // ch_ab_knock_t
-                p1_out_purple_master, 
-                p4_leds);
-        // (*) Same tile[0] so streaming chan does not  occupy a route through the HW switch within the scope of the task
+        on tile[0]:                   // .core[1]: not combinable so cannot explicitly place on core (*)
+            task_a_slave (            // Must wait knock response to send 
+                ch_ab_bidir,          // ch_ab_bidir_t
+                ch_ab_knock,          // ch_ab_knock_t
+                p1_out_blue_slave);   // Pin out for scope
+        on tile[0]:                   // .core[0]: This is how they end up, see on crash (*)
+            task_b_master (           // Can send any time
+                ch_ab_bidir,          // ch_ab_bidir_t
+                ch_ab_knock,          // ch_ab_knock_t
+                p1_out_purple_master, // Pin out for scope
+                p4_leds);             // LEDS for observing activity
+        // (*) Same tile[0] so streaming chan does not occupy a route through the HW switch within the scope of the task
     }
     return 0;
 } // main
 
+
+int main()
+{
+    STREAMING chan ch_ab_knock ; // ch_ab_knock_t
+    chan           ch_ab_bidir ; // ch_ab_bidir_t
+    par {
+        on tile[0]:                   // .core[1]
+            task_a_slave (            // Must wait knock response to send 
+                ch_ab_bidir,          // ch_ab_bidir_t
+                ch_ab_knock,          // ch_ab_knock_t
+                p1_out_blue_slave);   // Pin out for scope
+        on tile[0]:                   // .core[0]
+            task_b_master (           // Can send any time
+                ch_ab_bidir,          // ch_ab_bidir_t
+                ch_ab_knock,          // ch_ab_knock_t
+                p1_out_purple_master, // Pin out for scope
+                p4_leds);             // LEDS for observing activity
+    }
+    return 0;
+} // main
