@@ -43,13 +43,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.916" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.917" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
 // 10Jun2026 0.0.916 Prettier
 // 09Jun2026 0.0.916 Removed three not needed include files
 // 09Jun2026 0.0.916 Prettier code file here 
@@ -86,7 +87,7 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
 typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 
 #define DEBUG_KNOCKCOME                  1 // 0 default, 1 test of state transitions
-#define PRINT_KNOCKCOME                  0 // 0 default no printing and nice for FAST SCOPE, 1 log produced and ok for ROLL SCOPE
+#define PRINT_KNOCKCOME                  1 // 0 default no printing and nice for FAST SCOPE, 1 log produced and ok for ROLL SCOPE
 #define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
 #define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
@@ -163,9 +164,28 @@ typedef enum {
                                                //
     KC_STATE_MASTER_GOT_DATA_NOW_READY = 0x2A, // 42  Also INIT --> KC_STATE_MASTER_GOT_KNOCK
     KC_STATE_MASTER_GOT_KNOCK          = 0x2B, // 43            --> KC_STATE_MASTER_SENT_COME
-    KC_STATE_MASTER_SENT_COME          = 0x2C, // 44            --> KC_STATE_MASTER_GOT_DATA_NOW_READY
+    KC_STATE_MASTER_SENT_COME          = 0x2C, // 44            --> KC_STATE_MASTER_GOT_DATA_NOW_READY (atomic)
     //
 } KnockCome_State_e;
+
+
+typedef enum {
+    task_a,
+    task_b
+} ab_src_e;
+
+
+// Between task_a_slave and task_b_master
+// task_a_slave sends important data and task_b_master some times adds like new menu changes
+//
+typedef struct {
+    ab_src_e source;
+    KnockCome_Message_Type_e KnockCome_Message_Type;
+    union {
+        unsigned data_from_task_a_slave;  // KC_TYP_SM_DATA source is task_a_slave
+        unsigned data_from_task_b_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_b_master
+    } data;
+} ch_ab_bidir_t;
 
 
 // Usage:
@@ -254,28 +274,13 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 } // Master_Set_KnockCome_State
 
-
-typedef enum {
-    task_a,
-    task_b
-} ab_src_e;
-
-
-// Between task_a_slave and task_b_master
-// task_a_slave sends important data and task_b_master some times adds like new menu changes
-//
-typedef struct {
-    ab_src_e source;
-    KnockCome_Message_Type_e KnockCome_Message_Type;
-    union {
-        unsigned data_from_task_a_slave;  // KC_TYP_SM_DATA source is task_a_slave
-        unsigned data_from_task_b_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_b_master
-    } data;
-} ch_ab_bidir_t;
-
+// Rename delta_print_10ms if these change:
+#define PRINT_TIMEOUT_RESOLUTION_MS 10
+#define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
+#define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
 
 #if (PRINT_KNOCKCOME==1)
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100 ms nbsically for printing
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100 ms basically for printing
     #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
 #else
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10 us for SCOPE
@@ -300,10 +305,14 @@ typedef struct {
     unsigned rec_lt_sent_cnt;
     unsigned sum_sent_cnt;
     unsigned sum_rec_cnt;
+    //
+    timer    print_tmr;
+    time32_t print_time_ticks;
+    unsigned delta_print_10ms;
 } cnts_t;
 
 
-void init_debug_cnts (cnts_t &cnts)
+void reset_debug_cnts (cnts_t &cnts)
 {
     cnts.sent_cnt        = 0;
     cnts.rec_cnt         = 0;
@@ -311,10 +320,19 @@ void init_debug_cnts (cnts_t &cnts)
     cnts.rec_gt_sent_cnt = 0;
     cnts.rec_eq_sent_cnt = 0;
     cnts.rec_lt_sent_cnt = 0;
-    cnts.sum_sent_cnt    = 0;
-    cnts.sum_rec_cnt     = 0;
-} // init_debug_cnts
+    // Don't touch sum_sent_cnt, sum_rec_cnt
 
+    cnts.print_tmr :> cnts.print_time_ticks;  
+    cnts.delta_print_10ms = 0;
+} // reset_debug_cnts
+
+void init_debug_cnts (cnts_t &cnts)
+{
+    reset_debug_cnts (cnts);
+
+    cnts.sum_sent_cnt = 0;
+    cnts.sum_rec_cnt  = 0;
+} // init_debug_cnts
 
 void update_fairness_cnts (cnts_t &cnts)
 {
@@ -330,22 +348,21 @@ void update_fairness_cnts (cnts_t &cnts)
 // #if (PRINT_KNOCKCOME==1)
 void print_and_clear_debug_cnts (cnts_t &cnts)
 {
-   printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\n",
+   const unsigned delta_print_secs = cnts.delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 / 100 = 23
+   const unsigned delta_print_10ms = cnts.delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 % 100 = 87 for "DT 23.87s"
+   
+   printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
            cnts.rec_cnt,
            cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
            cnts.sent_cnt,
            cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
            cnts.sum_rec_cnt,
           (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
-           cnts.sum_sent_cnt);
+           cnts.sum_sent_cnt,
+           delta_print_secs,
+           delta_print_10ms);
 
-   cnts.sent_cnt        = 0;
-   cnts.rec_cnt         = 0;
-   cnts.rec_sent_cnt    = 0;
-   cnts.rec_gt_sent_cnt = 0;
-   cnts.rec_eq_sent_cnt = 0;
-   cnts.rec_lt_sent_cnt = 0;
-   // cnts.sum_sent_cnt, cnts.rec_cnt don't touch
+   reset_debug_cnts (cnts);
 } // print_and_clear_debug_cnts
 
 
@@ -511,7 +528,9 @@ void task_b_master (
     unsigned      random_delay_us         = random_seed % RANDOM_VAL_MAX_US;
     cnts_t        cnts;
 
-    init_debug_cnts (cnts);
+    init_debug_cnts (cnts); // Also sets print_time_ticks
+        cnts.print_tmr :> cnts.print_time_ticks;  
+    cnts.delta_print_10ms = 0;
     exercise_p1_out_purple_master (p1_out_purple_master);
 
     PRINT_WELCOME_BANNER;
@@ -521,11 +540,17 @@ void task_b_master (
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
-    tmr :> time_ticks; // Immediately
+    tmr :> time_ticks; // Almost immediately
 
     while (true) {
         ORDERED_PRI_SELECT // [[ordered]] or none
         select {
+            case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on th etop
+                // Every 10 ms RESOLUTION_PRINT_TIMEOUT_MS
+                cnts.print_time_ticks += PRINT_TIMEOUT_TICKS;
+                cnts.delta_print_10ms += 1; 
+            } break;
+
             case ch_ab_knock :> data_ch_ab_knock : {
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
                 // Build response
@@ -639,27 +664,6 @@ int main()
                 p1_out_purple_master, // Pin out for scope
                 p4_leds);             // LEDS for observing activity
         // (*) Same tile[0] so streaming chan does not occupy a route through the HW switch within the scope of the task
-    }
-    return 0;
-} // main
-
-
-int main()
-{
-    STREAMING chan ch_ab_knock ; // ch_ab_knock_t
-    chan           ch_ab_bidir ; // ch_ab_bidir_t
-    par {
-        on tile[0]:                   // .core[1]
-            task_a_slave (            // Must wait knock response to send 
-                ch_ab_bidir,          // ch_ab_bidir_t
-                ch_ab_knock,          // ch_ab_knock_t
-                p1_out_blue_slave);   // Pin out for scope
-        on tile[0]:                   // .core[0]
-            task_b_master (           // Can send any time
-                ch_ab_bidir,          // ch_ab_bidir_t
-                ch_ab_knock,          // ch_ab_knock_t
-                p1_out_purple_master, // Pin out for scope
-                p4_leds);             // LEDS for observing activity
     }
     return 0;
 } // main

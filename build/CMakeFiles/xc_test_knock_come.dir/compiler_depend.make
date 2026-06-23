@@ -67,6 +67,7 @@ CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJ
 
 CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/src/xc_test_knock_come.xc \
   /Applications/XMOS_XTC_15.3.1/target/include/_ansi.h \
+  /Applications/XMOS_XTC_15.3.1/target/include/clang/iso646.h \
   /Applications/XMOS_XTC_15.3.1/target/include/clang/stdarg.h \
   /Applications/XMOS_XTC_15.3.1/target/include/clang/stddef.h \
   /Applications/XMOS_XTC_15.3.1/target/include/limits.h \
@@ -105,6 +106,8 @@ CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: /Users/teig/Doc
 
 
 /Applications/XMOS_XTC_15.3.1/target/include/xc/safe/stdio.h:
+
+/Applications/XMOS_XTC_15.3.1/target/include/syscall.h:
 
 /Applications/XMOS_XTC_15.3.1/target/include/sys/types.h:
 
@@ -184,9 +187,9 @@ CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj: /Users/teig/Doc
 
 /Applications/XMOS_XTC_15.3.1/target/include/xs3a_defines.h:
 
-/Applications/XMOS_XTC_15.3.1/target/include/syscall.h:
-
 /Applications/XMOS_XTC_15.3.1/target/include/stdint.h:
+
+/Applications/XMOS_XTC_15.3.1/target/include/clang/iso646.h:
 
 /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/lib_random/api/random.h:
 
