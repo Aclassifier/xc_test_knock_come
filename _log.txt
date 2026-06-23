@@ -4,6 +4,8 @@ Time random max 10 us, cnt events at 1000 (Teig)
 
 // See blog note   scope capture
 
+// Analyzed by Teig: DT range [23.74s - 23.96s]
+
  *  Running xc_test_knock_come.xe
 XCC 1503.1 KNOCK-COME 0.0.917 on date Jun 23 2026 14:46:55
 Time random max 100000 us, cnt events at 1000 (Teig)
