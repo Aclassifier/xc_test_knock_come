@@ -43,13 +43,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.917" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.918" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 24Jun2026 0.0.918 USE_RANDOM_HW_SEED is new. Observe somewhat different "DT xx.yys" from this!
 // 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
 // 10Jun2026 0.0.916 Prettier
 // 09Jun2026 0.0.916 Removed three not needed include files
@@ -91,6 +92,7 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 #define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
 #define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
+#define USE_RANDOM_HW_SEED               1 // 0 default, 1 to test
 
 #define TIMER_FACTOR_KNOCKCOME_US 1 // microseconds, but not zero
 
@@ -280,21 +282,48 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 #define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
 
 #if (PRINT_KNOCKCOME==1)
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100 ms basically for printing
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
     #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
 #else
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10 us for SCOPE
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
     #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
 #endif
 //
+#define MAX_SUM_CNT 1000
+#define DATA_FIRST_AND_INC 1
+//
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
-#define MAX_SUM_CNT 1000
+// See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
+//
+#define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
+#define RANDOM_SEED_MASTER 8765 // --''--
+//
+// random_get_random_number: New value of random_seed or just let random_get_random_number use the one that it stores in
+// random seed yields the same result
+//
+// Use of random_create_generator_from_seed or random_create_generator_from_hw_seed 
+// Both create pesudo random numbers, and starting point is not interesting here, so I chose the second (starting at 0.0.917).
+// It uses a 32-bit LFSR (linear-feedback-shift register) to generate a pseudo random string of random bits.
+// The alternative slower (*) method in lib_random uses the on-chip ring oscillators to create a random bit
+// after some time has elapsed. I have not set this generation off to a saparate task, so I won't use it.
+// (*) Slower means RANDOM_RO_MIN_TIME_FOR_ONE_BIT gives 5000 bits/second, ie. [0-99] is seven bits, so it 
+// would mean 5000/7=715 new random values per second. Ok for the max 100 ms (average 50). For [0..9] we 
+// four bits, 5000/4=1250 per second, much too few than the 200000 needed for 5us average. However, since
+// the shortest is always 0, a new random value would have to be there immediately, which completely
+// outrules the ring oscillator solution. 
+//
+// Since update_fairness_cnts is called in task_b_master the theoretical values of "DT xx.yys" in the log
+// is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
 
-#define RANDOM_SEED_SLAVE  5678
-#define RANDOM_SEED_MASTER 8765
+#if (USE_RANDOM_HW_SEED==0)
+    #define RANDOM_CREATE_GENERATOR(seed) random_create_generator_from_seed(seed)    // Typical "DT 23.78s", "DT 23.95s"
+#elif (USE_RANDOM_HW_SEED==1)
+    #define RANDOM_CREATE_GENERATOR(not_used) random_create_generator_from_hw_seed() // Typical "DT 26.46s", "DT 26.61s"
+#else
+    #error
+#endif
 
-#define DATA_FIRST_AND_INC 1
 
 typedef struct {
     unsigned sent_cnt;
@@ -369,11 +398,11 @@ void print_and_clear_debug_cnts (cnts_t &cnts)
 // #if (PRINT_KNOCKCOME==0 or 1)
 void print_welcome_banner()
 {
-    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u us, cnt events at %u (Teig)\n\n",
+    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u us (hw seed %u), cnt events at %u (Teig)\n//\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
-            RANDOM_VAL_MAX_US, MAX_SUM_CNT);
+            RANDOM_VAL_MAX_US, USE_RANDOM_HW_SEED, MAX_SUM_CNT);
 } // print_welcome_banner
 
 
@@ -413,6 +442,18 @@ void print_ordered_banner()
 #endif
 
 
+// To assure correct scope channel for pin. Start scope in roll mode and auto trig
+//
+void exercise_p1_out_purple_master (port out p1_out_purple_master) {
+    
+    for (unsigned ix=0; ix<100; ix++) {
+        p1_out_purple_master <: ix;
+        delay_milliseconds (10); // 10 ms * 100 = 1 sec, so 50 pulses,
+    }
+    p1_out_purple_master <: PORT_LOW; // Since 99 yields a '1' PORT_HIGH
+} // exercise_p1_out_purple_master
+
+
 // =========================================================================================================================
 // Can only KNOCK to task_b_master and then wait for COME from task_b_master and then atomic send its DATA to task_b_master.
 // Must be able to accept DATA from task_b_master any time.
@@ -429,8 +470,7 @@ void task_a_slave (
     ch_ab_knock_t     data_ch_ab_knock;
     unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
     unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
-    unsigned          random_seed             = random_create_generator_from_seed(RANDOM_SEED_SLAVE); // xmos
-    unsigned          random_delay_us         = random_seed % RANDOM_VAL_MAX_US;
+    unsigned          random_seed             = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
     data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
@@ -478,10 +518,7 @@ void task_a_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                ch_ab_bidir_t data_ch_ab_bidir; // Here: limits scope of struct with union
-
-                random_delay_us = (random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US;
-                time_ticks     += (random_delay_us * XS1_TIMER_MHZ);
+                time_ticks += ((random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_seed updated!
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_ab_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
@@ -494,18 +531,6 @@ void task_a_slave (
         }
     }
 } // task_a_slave 
-
-
-// To assure correct scope channel for pin. Start scope in roll mode and auto trig
-//
-void exercise_p1_out_purple_master (port out p1_out_purple_master) {
-    
-    for (unsigned ix=0; ix<100; ix++) {
-        p1_out_purple_master <: ix;
-        delay_milliseconds (10); // 10 ms * 100 = 1 sec, so 50 pulses,
-    }
-    p1_out_purple_master <: PORT_LOW; // Since 99 yields a '1' PORT_HIGH
-} // exercise_p1_out_purple_master
 
 
 // ===================================================================================================================
@@ -524,8 +549,7 @@ void task_b_master (
     ch_ab_knock_t data_ch_ab_knock;
     unsigned      data_from_task_b_master = DATA_FIRST_AND_INC;
     unsigned      data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
-    unsigned      random_seed             = random_create_generator_from_seed(RANDOM_SEED_MASTER); // xmos
-    unsigned      random_delay_us         = random_seed % RANDOM_VAL_MAX_US;
+    unsigned      random_seed             =  RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
     cnts_t        cnts;
 
     init_debug_cnts (cnts); // Also sets print_time_ticks
@@ -586,8 +610,7 @@ void task_b_master (
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {
-                random_delay_us = (random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US;
-                time_ticks     += (random_delay_us * XS1_TIMER_MHZ);
+                time_ticks += ((random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_seed updated!
 
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
                 data_ch_ab_bidir.source = task_b;
