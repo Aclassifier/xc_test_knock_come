@@ -43,13 +43,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.918" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.919" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
 // 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
 // 24Jun2026 0.0.918 USE_RANDOM_HW_SEED is new. Observe somewhat different "DT xx.yys" from this!
 // 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
@@ -401,7 +402,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts)
 // #if (PRINT_KNOCKCOME==0 or 1)
 void print_welcome_banner()
 {
-    printf ("XCC %u.%u KNOCK-COME %s on date %s %s\nTime random max %u us (hw seed %u), cnt events at %u (Teig)\n//\n",
+    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us (hw seed %u), cnt events at %u (Teig)\n//\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
