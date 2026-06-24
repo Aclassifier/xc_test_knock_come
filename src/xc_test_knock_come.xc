@@ -50,6 +50,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
 // 24Jun2026 0.0.918 USE_RANDOM_HW_SEED is new. Observe somewhat different "DT xx.yys" from this!
 // 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
 // 10Jun2026 0.0.916 Prettier
@@ -315,7 +316,9 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 //
 // Since update_fairness_cnts is called in task_b_master the theoretical values of "DT xx.yys" in the log
 // is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
-
+//
+// See https://www.xcore.com/viewtopic.php?t=9317 "Different average random values when hw or sw seed and use of LFSR" on XCore Exchange
+//
 #if (USE_RANDOM_HW_SEED==0)
     #define RANDOM_CREATE_GENERATOR(seed) random_create_generator_from_seed(seed)    // Typical "DT 23.78s", "DT 23.95s"
 #elif (USE_RANDOM_HW_SEED==1)
