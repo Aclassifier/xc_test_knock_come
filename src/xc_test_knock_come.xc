@@ -49,6 +49,7 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 30Jun2026 0.0.922 typo
 // 30Jun2026 0.0.922 USE_RANDOM_SPECIAL 0 and 1 new and see _log.txt
 // 30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
 // 30Jun2026 0.0.920 randoms_t new, not used yet
@@ -303,7 +304,7 @@ typedef unsigned random_t; //uint32_t (random_get_random_number takes unsigned)
 
 typedef struct {
     random_generator_t random_generator;
-    random_t           random_number; // = random_seed on next usage. Will some times be typecast to signed
+    random_t           random_number; // Will some times be typecast to signed
     bool               use_random_negated; 
     unsigned           loop_for_pos_max_cnt;
     unsigned           drop_neg_cnt;
