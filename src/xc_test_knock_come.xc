@@ -1,7 +1,6 @@
 /*
  * xc_test_knock_come.xc
  *
- * 
  *  Created on: 20. mai 2026
  *      Author: oyvindteig
  *      This knock-come pattern implementation is described in-line here.
@@ -43,13 +42,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.919" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.920" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 30Jun2026 0.0.920 randoms_t new, not used yet
 // 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
 // 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
 // 24Jun2026 0.0.918 USE_RANDOM_HW_SEED is new. Observe somewhat different "DT xx.yys" from this!
@@ -296,6 +296,15 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 //
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
+typedef unsigned random_t; //uint32_t (random_get_random_number takes unsigned)
+
+typedef struct {
+    random_t random_number; // = random_seed on next usage. Will some times be typecast to signed
+    bool     use_random_negated; 
+    unsigned loop_for_pos_max_cnt;
+    unsigned drop_neg_cnt;
+} randoms_t;
+
 // See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
 //
 #define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
@@ -445,6 +454,17 @@ void print_ordered_banner()
     #define PRINT_ORDERED_BANNER
 #endif
 
+void init_randoms (
+    randoms_t      &randoms,
+    const random_t random_seed) {
+
+    randoms.random_number        = RANDOM_CREATE_GENERATOR(random_seed);
+    randoms.use_random_negated   = false;
+    randoms.loop_for_pos_max_cnt = 0;
+    randoms.drop_neg_cnt         = 0;
+
+} // init_randoms
+
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
 //
@@ -474,7 +494,10 @@ void task_a_slave (
     ch_ab_knock_t     data_ch_ab_knock;
     unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
     unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
-    unsigned          random_seed             = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
+    random_t          random_seed             = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
+    randoms_t         randoms;
+
+    init_randoms (randoms, RANDOM_SEED_SLAVE);
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
     data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
@@ -553,11 +576,14 @@ void task_b_master (
     ch_ab_knock_t data_ch_ab_knock;
     unsigned      data_from_task_b_master = DATA_FIRST_AND_INC;
     unsigned      data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
-    unsigned      random_seed             =  RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
+    random_t      random_seed             =  RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
     cnts_t        cnts;
+    randoms_t     randoms;
 
+    init_randoms (randoms, RANDOM_SEED_MASTER);
+    
     init_debug_cnts (cnts); // Also sets print_time_ticks
-        cnts.print_tmr :> cnts.print_time_ticks;  
+    cnts.print_tmr :> cnts.print_time_ticks;  
     cnts.delta_print_10ms = 0;
     exercise_p1_out_purple_master (p1_out_purple_master);
 
