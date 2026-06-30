@@ -42,13 +42,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.920" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.921" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
 // 30Jun2026 0.0.920 randoms_t new, not used yet
 // 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
 // 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
@@ -299,10 +300,11 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 typedef unsigned random_t; //uint32_t (random_get_random_number takes unsigned)
 
 typedef struct {
-    random_t random_number; // = random_seed on next usage. Will some times be typecast to signed
-    bool     use_random_negated; 
-    unsigned loop_for_pos_max_cnt;
-    unsigned drop_neg_cnt;
+    random_generator_t random_generator;
+    random_t           random_number; // = random_seed on next usage. Will some times be typecast to signed
+    bool               use_random_negated; 
+    unsigned           loop_for_pos_max_cnt;
+    unsigned           drop_neg_cnt;
 } randoms_t;
 
 // See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
@@ -337,7 +339,6 @@ typedef struct {
     #error
 #endif
 
-
 typedef struct {
     unsigned sent_cnt;
     unsigned rec_cnt;
@@ -352,7 +353,6 @@ typedef struct {
     time32_t print_time_ticks;
     unsigned delta_print_10ms;
 } cnts_t;
-
 
 void reset_debug_cnts (cnts_t &cnts)
 {
@@ -458,12 +458,15 @@ void init_randoms (
     randoms_t      &randoms,
     const random_t random_seed) {
 
-    randoms.random_number        = RANDOM_CREATE_GENERATOR(random_seed);
+    randoms.random_generator     = RANDOM_CREATE_GENERATOR(random_seed);
+    // randoms.random_number     = 0; Not needed
     randoms.use_random_negated   = false;
     randoms.loop_for_pos_max_cnt = 0;
     randoms.drop_neg_cnt         = 0;
 
 } // init_randoms
+
+// random_get_random_number (random_generator)
 
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
@@ -487,15 +490,15 @@ void task_a_slave (
     STREAMING chanend ch_ab_knock,       // ch_ab_knock_t
     port out          p1_out_blue_slave) // bit0
 {
-    timer             tmr;
-    time32_t          time_ticks;
-    ch_ab_bidir_t     data_ch_ab_bidir;
-    KnockCome_State_e KnockCome_State;
-    ch_ab_knock_t     data_ch_ab_knock;
-    unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
-    unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
-    random_t          random_seed             = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
-    randoms_t         randoms;
+    timer              tmr;
+    time32_t           time_ticks;
+    ch_ab_bidir_t      data_ch_ab_bidir;
+    KnockCome_State_e  KnockCome_State;
+    ch_ab_knock_t      data_ch_ab_knock;
+    unsigned           data_from_task_a_slave  = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
+    random_generator_t random_generator        = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
+    randoms_t          randoms;
 
     init_randoms (randoms, RANDOM_SEED_SLAVE);
 
@@ -545,7 +548,7 @@ void task_a_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                time_ticks += ((random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_seed updated!
+                time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_ab_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
@@ -570,15 +573,15 @@ void task_b_master (
     port out          p1_out_purple_master, // bit0
     port out          p4_leds)              // bit0-3
 {
-    timer         tmr;
-    time32_t      time_ticks;
-    ch_ab_bidir_t data_ch_ab_bidir;
-    ch_ab_knock_t data_ch_ab_knock;
-    unsigned      data_from_task_b_master = DATA_FIRST_AND_INC;
-    unsigned      data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
-    random_t      random_seed             =  RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
-    cnts_t        cnts;
-    randoms_t     randoms;
+    timer              tmr;
+    time32_t           time_ticks;
+    ch_ab_bidir_t      data_ch_ab_bidir;
+    ch_ab_knock_t      data_ch_ab_knock;
+    unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
+    random_generator_t random_generator        =  RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
+    cnts_t             cnts;
+    randoms_t          randoms;
 
     init_randoms (randoms, RANDOM_SEED_MASTER);
     
@@ -640,7 +643,7 @@ void task_b_master (
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {
-                time_ticks += ((random_get_random_number (random_seed)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_seed updated!
+                time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
 
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
                 data_ch_ab_bidir.source = task_b;
