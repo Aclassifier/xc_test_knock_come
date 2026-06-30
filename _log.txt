@@ -1,4 +1,41 @@
-Newwat in top:
+Newest in top:
+
+// USE_RANDOM_SPECIAL=1 qwe second time "ok"
+XCC 1503.1 KNOCK-COME v0.0.922 on date Jun 30 2026 20:29:25
+Time random max 100000 us (hw seed 1), cnt events at 1000 (Teig)
+//
+REC 0   =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+REC 499 >       SENT 501        (>603 =257 <140)        SUM (REC 499 < SENT 501)        DT 25.46s
+REC 501 >       SENT 499        (>604 =259 <137)        SUM (REC 1000 = SENT 1000)      DT 25.54s
+REC 498 >       SENT 502        (>0 =30 <970)   SUM (REC 1498 < SENT 1502)      DT 25.42s
+
+// USE_RANDOM_SPECIAL=1 qwe so low!!
+XCC 1503.1 KNOCK-COME v0.0.922 on date Jun 30 2026 20:29:25
+Time random max 100000 us (hw seed 1), cnt events at 1000 (Teig)
+//
+REC 0   =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+REC 501 >       SENT 499        (>908 =91 <1)   SUM (REC 501 > SENT 499)        DT 19.74s
+REC 499 >       SENT 501        (>0 =0 <1000)   SUM (REC 1000 = SENT 1000)      DT 19.71s
+REC 499 >       SENT 501        (>0 =0 <1000)   SUM (REC 1499 < SENT 1501)      DT 19.67s
+
+// USE_RANDOM_SPECIAL=0 qwe second time "ok"
+XCC 1503.1 KNOCK-COME v0.0.921 on date Jun 30 2026 20:22:57
+Time random max 100000 us (hw seed 1), cnt events at 1000 (Teig)
+//
+REC 0   =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+REC 500 >       SENT 500        (>813 =170 <17) SUM (REC 500 = SENT 500)        DT 24.29s
+REC 500 >       SENT 500        (>75 =332 <593) SUM (REC 1000 = SENT 1000)      DT 24.30s
+REC 499 >       SENT 501        (>0 =78 <922)   SUM (REC 1499 < SENT 1501)      DT 24.28s
+
+// USE_RANDOM_SPECIAL=0 qwe so low!!
+XCC 1503.1 KNOCK-COME v0.0.922 on date Jun 30 2026 20:22:57
+Time random max 100000 us (hw seed 1), cnt events at 1000 (Teig)
+//
+REC 0   =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+REC 501 >       SENT 499        (>937 =62 <1)   SUM (REC 501 > SENT 499)        DT 19.60s
+REC 499 >       SENT 501        (>0 =0 <1000)   SUM (REC 1000 = SENT 1000)      DT 19.55s
+REC 499 >       SENT 501        (>0 =317 <683)  SUM (REC 1499 < SENT 1501)      DT 19.59s
+REC 499 >       SENT 501        (>0 =0 <1000)   SUM (REC 1998 < SENT 2002)      DT 19.70s
 
 XCC 1503.1 KNOCK-COME v0.0.921 on date Jun 30 2026 19:39:43
 Time random max 100000 us (hw seed 1), cnt events at 1000 (Teig)
