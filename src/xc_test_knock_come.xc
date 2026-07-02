@@ -49,8 +49,9 @@
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
 // 30Jun2026 0.0.922 typo
-// 30Jun2026 0.0.922 USE_RANDOM_SPECIAL 0 and 1 new and see _log.txt
+// 30Jun2026 0.0.922 USE_RANDOM_SYMMETRIC 0 and 1 new and see _log.txt
 // 30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
 // 30Jun2026 0.0.920 randoms_t new, not used yet
 // 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
@@ -98,7 +99,7 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
 #define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
 #define USE_RANDOM_HW_SEED               1 // 0 default, 1 to test
-#define USE_RANDOM_SPECIAL               1 // 0 default, 1 to test with full random_generator_t
+#define USE_RANDOM_SYMMETRIC             1 // 0 default, 1 to test with full random_generator_t
 
 #define TIMER_FACTOR_KNOCKCOME_US 1 // microseconds, but not zero
 
@@ -300,15 +301,18 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 //
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
-typedef unsigned random_t; //uint32_t (random_get_random_number takes unsigned)
+typedef unsigned random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
+typedef signed   random_signed32_t;
 
 typedef struct {
-    random_generator_t random_generator;
-    random_t           random_number; // Will some times be typecast to signed
-    bool               use_random_negated; 
-    unsigned           loop_for_pos_max_cnt;
-    unsigned           drop_neg_cnt;
+    random_generator_t  random_generator;
+    random_unsigned32_t next_random_number;
+    bool                use_random_negated; 
+    unsigned            loop_for_pos_cnt_max;
+    unsigned            drop_neg_cnt;
 } randoms_t;
+//
+#define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
 
 // See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
 //
@@ -460,21 +464,67 @@ void print_ordered_banner()
 
 void init_randoms (
     randoms_t      &randoms,
-    const random_t random_seed) {
+    const random_unsigned32_t random_seed) {
 
-    randoms.random_generator     = RANDOM_CREATE_GENERATOR(random_seed);
-    // randoms.random_number     = 0; Not here
-    randoms.use_random_negated   = false;
-    randoms.loop_for_pos_max_cnt = 0;
-    randoms.drop_neg_cnt         = 0;
+    randoms.random_generator      = RANDOM_CREATE_GENERATOR(random_seed);
+    // randoms.next_random_number = 0; Not here
+    randoms.use_random_negated    = false;
+    randoms.loop_for_pos_cnt_max  = 0;
+    randoms.drop_neg_cnt          = 0;
 } // init_randoms
 
 
-random_t random_get_random_number_local (randoms_t &randoms) {
+// Algorithm invented by me, Øyvind Teig in June 2026
+// Not yet tested. For every even number of pseudo-random values asked for,
+// the mean value will be half the value of the UINT_MAX range, ie. 
+// UINT_MAX (4294967295) / 2 = 0b 1111.1111 = -1 signed
+//
+void next_symmetric_pseudo_random_number (randoms_t &randoms) {
+    if (randoms.use_random_negated) {
+        // Use negative value of last positive
+        // This makes it symmetric around zero, seen as signed, however..
+        // .. seem as unsigned it is symmetric on half the number range
+        random_signed32_t random_signed32;
+        
+        random_signed32            = (random_signed32_t) randoms.next_random_number;
+        randoms.next_random_number = (random_unsigned32_t) (-random_signed32);
+        randoms.use_random_negated = false;
+    } else {
+        random_unsigned32_t next_random_number = 0;
+        unsigned            loop_for_pos_cnt   = 1;
 
-    randoms.random_number = random_get_random_number (randoms.random_generator);
-    return randoms.random_number;
-}
+        while (next_random_number >= 0) {
+            loop_for_pos_cnt++;
+            next_random_number = random_get_random_number (randoms.random_generator);
+            if (((signed) next_random_number) < 0) {
+                // Drop negative value
+                // If like "n" dropped here those calls have been "used up", but since each number 
+                // is reached once, and only once, it will be balanced with "n" calls that
+                // will return positive values
+                randoms.drop_neg_cnt++;
+                xassert (randoms.drop_neg_cnt <= DROP_NEG_CNT_MAX);
+            } else {
+                // Use postive value, but next time, use the negative value of it
+                randoms.next_random_number = next_random_number;
+                randoms.use_random_negated = true; // Use as negative next time
+            }
+        }
+        if (loop_for_pos_cnt > randoms.loop_for_pos_cnt_max) {
+            randoms.loop_for_pos_cnt_max = loop_for_pos_cnt;
+        } else {}
+    }
+} // next_symmetric_pseudo_random_number
+
+
+random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
+    #if (USE_RANDOM_SYMMETRIC == 0)
+          randoms.next_random_number = random_get_random_number (randoms.random_generator);
+    #elif (USE_RANDOM_SYMMETRIC == 1)
+        next_symmetric_pseudo_random_number (randoms); // Return already in randoms.next_random_number
+    #endif
+
+    return randoms.next_random_number;
+} // random_get_random_number_special
 
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
@@ -506,7 +556,7 @@ void task_a_slave (
     unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
     unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t         randoms;
-    #if (USE_RANDOM_SPECIAL == 0)
+    #if (USE_RANDOM_SYMMETRIC == 0)
         random_generator_t random_generator = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
     #endif
 
@@ -558,10 +608,10 @@ void task_a_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                #if (USE_RANDOM_SPECIAL == 0)
+                #if (USE_RANDOM_SYMMETRIC == 0)
                     time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #elif (USE_RANDOM_SPECIAL == 1)
-                    time_ticks += ((random_get_random_number_local (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
+                #elif (USE_RANDOM_SYMMETRIC == 1)
+                    time_ticks += ((random_get_random_number_special (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
                 #else
                     #error
                 #endif
@@ -597,7 +647,7 @@ void task_b_master (
     unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
     cnts_t             cnts;
     randoms_t          randoms;
-    #if (USE_RANDOM_SPECIAL == 0)
+    #if (USE_RANDOM_SYMMETRIC == 0)
         random_generator_t random_generator = RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
     #endif
 
@@ -661,10 +711,10 @@ void task_b_master (
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {
-                #if (USE_RANDOM_SPECIAL == 0)
+                #if (USE_RANDOM_SYMMETRIC == 0)
                     time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #elif (USE_RANDOM_SPECIAL == 1)
-                    time_ticks += ((random_get_random_number_local (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
+                #elif (USE_RANDOM_SYMMETRIC == 1)
+                    time_ticks += ((random_get_random_number_special (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
                 #else
                     #error
                 #endif

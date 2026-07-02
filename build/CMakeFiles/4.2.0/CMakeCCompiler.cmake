@@ -23,7 +23,6 @@ set(CMAKE_C_COMPILER_ARCHITECTURE_ID "")
 
 
 
-
 set(CMAKE_AR "xmosar")
 set(CMAKE_C_COMPILER_AR "xmosar")
 set(CMAKE_RANLIB "echo")

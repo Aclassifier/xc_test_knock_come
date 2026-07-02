@@ -35,7 +35,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/uname"
       - "/usr/local/bin/uname"
@@ -58,7 +57,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -103,7 +101,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     found: "/Applications/XMOS_XTC_15.3.1/bin/xcc"
     search_context:
       ENV{PATH}:
@@ -122,12 +119,11 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -167,7 +163,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -191,8 +186,8 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -232,7 +227,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -254,7 +248,7 @@ events:
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
       
       The CXX compiler identification is Clang, found in:
-        /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/4.3.2/CompilerIdCXX/CMakeCXXCompilerId.o
+        /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/4.2.0/CompilerIdCXX/CMakeCXXCompilerId.o
       
   -
     kind: "find-v1"
@@ -291,7 +285,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/strip"
       - "/usr/local/bin/strip"
@@ -314,7 +307,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -351,7 +343,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/ld.lld"
       - "/usr/local/bin/ld.lld"
@@ -367,7 +358,6 @@ events:
       - "/opt/X11/bin/ld.lld"
       - "/usr/texbin/ld.lld"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/ld.lld"
-      - "/Users/teig/.cargo/bin/ld.lld"
       - "/Applications/XMOS_XTC_15.3.1/bin/ld"
       - "/usr/local/bin/ld"
       - "/System/Cryptexes/App/usr/bin/ld"
@@ -389,7 +379,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -426,7 +415,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-nm"
       - "/usr/local/bin/llvm-nm"
@@ -442,7 +430,6 @@ events:
       - "/opt/X11/bin/llvm-nm"
       - "/usr/texbin/llvm-nm"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-nm"
-      - "/Users/teig/.cargo/bin/llvm-nm"
       - "/Applications/XMOS_XTC_15.3.1/bin/nm"
       - "/usr/local/bin/nm"
       - "/System/Cryptexes/App/usr/bin/nm"
@@ -464,7 +451,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -500,7 +486,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/objdump"
       - "/usr/local/bin/objdump"
@@ -523,7 +508,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -559,7 +543,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/objcopy"
       - "/usr/local/bin/objcopy"
@@ -575,7 +558,6 @@ events:
       - "/opt/X11/bin/objcopy"
       - "/usr/texbin/objcopy"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/objcopy"
-      - "/Users/teig/.cargo/bin/objcopy"
     found: false
     search_context:
       ENV{PATH}:
@@ -594,7 +576,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -631,7 +612,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-readelf"
       - "/usr/local/bin/llvm-readelf"
@@ -647,7 +627,6 @@ events:
       - "/opt/X11/bin/llvm-readelf"
       - "/usr/texbin/llvm-readelf"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-readelf"
-      - "/Users/teig/.cargo/bin/llvm-readelf"
       - "/Applications/XMOS_XTC_15.3.1/bin/readelf"
       - "/usr/local/bin/readelf"
       - "/System/Cryptexes/App/usr/bin/readelf"
@@ -662,7 +641,6 @@ events:
       - "/opt/X11/bin/readelf"
       - "/usr/texbin/readelf"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/readelf"
-      - "/Users/teig/.cargo/bin/readelf"
     found: false
     search_context:
       ENV{PATH}:
@@ -681,7 +659,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -718,7 +695,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-dlltool"
       - "/usr/local/bin/llvm-dlltool"
@@ -734,7 +710,6 @@ events:
       - "/opt/X11/bin/llvm-dlltool"
       - "/usr/texbin/llvm-dlltool"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-dlltool"
-      - "/Users/teig/.cargo/bin/llvm-dlltool"
       - "/Applications/XMOS_XTC_15.3.1/bin/dlltool"
       - "/usr/local/bin/dlltool"
       - "/System/Cryptexes/App/usr/bin/dlltool"
@@ -749,7 +724,6 @@ events:
       - "/opt/X11/bin/dlltool"
       - "/usr/texbin/dlltool"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/dlltool"
-      - "/Users/teig/.cargo/bin/dlltool"
     found: false
     search_context:
       ENV{PATH}:
@@ -768,7 +742,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -805,7 +778,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-addr2line"
       - "/usr/local/bin/llvm-addr2line"
@@ -821,7 +793,6 @@ events:
       - "/opt/X11/bin/llvm-addr2line"
       - "/usr/texbin/llvm-addr2line"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-addr2line"
-      - "/Users/teig/.cargo/bin/llvm-addr2line"
       - "/Applications/XMOS_XTC_15.3.1/bin/addr2line"
       - "/usr/local/bin/addr2line"
       - "/System/Cryptexes/App/usr/bin/addr2line"
@@ -836,7 +807,6 @@ events:
       - "/opt/X11/bin/addr2line"
       - "/usr/texbin/addr2line"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/addr2line"
-      - "/Users/teig/.cargo/bin/addr2line"
     found: false
     search_context:
       ENV{PATH}:
@@ -855,7 +825,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -891,7 +860,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/tapi"
       - "/usr/local/bin/tapi"
@@ -907,7 +875,6 @@ events:
       - "/opt/X11/bin/tapi"
       - "/usr/texbin/tapi"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/tapi"
-      - "/Users/teig/.cargo/bin/tapi"
     found: false
     search_context:
       ENV{PATH}:
@@ -926,7 +893,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -965,7 +931,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib-3.6"
       - "/usr/local/bin/llvm-ranlib-3.6"
@@ -981,7 +946,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib-3.6"
       - "/usr/texbin/llvm-ranlib-3.6"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib-3.6"
-      - "/Users/teig/.cargo/bin/llvm-ranlib-3.6"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib-3"
       - "/usr/local/bin/llvm-ranlib-3"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib-3"
@@ -996,7 +960,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib-3"
       - "/usr/texbin/llvm-ranlib-3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib-3"
-      - "/Users/teig/.cargo/bin/llvm-ranlib-3"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib3"
       - "/usr/local/bin/llvm-ranlib3"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib3"
@@ -1011,7 +974,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib3"
       - "/usr/texbin/llvm-ranlib3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib3"
-      - "/Users/teig/.cargo/bin/llvm-ranlib3"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib"
       - "/usr/local/bin/llvm-ranlib"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib"
@@ -1026,7 +988,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib"
       - "/usr/texbin/llvm-ranlib"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib"
-      - "/Users/teig/.cargo/bin/llvm-ranlib"
     found: false
     search_context:
       ENV{PATH}:
@@ -1045,7 +1006,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -1084,7 +1044,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps-3.6"
       - "/usr/local/bin/clang-scan-deps-3.6"
@@ -1100,7 +1059,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps-3.6"
       - "/usr/texbin/clang-scan-deps-3.6"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps-3.6"
-      - "/Users/teig/.cargo/bin/clang-scan-deps-3.6"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps-3"
       - "/usr/local/bin/clang-scan-deps-3"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps-3"
@@ -1115,7 +1073,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps-3"
       - "/usr/texbin/clang-scan-deps-3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps-3"
-      - "/Users/teig/.cargo/bin/clang-scan-deps-3"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps3"
       - "/usr/local/bin/clang-scan-deps3"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps3"
@@ -1130,7 +1087,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps3"
       - "/usr/texbin/clang-scan-deps3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps3"
-      - "/Users/teig/.cargo/bin/clang-scan-deps3"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps"
       - "/usr/local/bin/clang-scan-deps"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps"
@@ -1145,7 +1101,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps"
       - "/usr/texbin/clang-scan-deps"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps"
-      - "/Users/teig/.cargo/bin/clang-scan-deps"
     found: false
     search_context:
       ENV{PATH}:
@@ -1164,7 +1119,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -1200,7 +1154,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     found: "/Applications/XMOS_XTC_15.3.1/bin/xcc"
     search_context:
       ENV{PATH}:
@@ -1219,12 +1172,11 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -1264,7 +1216,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -1288,8 +1239,8 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:468 (find_file)"
-      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:506 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "/usr/local/share/cmake/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
@@ -1329,7 +1280,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -1351,7 +1301,7 @@ events:
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
       
       The C compiler identification is Clang, found in:
-        /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/4.3.2/CompilerIdC/CMakeCCompilerId.o
+        /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/xc_test_knock_come/build/CMakeFiles/4.2.0/CompilerIdC/CMakeCCompilerId.o
       
   -
     kind: "find-v1"
@@ -1391,7 +1341,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib-3.6"
       - "/usr/local/bin/llvm-ranlib-3.6"
@@ -1407,7 +1356,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib-3.6"
       - "/usr/texbin/llvm-ranlib-3.6"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib-3.6"
-      - "/Users/teig/.cargo/bin/llvm-ranlib-3.6"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib-3"
       - "/usr/local/bin/llvm-ranlib-3"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib-3"
@@ -1422,7 +1370,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib-3"
       - "/usr/texbin/llvm-ranlib-3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib-3"
-      - "/Users/teig/.cargo/bin/llvm-ranlib-3"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib3"
       - "/usr/local/bin/llvm-ranlib3"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib3"
@@ -1437,7 +1384,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib3"
       - "/usr/texbin/llvm-ranlib3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib3"
-      - "/Users/teig/.cargo/bin/llvm-ranlib3"
       - "/Applications/XMOS_XTC_15.3.1/bin/llvm-ranlib"
       - "/usr/local/bin/llvm-ranlib"
       - "/System/Cryptexes/App/usr/bin/llvm-ranlib"
@@ -1452,7 +1398,6 @@ events:
       - "/opt/X11/bin/llvm-ranlib"
       - "/usr/texbin/llvm-ranlib"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/llvm-ranlib"
-      - "/Users/teig/.cargo/bin/llvm-ranlib"
     found: false
     search_context:
       ENV{PATH}:
@@ -1471,7 +1416,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -1510,7 +1454,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     searched_directories:
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps-3.6"
       - "/usr/local/bin/clang-scan-deps-3.6"
@@ -1526,7 +1469,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps-3.6"
       - "/usr/texbin/clang-scan-deps-3.6"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps-3.6"
-      - "/Users/teig/.cargo/bin/clang-scan-deps-3.6"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps-3"
       - "/usr/local/bin/clang-scan-deps-3"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps-3"
@@ -1541,7 +1483,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps-3"
       - "/usr/texbin/clang-scan-deps-3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps-3"
-      - "/Users/teig/.cargo/bin/clang-scan-deps-3"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps3"
       - "/usr/local/bin/clang-scan-deps3"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps3"
@@ -1556,7 +1497,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps3"
       - "/usr/texbin/clang-scan-deps3"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps3"
-      - "/Users/teig/.cargo/bin/clang-scan-deps3"
       - "/Applications/XMOS_XTC_15.3.1/bin/clang-scan-deps"
       - "/usr/local/bin/clang-scan-deps"
       - "/System/Cryptexes/App/usr/bin/clang-scan-deps"
@@ -1571,7 +1511,6 @@ events:
       - "/opt/X11/bin/clang-scan-deps"
       - "/usr/texbin/clang-scan-deps"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/clang-scan-deps"
-      - "/Users/teig/.cargo/bin/clang-scan-deps"
     found: false
     search_context:
       ENV{PATH}:
@@ -1590,7 +1529,6 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -1626,7 +1564,6 @@ events:
       - "/opt/X11/bin/"
       - "/usr/texbin/"
       - "/Library/Frameworks/Mono.framework/Versions/Current/Commands/"
-      - "/Users/teig/.cargo/bin/"
     found: "/Applications/XMOS_XTC_15.3.1/bin/xcc"
     search_context:
       ENV{PATH}:
@@ -1645,5 +1582,4 @@ events:
         - "/opt/X11/bin"
         - "/usr/texbin"
         - "/Library/Frameworks/Mono.framework/Versions/Current/Commands"
-        - "/Users/teig/.cargo/bin"
 ...

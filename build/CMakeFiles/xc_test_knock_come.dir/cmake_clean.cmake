@@ -7,8 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/lib_random/src/random_init.c.obj.d"
   "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/lib_random/src/ro_random.c.obj"
   "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/lib_random/src/ro_random.c.obj.d"
-  "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_xassert/lib_xassert/src/xassert.xc.obj"
-  "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_xassert/lib_xassert/src/xassert.xc.obj.d"
+  "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_xassert/lib_xassert/src/xassert.c.obj"
+  "CMakeFiles/xc_test_knock_come.dir/Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_xassert/lib_xassert/src/xassert.c.obj.d"
   "CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj"
   "CMakeFiles/xc_test_knock_come.dir/src/xc_test_knock_come.xc.obj.d"
 )
