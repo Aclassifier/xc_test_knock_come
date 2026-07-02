@@ -42,13 +42,14 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.922" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.0.924" // x.y.zzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // =============================================================================================
 // VERSIONS / COMMITS
 // =============================================================================================
+// 02Jun2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
 // 02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
 // 30Jun2026 0.0.922 typo
 // 30Jun2026 0.0.922 USE_RANDOM_SYMMETRIC 0 and 1 new and see _log.txt
@@ -306,10 +307,10 @@ typedef signed   random_signed32_t;
 
 typedef struct {
     random_generator_t  random_generator;
-    random_unsigned32_t next_random_number;
+    random_unsigned32_t next_random_number;   // Will then be used as (unsigned)((signed)(-next_random_number))
     bool                use_random_negated; 
-    unsigned            loop_for_pos_cnt_max;
-    unsigned            drop_neg_cnt;
+    unsigned            loop_for_pos_cnt_max; // debug
+    unsigned            drop_neg_cnt;         // debug
 } randoms_t;
 //
 #define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
@@ -479,7 +480,7 @@ void init_randoms (
 // the mean value will be half the value of the UINT_MAX range, ie. 
 // UINT_MAX (4294967295) / 2 = 0b 1111.1111 = -1 signed
 //
-void next_symmetric_pseudo_random_number (randoms_t &randoms) {
+void next_symmetric_random_get_random_number (randoms_t &randoms) {
     if (randoms.use_random_negated) {
         // Use negative value of last positive
         // This makes it symmetric around zero, seen as signed, however..
@@ -513,14 +514,14 @@ void next_symmetric_pseudo_random_number (randoms_t &randoms) {
             randoms.loop_for_pos_cnt_max = loop_for_pos_cnt;
         } else {}
     }
-} // next_symmetric_pseudo_random_number
+} // next_symmetric_random_get_random_number
 
 
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #if (USE_RANDOM_SYMMETRIC == 0)
           randoms.next_random_number = random_get_random_number (randoms.random_generator);
     #elif (USE_RANDOM_SYMMETRIC == 1)
-        next_symmetric_pseudo_random_number (randoms); // Return already in randoms.next_random_number
+        next_symmetric_random_get_random_number (randoms); // Return already in randoms.next_random_number
     #endif
 
     return randoms.next_random_number;
