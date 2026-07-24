@@ -8,10 +8,12 @@
  * The algorithm / implementations are also described from these links:
  *   [The "knock-come" deadlock free pattern]
  *       https://www.teigfam.net/oyvind/home/technology/009-the-knock-come-deadlock-free-pattern/
- *   [xc_test_knock_come]
+ *   [xc_test_knock_come GitHub XC]
  *       https://github.com/Aclassifier/xc_test_knock_come/tree/master
  *   [My Beep-BRRR notes - Decoupling slave_task_a and master_task_b - Implementation D]
  *       https://www.teigfam.net/oyvind/home/technology/219-my-beep-brrr-notes/#implementation_d
+ *   [xc_test_knock_come GitHub Rust]
+ *       https://github.com/Aclassifier/rust_test_knock_come/tree/master
  *
  * Some discussion here:
  * slave_task_a and master_task_b want to spontaneously send to the other part. With only synchronous non-buffered
@@ -42,13 +44,16 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.0.924" // x.y.zzz
+#define KNOCK_COME_VERSION_STR "0.925" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
-// =============================================================================================
+// ===================================================================================================================
 // VERSIONS / COMMITS
-// =============================================================================================
+// ===================================================================================================================
+// 24Jul2926 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
+//                   Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
+//                   and PRINT_OR_SCOPE. USE_RANDOM_SYMMETRIC=1 compiles and runs but algorithm not verified yet
 // 02Jun2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
 // 02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
 // 30Jun2026 0.0.922 typo
@@ -64,24 +69,24 @@
 // 09Jun2026 0.0.916 Prettier code file here 
 // 09Jun2026 0.0.916 Possible to use ports for scope instead of logs.
 //                   <syscall.h> introduced since XTC_ExampleXCommonCMake came with it
-//                   PRINT_KNOCKCOME is new
+//                   PRINT_OR_SCOPE is new 
 //                   TIMER_FACTOR_KNOCKCOME_US is new, to enable fast scope'ing
 // 27May2026 0.0.915 First commit with XTC compiled ok, CMake and CMakeLists.txt
 // 26May2026 0.0.914 Welcome printing different sequence
 // 26May2026 0.0.913 No code change, another XCore Exchange entry referenced. Some empty lines
 // 26May2026 0.0.913 No change of code, more comments
 // 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
-//                   TEST_NOT_ORDERED_PRI_SELECT is new
+//                   USE_ORDERED_PRI_SELECT_MASTER is new
 // 25May2026 0.0.912 was committed by GitHub desktop on macOS Tahoe and then
 //                   https://github.com/Aclassifier/xc_test_knock_come/tree/master created
 //                   Then ChronoSync'ed back to the xTIMEcomposer 2010 mac Mini. No code change
 // 24May2026 0.0.912 URL to blog note updated
 //                   Description uodated and some renaming
-//                   task_a_master -> task_b_master
+//                   task_a_master -> task_master
 // 24May2026 0.0.911 print_and_clear_debug_cnts added last > = <
 //                   print_welcome_banner is new
 //                   Conditional printing done in macros
-// 23May2026 0.0.910 ch_ba_knock -> ch_ab_knock
+// 23May2026 0.0.910 ch_ba_knock -> ch_knock
 //                   TEST_DEADLOCK_NO_STREAMING_CHAN is new
 // 21May2026 0.0.900 Initial version. Sent to Antonio
 // =============================================================================================
@@ -94,18 +99,27 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
 
 typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 
-#define DEBUG_KNOCKCOME                  1 // 0 default, 1 test of state transitions
-#define PRINT_KNOCKCOME                  1 // 0 default no printing and nice for FAST SCOPE, 1 log produced and ok for ROLL SCOPE
-#define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
-#define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_ab_knock, 1 double send will cause double COME and crash
-#define TEST_NOT_ORDERED_PRI_SELECT      0 // 0 default, 1 to test
-#define USE_RANDOM_HW_SEED               1 // 0 default, 1 to test
-#define USE_RANDOM_SYMMETRIC             1 // 0 default, 1 to test with full random_generator_t
+//                                LEDS COUNT ABOUT THE SAME RATE FOR BOTH
+#define SPEED_SLOW_AND_PRINT 0 // Scope possible: use ROLL scope
+#define SPEED_FAST_AND_SCOPE 1 // Scope 5 us/div two channels and SINGLE shots
+
+#define DEBUG_KNOCKCOME                   1 // 0 default, 1 test of state transitions
+#define PRINT_OR_SCOPE                    SPEED_SLOW_AND_PRINT
+#define TEST_DEADLOCK_NO_STREAMING_CHAN   0 // 0 default to get it to work, 1 deadlocks
+#define TEST_STREAMING_CHAN_DOUBLE_KNOCK  0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
+#define USE_ORDERED_PRI_SELECT_MASTER     0 // 0 default, 1 to test (*)
+#define USE_ORDERED_PRI_SELECT_SLAVE      0 // 0 default, 1 to test (*)
+#define USE_RANDOM_HW_SEED                1 // 0 default, 1 to test
+#define USE_RANDOM_SYMMETRIC              0 // 0 default, 1 to test with full random_generator_t
+//
+// (*) Observe that the Promela code to verify this pattern proves that it does not deadlock with its
+// non-deterministic handling of the if :: case 1 :: case 2 fi; select / ALT. No [[ordered]] or "biased" (Rust tokio) 
+// See https://www.teigfam.net/oyvind/home/technology/009-the-knock-come-deadlock-free-pattern/#formal_proof_of_deadlock_freedom
 
 #define TIMER_FACTOR_KNOCKCOME_US 1 // microseconds, but not zero
 
 #if ((TEST_DEADLOCK_NO_STREAMING_CHAN==0) or (DEBUG_KNOCKCOME==0)) 
-    #define STREAMING streaming // Default. ch_ab_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
+    #define STREAMING streaming // Default. ch_knock the HW layer buffers at leat TWO 32 bits words, see TEST_STREAMING_CHAN_DOUBLE_KNOCK==1
     // See https://www.xcore.com/viewtopic.php?t=9298 "XC and the size of streaming chan buffer" on XCore Exchange
     //   Is there some list anywhere about the size of streaming chan buffer on the different architectures X1, X2, X3?
     //   And is a buffer element always 32 bits wide?
@@ -121,7 +135,7 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
     //   so streaming channels should be used cautiously across tiles. This code uses single tile, so streaming chan use is fine.
     //   The protocol is different so you cannot mix streaming/no streaming channel end types.
 #else 
-    #define STREAMING // ch_ab_knock not buffered will cause deadlock!
+    #define STREAMING // ch_knock not buffered will cause deadlock!
     #warning Not streaming knock chan!
 #endif
 
@@ -132,9 +146,9 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
     #warning Double knock!
 #endif
 
-#if ((TEST_NOT_ORDERED_PRI_SELECT==0) or (DEBUG_KNOCKCOME==0)) 
-    #define ORDERED_PRI_SELECT [[ordered]] // Default. Probably not necessary (but not proven), since KnockCome_State_e, and
-    //                                        since "unspecified" below probably is implemented as ordered anyhow
+#if ((USE_ORDERED_PRI_SELECT_SLAVE==1) or (DEBUG_KNOCKCOME==0)) 
+    #define ORDERED_PRI_SELECT_SLAVE [[ordered]] // Default. Probably not necessary (but not proven), since KnockCome_State_e, and
+    //                                              since "unspecified" below probably is implemented as ordered anyhow
     // 
     // XMOS Programming Guide (2015/9/18)
     //   Ordering
@@ -143,8 +157,13 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
     //     Sometimes it is useful to force a priority by using the [[ordered]] attribute which
     //     says that a select is presented with events ordered in priority from highest to lowest.
 #else
-    #define ORDERED_PRI_SELECT // Seems to run just as good as the alternative
-    #warning Not [[ordered]] pri selects
+    #define ORDERED_PRI_SELECT_SLAVE // Seems to run just as good as the alternative
+#endif
+
+#if ((USE_ORDERED_PRI_SELECT_MASTER==1) or (DEBUG_KNOCKCOME==0)) 
+    #define ORDERED_PRI_SELECT_MASTER [[ordered]] 
+#else
+    #define ORDERED_PRI_SELECT_MASTER // Seems to run just as good as the alternative
 #endif
 
 
@@ -159,7 +178,7 @@ typedef enum {        // NEEDS
 
 typedef struct {
     KnockCome_Message_Type_e KnockCome_Message_Type; // KC_TYP_SM_KNOCK only
-} ch_ab_knock_t;
+} ch_knock_t;
 
 
 typedef enum {
@@ -185,17 +204,17 @@ typedef enum {
 } ab_src_e;
 
 
-// Between task_a_slave and task_b_master
-// task_a_slave sends important data and task_b_master some times adds like new menu changes
+// Between task_slave and task_master
+// task_slave sends important data and task_master some times adds like new menu changes
 //
 typedef struct {
     ab_src_e source;
     KnockCome_Message_Type_e KnockCome_Message_Type;
     union {
-        unsigned data_from_task_a_slave;  // KC_TYP_SM_DATA source is task_a_slave
-        unsigned data_from_task_b_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_b_master
+        unsigned data_from_task_a_slave;  // KC_TYP_SM_DATA source is task_slave
+        unsigned data_from_task_b_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_master
     } data;
-} ch_ab_bidir_t;
+} ch_come_or_sdata_t;
 
 
 // Usage:
@@ -289,10 +308,10 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 #define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
 #define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
 
-#if (PRINT_KNOCKCOME==1)
+#if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
     #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
-#else
+#else // SPEED_FAST_AND_SCOPE
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
     #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
 #endif
@@ -307,10 +326,10 @@ typedef signed   random_signed32_t;
 
 typedef struct {
     random_generator_t  random_generator;
-    random_unsigned32_t next_random_number;   // Will then be used as (unsigned)((signed)(-next_random_number))
+    random_unsigned32_t next_random_number;    // Will then be used as (unsigned)((signed)(-next_random_number))
     bool                use_random_negated; 
-    unsigned            loop_for_pos_cnt_max; // debug
-    unsigned            drop_neg_cnt;         // debug
+    unsigned            loop_for_pos_cnt_max;  // debug
+    unsigned            max_loop_drop_neg_cnt; // debug
 } randoms_t;
 //
 #define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
@@ -334,7 +353,7 @@ typedef struct {
 // the shortest is always 0, a new random value would have to be there immediately, which completely
 // outrules the ring oscillator solution. 
 //
-// Since update_fairness_cnts is called in task_b_master the theoretical values of "DT xx.yys" in the log
+// Since update_fairness_cnts is called in task_master the theoretical values of "DT xx.yys" in the log
 // is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
 //
 // See https://www.xcore.com/viewtopic.php?t=9317 "Different average random values when hw or sw seed and use of LFSR" on XCore Exchange
@@ -395,7 +414,7 @@ void update_fairness_cnts (cnts_t &cnts)
     }
 } // update_fairness_cnts
 
-// #if (PRINT_KNOCKCOME==1)
+// #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
 void print_and_clear_debug_cnts (cnts_t &cnts)
 {
    const unsigned delta_print_secs = cnts.delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 / 100 = 23
@@ -416,37 +435,43 @@ void print_and_clear_debug_cnts (cnts_t &cnts)
 } // print_and_clear_debug_cnts
 
 
-// #if (PRINT_KNOCKCOME==0 or 1)
+// #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT or SPEED_FAST_AND_SCOPE)
 void print_welcome_banner()
 {
-    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us (hw seed %u), cnt events at %u (Teig)\n//\n",
+    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us HW seed %u, %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n//\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
-            RANDOM_VAL_MAX_US, USE_RANDOM_HW_SEED, MAX_SUM_CNT);
+            RANDOM_VAL_MAX_US, USE_RANDOM_HW_SEED, 
+            PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
+            MAX_SUM_CNT,
+            PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : ")",
+            USE_ORDERED_PRI_SELECT_MASTER,
+            USE_ORDERED_PRI_SELECT_SLAVE,
+            PRINT_OR_SCOPE);
 } // print_welcome_banner
 
 
 // #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
 void print_deadlock_banner()
 {
-    printf ("ch_ab_knock is not buffered, system will deadlock.\n"
+    printf ("ch_knock is not buffered, system will deadlock.\n"
             "This is last print. Wait one minute to confirm.\n\n");
 } // print_deadlock_banner
 
 
-// #if (TEST_NOT_ORDERED_PRI_SELECT==1)
+// #if (USE_ORDERED_PRI_SELECT_MASTER==1)
 void print_ordered_banner()
 {
-    printf ("[[ordered]] not used in select statements seems to have no effect\n"
+    printf ("[[ordered]] not used in select statement(s) seems to have no effect\n"
             "But watch out for stopped log\n");
 } // print_ordered_banner
 
 #define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
 
-#if (PRINT_KNOCKCOME==1)
+#if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
     #define PRINT_AND_CLEAR_CNTS(cnts) print_and_clear_debug_cnts(cnts) 
-#else
+#else // SPEED_FAST_AND_SCOPE
     #define PRINT_AND_CLEAR_CNTS(cnts)
 #endif
 
@@ -456,7 +481,7 @@ void print_ordered_banner()
     #define PRINT_DEADLOCK_BANNER
 #endif
 
-#if (TEST_NOT_ORDERED_PRI_SELECT==1)
+#if (USE_ORDERED_PRI_SELECT_MASTER==1)
     #define PRINT_ORDERED_BANNER print_ordered_banner()
 #else
     #define PRINT_ORDERED_BANNER
@@ -471,14 +496,13 @@ void init_randoms (
     // randoms.next_random_number = 0; Not here
     randoms.use_random_negated    = false;
     randoms.loop_for_pos_cnt_max  = 0;
-    randoms.drop_neg_cnt          = 0;
+    randoms.max_loop_drop_neg_cnt          = 0;
 } // init_randoms
 
 
 // Algorithm invented by me, Øyvind Teig in June 2026
 // Not yet tested. For every even number of pseudo-random values asked for,
-// the mean value will be half the value of the UINT_MAX range, ie. 
-// UINT_MAX (4294967295) / 2 = 0b 1111.1111 = -1 signed
+// the mean value will be half the value of the UINT_MAX range
 //
 void next_symmetric_random_get_random_number (randoms_t &randoms) {
     if (randoms.use_random_negated) {
@@ -491,23 +515,35 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         randoms.next_random_number = (random_unsigned32_t) (-random_signed32);
         randoms.use_random_negated = false;
     } else {
-        random_unsigned32_t next_random_number = 0;
-        unsigned            loop_for_pos_cnt   = 1;
+        random_unsigned32_t next_random_number_unsigned32 = 0;
+        unsigned            loop_for_pos_cnt  = 1;
+        unsigned            loop_drop_neg_cnt = 0;
 
-        while (next_random_number >= 0) {
+        // From limits.h plus here
+        // __INT_MAX__ =                                          2147483647
+        //
+        // UINT_MAX    = (INT_MAX * 2U + 1) = (2147483647*2)+1 =  4294967295 = 0xffffffff (-1 signed ) 
+        // INT_MAX     = __INT_MAX__        =                     2147483647 = 0x7fffffff (UINT_MAX/2)
+        // UINT_MIN    =                                                   0 = 0x00000000
+        // INT_MIN     = (-INT_MAX-1)       = -2147483647-1    = -2147483648 = 0x80000000
+
+        while (next_random_number_unsigned32 < (UINT_MAX/2)) { // "Positive"
             loop_for_pos_cnt++;
-            next_random_number = random_get_random_number (randoms.random_generator);
-            if (((signed) next_random_number) < 0) {
+            next_random_number_unsigned32 = random_get_random_number (randoms.random_generator); // Returns unsigned
+            if (next_random_number_unsigned32 < (UINT_MAX/2)) {
+                // Use postive value, but next time, use the negative value of it
+                randoms.next_random_number = next_random_number_unsigned32;
+                randoms.use_random_negated = true; // Use as negative next time
+            } else {
                 // Drop negative value
                 // If like "n" dropped here those calls have been "used up", but since each number 
                 // is reached once, and only once, it will be balanced with "n" calls that
                 // will return positive values
-                randoms.drop_neg_cnt++;
-                xassert (randoms.drop_neg_cnt <= DROP_NEG_CNT_MAX);
-            } else {
-                // Use postive value, but next time, use the negative value of it
-                randoms.next_random_number = next_random_number;
-                randoms.use_random_negated = true; // Use as negative next time
+                loop_drop_neg_cnt++;
+                if (loop_drop_neg_cnt < randoms.max_loop_drop_neg_cnt) {
+                    randoms.max_loop_drop_neg_cnt = loop_drop_neg_cnt; // new max
+                } else {}
+                xassert (randoms.max_loop_drop_neg_cnt <= DROP_NEG_CNT_MAX);
             }
         }
         if (loop_for_pos_cnt > randoms.loop_for_pos_cnt_max) {
@@ -519,7 +555,7 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
 
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #if (USE_RANDOM_SYMMETRIC == 0)
-          randoms.next_random_number = random_get_random_number (randoms.random_generator);
+          randoms.next_random_number = random_get_random_number (randoms.random_generator); // Returns unsigned
     #elif (USE_RANDOM_SYMMETRIC == 1)
         next_symmetric_random_get_random_number (randoms); // Return already in randoms.next_random_number
     #endif
@@ -541,19 +577,19 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
 
 
 // =========================================================================================================================
-// Can only KNOCK to task_b_master and then wait for COME from task_b_master and then atomic send its DATA to task_b_master.
-// Must be able to accept DATA from task_b_master any time.
+// Can only KNOCK to task_master and then wait for COME from task_master and then atomic send its DATA to task_master.
+// Must be able to accept DATA from task_master any time.
 //
-void task_a_slave (
-    chanend           ch_ab_bidir,       // ch_ab_bidir_t
-    STREAMING chanend ch_ab_knock,       // ch_ab_knock_t
+void task_slave (
+    chanend           ch_come_or_sdata,       // ch_come_or_sdata_t
+    STREAMING chanend ch_knock,       // ch_knock_t
     port out          p1_out_blue_slave) // bit0
 {
     timer             tmr;
     time32_t          time_ticks;
-    ch_ab_bidir_t     data_ch_ab_bidir;
+    ch_come_or_sdata_t     data_ch_ab_bidir;
     KnockCome_State_e KnockCome_State;
-    ch_ab_knock_t     data_ch_ab_knock;
+    ch_knock_t     data_ch_ab_knock;
     unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
     unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t         randoms;
@@ -569,9 +605,9 @@ void task_a_slave (
     tmr :> time_ticks;
 
     while (true) {
-        ORDERED_PRI_SELECT // [[ordered]] or none
+        ORDERED_PRI_SELECT_SLAVE // [[ordered]] or none
         select {
-            case ch_ab_bidir :> data_ch_ab_bidir : { // RECEIVE
+            case ch_come_or_sdata :> data_ch_ab_bidir : { // RECEIVE
                 bool knockCome_send_data = false;
                 bool got_data            = false;
 
@@ -599,7 +635,7 @@ void task_a_slave (
                     data_ch_ab_bidir.source = task_a;
 
                     data_ch_ab_bidir.data.data_from_task_a_slave = data_from_task_a_slave;
-                    ch_ab_bidir <: data_ch_ab_bidir; // ATOMIC SEND
+                    ch_come_or_sdata <: data_ch_ab_bidir; // ATOMIC SEND
                     p1_out_blue_slave <: data_from_task_a_slave; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
                     data_from_task_a_slave = data_from_task_a_slave + DATA_FIRST_AND_INC;
 
@@ -618,32 +654,32 @@ void task_a_slave (
                 #endif
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
-                    ch_ab_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
+                    ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
                     #if (DOUBLE_KNOCK==1)
-                        ch_ab_knock <: data_ch_ab_knock; // Will be buffered as two and cause an extra COME and rash
+                        ch_knock <: data_ch_ab_knock; // Will be buffered as two and cause an extra COME and rash
                     #endif
                     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_KNOCK);
                 } else {}
             } break;
         }
     }
-} // task_a_slave 
+} // task_slave 
 
 
 // ===================================================================================================================
-// task_b_master can send its DATA to task_a_slave any time, 
-// but if KNOCK is received it must respond with atomic send COME to task_a_slave and wait for DATA from task_a_slave.
+// task_master can send its DATA to task_slave any time, 
+// but if KNOCK is received it must respond with atomic send COME to task_slave and wait for DATA from task_slave.
 //
-void task_b_master (
-    chanend           ch_ab_bidir,          // ch_ab_bidir_t
-    STREAMING chanend ch_ab_knock,          // ch_ab_knock_t
+void task_master (
+    chanend           ch_come_or_sdata,     // ch_come_or_sdata_t
+    STREAMING chanend ch_knock,             // ch_knock_t
     port out          p1_out_purple_master, // bit0
     port out          p4_leds)              // bit0-3
 {
     timer              tmr;
     time32_t           time_ticks;
-    ch_ab_bidir_t      data_ch_ab_bidir;
-    ch_ab_knock_t      data_ch_ab_knock;
+    ch_come_or_sdata_t      data_ch_ab_bidir;
+    ch_knock_t      data_ch_ab_knock;
     unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
     unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
     cnts_t             cnts;
@@ -669,15 +705,15 @@ void task_b_master (
     tmr :> time_ticks; // Almost immediately
 
     while (true) {
-        ORDERED_PRI_SELECT // [[ordered]] or none
+        ORDERED_PRI_SELECT_MASTER // [[ordered]] or none
         select {
-            case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on th etop
+            case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on the etop
                 // Every 10 ms RESOLUTION_PRINT_TIMEOUT_MS
                 cnts.print_time_ticks += PRINT_TIMEOUT_TICKS;
                 cnts.delta_print_10ms += 1; 
             } break;
 
-            case ch_ab_knock :> data_ch_ab_knock : {
+            case ch_knock :> data_ch_ab_knock : {
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
                 // Build response
                 data_ch_ab_bidir.source = task_b;
@@ -688,8 +724,8 @@ void task_b_master (
                 // INSIDE THIS CASE CONTINUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
                 // ==============================================================
 
-                ch_ab_bidir <: data_ch_ab_bidir; // SEND and ATOMIC..
-                ch_ab_bidir :> data_ch_ab_bidir; // ..RECEIVE
+                ch_come_or_sdata <: data_ch_ab_bidir; // SEND and ATOMIC..
+                ch_come_or_sdata :> data_ch_ab_bidir; // ..RECEIVE
 
                 unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
                 xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
@@ -703,7 +739,7 @@ void task_b_master (
                 xassert (data_ch_ab_bidir.source == task_a);
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
 
-                #if (PRINT_KNOCKCOME==1)
+                #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_debug_cnts (cnts);
@@ -725,7 +761,7 @@ void task_b_master (
 
                 data_ch_ab_bidir.data.data_from_task_b_master = data_from_task_b_master;
 
-                ch_ab_bidir <: data_ch_ab_bidir; // SEND
+                ch_come_or_sdata <: data_ch_ab_bidir; // SEND
                 p1_out_purple_master <: data_from_task_b_master; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
                 data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
 
@@ -733,7 +769,7 @@ void task_b_master (
                 cnts.rec_sent_cnt++;
                 cnts.sum_sent_cnt++;
 
-                #if (PRINT_KNOCKCOME==1)
+                #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_debug_cnts (cnts);
@@ -742,7 +778,7 @@ void task_b_master (
             } break;
         }
     }
-} // task_b_master
+} // task_master
 
 // See different port syntax forms at https://www.teigfam.net/oyvind/home/technology/141-xc-is-c-plus-x/#port_construct_of_xc
 
@@ -780,18 +816,18 @@ X0D11  P1D       15   GND               16
 
 int main()
 {
-    STREAMING chan ch_ab_knock ; // ch_ab_knock_t
-    chan           ch_ab_bidir ; // ch_ab_bidir_t
+    STREAMING chan ch_knock ; // ch_knock_t
+    chan           ch_come_or_sdata ; // ch_come_or_sdata_t
     par {
         on tile[0]:                   // .core[1]: not combinable so cannot explicitly place on core (*)
-            task_a_slave (            // Must wait knock response to send 
-                ch_ab_bidir,          // ch_ab_bidir_t
-                ch_ab_knock,          // ch_ab_knock_t
+            task_slave (              // Must wait knock response to send 
+                ch_come_or_sdata,     // ch_come_or_sdata_t
+                ch_knock,             // ch_knock_t
                 p1_out_blue_slave);   // Pin out for scope
         on tile[0]:                   // .core[0]: This is how they end up, see on crash (*)
-            task_b_master (           // Can send any time
-                ch_ab_bidir,          // ch_ab_bidir_t
-                ch_ab_knock,          // ch_ab_knock_t
+            task_master (             // Can send any time
+                ch_come_or_sdata,     // ch_come_or_sdata_t
+                ch_knock,             // ch_knock_t
                 p1_out_purple_master, // Pin out for scope
                 p4_leds);             // LEDS for observing activity
         // (*) Same tile[0] so streaming chan does not occupy a route through the HW switch within the scope of the task
