@@ -28,8 +28,11 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
- #define _XTC           (XCC_VERSION_MAJOR >= 1503)
- #define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
+#define DO_LIB_RANDOM_EXAMPLE 1
+#if (DO_LIB_RANDOM_EXAMPLE == 0)
+
+#define _XTC           (XCC_VERSION_MAJOR >= 1503)
+#define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
 
 #define INCLUDES
 #ifdef INCLUDES
@@ -44,14 +47,15 @@
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
 #endif
 
-#define KNOCK_COME_VERSION_STR "0.925" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.925.1" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 24Jul2926 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
+// 26Jul2026 0.925.1 DO_LIB_RANDOM_EXAMPLE is new, testing XMOS lib_random, will be sent to XMOS
+// 24Jul2026 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
 //                   Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
 //                   and PRINT_OR_SCOPE. USE_RANDOM_SYMMETRIC=1 compiles and runs but algorithm not verified yet
 // 02Jun2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
@@ -109,8 +113,10 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK  0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
 #define USE_ORDERED_PRI_SELECT_MASTER     0 // 0 default, 1 to test (*)
 #define USE_ORDERED_PRI_SELECT_SLAVE      0 // 0 default, 1 to test (*)
-#define USE_RANDOM_HW_SEED                1 // 0 default, 1 to test
+#define USE_RANDOM_HW_SEED                0 // 0 default, 1 to test
 #define USE_RANDOM_SYMMETRIC              0 // 0 default, 1 to test with full random_generator_t
+#define PRINT_RANDOM_VALS                 1 // 0 default, 1 to test
+
 //
 // (*) Observe that the Promela code to verify this pattern proves that it does not deadlock with its
 // non-deterministic handling of the if :: case 1 :: case 2 fi; select / ALT. No [[ordered]] or "biased" (Rust tokio) 
@@ -325,14 +331,15 @@ typedef unsigned random_unsigned32_t; // uint32_t (random_get_random_number take
 typedef signed   random_signed32_t;
 
 typedef struct {
-    random_generator_t  random_generator;
-    random_unsigned32_t next_random_number;    // Will then be used as (unsigned)((signed)(-next_random_number))
+    random_generator_t  random_generator_sw_seed;
+    random_unsigned32_t next_random_number;  // Will then be used as (unsigned)((signed)(-next_random_number))
     bool                use_random_negated; 
-    unsigned            loop_for_pos_cnt_max;  // debug
-    unsigned            max_loop_drop_neg_cnt; // debug
+    unsigned            max_loop_pos_cnt;    // debug
+    unsigned            max_loop_neg_cnt;    // debug
 } randoms_t;
 //
 #define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
+
 
 // See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
 //
@@ -415,12 +422,16 @@ void update_fairness_cnts (cnts_t &cnts)
 } // update_fairness_cnts
 
 // #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
-void print_and_clear_debug_cnts (cnts_t &cnts)
+void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 {
    const unsigned delta_print_secs = cnts.delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 / 100 = 23
    const unsigned delta_print_10ms = cnts.delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 % 100 = 87 for "DT 23.87s"
+   char max_loop_drop_neg_cnt_str[25];
+
+   sprintf(max_loop_drop_neg_cnt_str, "P %u N %u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt);
    
-   printf ("REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
+   printf ("%sREC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
+           (USE_RANDOM_SYMMETRIC==1) ? max_loop_drop_neg_cnt_str : "",
            cnts.rec_cnt,
            cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
            cnts.sent_cnt,
@@ -430,7 +441,9 @@ void print_and_clear_debug_cnts (cnts_t &cnts)
            cnts.sum_sent_cnt,
            delta_print_secs,
            delta_print_10ms);
-
+   
+   randoms.max_loop_neg_cnt = 0;
+   randoms.max_loop_pos_cnt = 0;
    reset_debug_cnts (cnts);
 } // print_and_clear_debug_cnts
 
@@ -470,9 +483,9 @@ void print_ordered_banner()
 #define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
 
 #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
-    #define PRINT_AND_CLEAR_CNTS(cnts) print_and_clear_debug_cnts(cnts) 
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
 #else // SPEED_FAST_AND_SCOPE
-    #define PRINT_AND_CLEAR_CNTS(cnts)
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
 #endif
 
 #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
@@ -489,14 +502,14 @@ void print_ordered_banner()
 
 
 void init_randoms (
-    randoms_t      &randoms,
+    randoms_t                 &randoms,
     const random_unsigned32_t random_seed) {
 
-    randoms.random_generator      = RANDOM_CREATE_GENERATOR(random_seed);
-    // randoms.next_random_number = 0; Not here
-    randoms.use_random_negated    = false;
-    randoms.loop_for_pos_cnt_max  = 0;
-    randoms.max_loop_drop_neg_cnt          = 0;
+    randoms.random_generator_sw_seed = RANDOM_CREATE_GENERATOR(random_seed); // No value assigned
+    // randoms.next_random_number    = 0; Not here
+    randoms.use_random_negated       = false;
+    randoms.max_loop_pos_cnt         = 0;
+    randoms.max_loop_neg_cnt         = 0;
 } // init_randoms
 
 
@@ -514,10 +527,13 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         random_signed32            = (random_signed32_t) randoms.next_random_number;
         randoms.next_random_number = (random_unsigned32_t) (-random_signed32);
         randoms.use_random_negated = false;
-    } else {
+        #if (PRINT_RANDOM_VALS==1)
+            printf (" %d\n", -random_signed32);
+        #endif
+    } else { // randoms.use_random_negated false
         random_unsigned32_t next_random_number_unsigned32 = 0;
-        unsigned            loop_for_pos_cnt  = 1;
-        unsigned            loop_drop_neg_cnt = 0;
+        unsigned            max_loop_pos_cnt  = 1;
+        unsigned            max_loop_neg_cnt = 0;
 
         // From limits.h plus here
         // __INT_MAX__ =                                          2147483647
@@ -527,37 +543,41 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // UINT_MIN    =                                                   0 = 0x00000000
         // INT_MIN     = (-INT_MAX-1)       = -2147483647-1    = -2147483648 = 0x80000000
 
-        while (next_random_number_unsigned32 < (UINT_MAX/2)) { // "Positive"
-            loop_for_pos_cnt++;
-            next_random_number_unsigned32 = random_get_random_number (randoms.random_generator); // Returns unsigned
+        while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert 
+            next_random_number_unsigned32 = random_get_random_number (randoms.random_generator_sw_seed); 
             if (next_random_number_unsigned32 < (UINT_MAX/2)) {
                 // Use postive value, but next time, use the negative value of it
                 randoms.next_random_number = next_random_number_unsigned32;
+                #if (PRINT_RANDOM_VALS==1)
+                    printf ("  %u\n", next_random_number_unsigned32);
+                #endif
                 randoms.use_random_negated = true; // Use as negative next time
+                max_loop_pos_cnt++;
+                if (max_loop_pos_cnt > randoms.max_loop_pos_cnt) {
+                    randoms.max_loop_pos_cnt = max_loop_pos_cnt;
+                } else {}
             } else {
                 // Drop negative value
                 // If like "n" dropped here those calls have been "used up", but since each number 
                 // is reached once, and only once, it will be balanced with "n" calls that
                 // will return positive values
-                loop_drop_neg_cnt++;
-                if (loop_drop_neg_cnt < randoms.max_loop_drop_neg_cnt) {
-                    randoms.max_loop_drop_neg_cnt = loop_drop_neg_cnt; // new max
+                max_loop_neg_cnt++;
+                if (max_loop_neg_cnt > randoms.max_loop_neg_cnt) {
+                    randoms.max_loop_neg_cnt = max_loop_neg_cnt; // new max
                 } else {}
-                xassert (randoms.max_loop_drop_neg_cnt <= DROP_NEG_CNT_MAX);
+                xassert (randoms.max_loop_neg_cnt <= DROP_NEG_CNT_MAX);
             }
         }
-        if (loop_for_pos_cnt > randoms.loop_for_pos_cnt_max) {
-            randoms.loop_for_pos_cnt_max = loop_for_pos_cnt;
-        } else {}
+
     }
 } // next_symmetric_random_get_random_number
 
 
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #if (USE_RANDOM_SYMMETRIC == 0)
-          randoms.next_random_number = random_get_random_number (randoms.random_generator); // Returns unsigned
+        randoms.next_random_number = random_get_random_number (randoms.random_generator_sw_seed); // Returns unsigned
     #elif (USE_RANDOM_SYMMETRIC == 1)
-        next_symmetric_random_get_random_number (randoms); // Return already in randoms.next_random_number
+        next_symmetric_random_get_random_number (randoms); // Return value already in randoms.next_random_number
     #endif
 
     return randoms.next_random_number;
@@ -585,17 +605,14 @@ void task_slave (
     STREAMING chanend ch_knock,       // ch_knock_t
     port out          p1_out_blue_slave) // bit0
 {
-    timer             tmr;
-    time32_t          time_ticks;
-    ch_come_or_sdata_t     data_ch_ab_bidir;
-    KnockCome_State_e KnockCome_State;
-    ch_knock_t     data_ch_ab_knock;
-    unsigned          data_from_task_a_slave  = DATA_FIRST_AND_INC;
-    unsigned          data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
-    randoms_t         randoms;
-    #if (USE_RANDOM_SYMMETRIC == 0)
-        random_generator_t random_generator = RANDOM_CREATE_GENERATOR(RANDOM_SEED_SLAVE);
-    #endif
+    timer              tmr;
+    time32_t           time_ticks;
+    ch_come_or_sdata_t data_ch_ab_bidir;
+    KnockCome_State_e  KnockCome_State;
+    ch_knock_t         data_ch_ab_knock;
+    unsigned           data_from_task_a_slave  = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
+    randoms_t          randoms;
 
     init_randoms (randoms, RANDOM_SEED_SLAVE);
 
@@ -645,13 +662,8 @@ void task_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                #if (USE_RANDOM_SYMMETRIC == 0)
-                    time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #elif (USE_RANDOM_SYMMETRIC == 1)
-                    time_ticks += ((random_get_random_number_special (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #else
-                    #error
-                #endif
+                const random_unsigned32_t random_number = random_get_random_number_special (randoms); // Easier to print
+                time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
@@ -684,9 +696,6 @@ void task_master (
     unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
     cnts_t             cnts;
     randoms_t          randoms;
-    #if (USE_RANDOM_SYMMETRIC == 0)
-        random_generator_t random_generator = RANDOM_CREATE_GENERATOR(RANDOM_SEED_MASTER);
-    #endif
 
     init_randoms (randoms, RANDOM_SEED_MASTER);
     
@@ -698,7 +707,7 @@ void task_master (
     PRINT_WELCOME_BANNER;
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
-    PRINT_AND_CLEAR_CNTS (cnts);
+    PRINT_AND_CLEAR_CNTS (cnts, randoms);
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
@@ -742,18 +751,16 @@ void task_master (
                 #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_debug_cnts (cnts);
+                        print_and_clear_debug_cnts (cnts, randoms);
                     } else {}
                 #endif
             } break;
 
-            case tmr when timerafter (time_ticks) :> void : {
-                #if (USE_RANDOM_SYMMETRIC == 0)
-                    time_ticks += ((random_get_random_number (random_generator)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #elif (USE_RANDOM_SYMMETRIC == 1)
-                    time_ticks += ((random_get_random_number_special (randoms)) % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #else
-                    #error
+            case tmr when timerafter (time_ticks) :> void : {       
+                const random_unsigned32_t random_number = random_get_random_number_special (randoms);
+                time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
+                #if (PRINT_RANDOM_VALS==1)
+                    printf ("%u\n", random_number); // Print (not in slave)
                 #endif
 
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
@@ -772,7 +779,7 @@ void task_master (
                 #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_debug_cnts (cnts);
+                        print_and_clear_debug_cnts (cnts, randoms);
                     } else {}
                 #endif
             } break;
@@ -813,7 +820,6 @@ X0D19  P4D3      11   X0D20  P4C2(LED2) 12
 GND              13   X0D21  P4C3(LED3) 14
 X0D11  P1D       15   GND               16
 */
-
 int main()
 {
     STREAMING chan ch_knock ; // ch_knock_t
@@ -834,3 +840,109 @@ int main()
     }
     return 0;
 } // main
+
+#elif  (DO_LIB_RANDOM_EXAMPLE == 1)
+    // Taken from  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/examples/app_random/src/main.c 
+    #include <stdint.h>
+    #include <print.h>
+    #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
+    #define RAND_SEED (8369)
+    #define RAND_BUF_LEN (256) // Was 8. Since byte, it should not be repeated
+    //
+    int lib_random_example() {
+
+        printstr("\n26Jul2026 16.21\n= unsigned =\n");
+        // Create a generator with a software seed
+        random_generator_t rg_sw = random_create_generator_from_seed(RAND_SEED);
+
+        // Generate a single random value and print it. Was printing of single value
+        for (unsigned ix=0; ix <RAND_BUF_LEN; ix++ ) {
+            unsigned rand_val = random_get_random_number(rg_sw); // was &rg_sw (C-code)
+            printuintln(rand_val);
+        }
+        // ERROR?
+        // With 256 there is a repetion every 33th, like for this run (comma and newline added by me). Only one run needed since software seed
+        // 3375822939, 2150272105, 303195149, 3382463290, 2172644011, 280537481, 3435778098, 2345983163, 99534249, 3865380978, 3733810235, 2942149801, 1291597197, 1950410810, 87642964, 3888784776,
+        // 3721607119, 2850100033, 1099258461, 1857173402, 819784724, 2348899080, 172346063, 4180874942, 3760279971, 3523600281, 3058484205, 2128542469, 268793130, 3451021684, 2300816951, 8369,
+        // 3988308546,
+
+        printstr("\n= bytes =\n");
+        // Create a generator with a hardware seed
+        random_generator_t rg_hw = random_create_generator_from_hw_seed();
+
+        // Generate a set of random bytes and print them
+        uint8_t rand_buf[RAND_BUF_LEN];
+        random_get_random_bytes(rg_hw, rand_buf, RAND_BUF_LEN); // was &rg_sw (C-code)
+
+        for (int idx = 0; idx < RAND_BUF_LEN; ++idx) {
+            printuintln(rand_buf[idx]);
+        }
+        // ERROR?
+        // With 256 there is a repetion every 33th, like for these two runs (comma and newline added by me)
+        // 251, 41, 141, 58, 171, 137, 50, 187, 169, 114, 59, 169, 141, 58, 84, 136,
+        // 48, 191, 161, 157, 229, 21, 245, 202, 75, 182, 76, 184, 175, 126, 35, 153,
+        // 18,
+        //
+        // 111, 1, 221, 154, 235, 9, 50, 187, 169, 114, 59, 169, 141, 58, 84, 119,
+        // 206, 67, 166, 147, 249, 45, 122, 212, 136, 207, 65, 162, 100, 23, 14, 60,
+        // 88,
+        printstr("\n= bits =\n");
+        random_ro_init();
+        for (int i = 0; i < 10; ++i) {
+            int bit;
+            do {
+                bit = random_ro_get_bit();
+                // You could sleep here for -bit timer ticks.
+            } while(bit < 0);
+            printint(bit);
+        }
+        random_ro_uninit();
+        printstr("\n= done =\n");
+
+        return 0;
+    }
+
+    #warning DO_LIB_RANDOM_EXAMPLE, NO KNOCK_COME!
+    int main()
+    {
+        lib_random_example();
+        return 0;
+    } // main
+
+    /* Log, pretty-printed with AI
+    Running xc_test_knock_come.xe
+    26Jul2026 16.21
+    = unsigned =
+    3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  2942149801  1291597197  1950410810  87642964    3888784776  
+    3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  2128542469  268793130   3451021684  2300816951  8369        
+    3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  2942149801  1291597197  1950410810  87642964    
+    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  2128542469  268793130   3451021684  2300816951  
+    8369        3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  2942149801  1291597197  1950410810  
+    87642964    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  2128542469  268793130   3451021684  
+    2300816951  8369        3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  2942149801  1291597197  
+    1950410810  87642964    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  2128542469  268793130   
+    3451021684  2300816951  8369        3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  2942149801  
+    1291597197  1950410810  87642964    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  2128542469  
+    268793130   3451021684  2300816951  8369        3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  3733810235  
+    2942149801  1291597197  1950410810  87642964    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  3523600281  3058484205  
+    2128542469  268793130   3451021684  2300816951  8369        3988308546  3375822939  2150272105  303195149   3382463290  2172644011  280537481   3435778098  2345983163  99534249    3865380978  
+    3733810235  2942149801  1291597197  1950410810  87642964    3888784776  3721607119  2850100033  1099258461  1857173402  819784724   2348899080  172346063   4180874942  3760279971  
+    = bytes =
+    195         89          109         250         43          137         50          187         169         114         59          169         141         58          84          136         
+    207         190         163         153         237         5           42          139         201         178         68          87          113         194         164         151         
+    14          195         89          109         250         43          137         50          187         169         114         59          169         141         58          84          
+    136         207         190         163         153         237         5           42          139         201         178         68          87          113         194         164         
+    151         14          195         89          109         250         43          137         50          187         169         114         59          169         141         58          
+    84          136         207         190         163         153         237         5           42          139         201         178         68          87          113         194         
+    164         151         14          195         89          109         250         43          137         50          187         169         114         59          169         141         
+    58          84          136         207         190         163         153         237         5           42          139         201         178         68          87          113         
+    194         164         151         14          195         89          109         250         43          137         50          187         169         114         59          169         
+    141         58          84          136         207         190         163         153         237         5           42          139         201         178         68          87          
+    113         194         164         151         14          195         89          109         250         43          137         50          187         169         114         59          
+    169         141         58          84          136         207         190         163         153         237         5           42          139         201         178         68          
+    87          113         194         164         151         14          195         89          109         250         43          137         50          187         169         114         
+    59          169         141         58          84          136         207         190         163         153         237         5           42          139         201         
+    = bits =
+    1100100011  
+    */
+#endif
