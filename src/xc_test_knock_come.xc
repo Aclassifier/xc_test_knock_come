@@ -54,7 +54,10 @@
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 27Jul2026 0.925.1 Moved /workspace one level down, under a new /xc to /xc/workspace. Quit VS Code and GitHub desktop
+//                   first, then after, GitHub desktop "locate" and VS Code just deleting the /build directory fixed everything
 // 26Jul2026 0.925.1 DO_LIB_RANDOM_EXAMPLE is new, testing XMOS lib_random, will be sent to XMOS
+//                   XMOS Ticket 339260 "lib_random seems to give repeated pattern"
 // 24Jul2026 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
 //                   Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
 //                   and PRINT_OR_SCOPE. USE_RANDOM_SYMMETRIC=1 compiles and runs but algorithm not verified yet

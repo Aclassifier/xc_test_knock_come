@@ -1,5 +1,0 @@
-Name                    | Location                                        | Branch/tag             | Changeset
-------------------------+-------------------------------------------------+------------------------+--------------------------------------------
-xc_test_knock_come        https://github.com/Aclassifier/xc_test_knock_come.git master               e037159827e46222cb9eb23463b028a95de9cb01
-lib_xassert               -                                                 -                        -
-lib_random                https://github.com/xmos/lib_random                v1.3.1                   dfa8a701c2b6d93ee0fd10d5137113937a0a61f4
