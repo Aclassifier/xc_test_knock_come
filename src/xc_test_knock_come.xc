@@ -23,53 +23,35 @@
  * (see above) - making up for a one-element buffer task. This channel carries the data-less "knock" from
  * the slave_task_ak, which cannot just send data on a zero-buffered synchronous channel in fear of a deadlock
  * with a master_task_b. Both tasks trigger themselves to initiate send (knock) or actually send (data)
- * with an internal timer, with pseudo-random timeout valuse, inlcuding immediate action.
+ * with an internal timer, with pseudorandom timeout valuse, inlcuding immediate action.
  * 
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define DO_LIB_RANDOM_EXAMPLE 1
-#if (DO_LIB_RANDOM_EXAMPLE == 0)
-
-#define _XTC           (XCC_VERSION_MAJOR >= 1503)
-#define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
-
-#define INCLUDES
-#ifdef INCLUDES
-    #include <xs1.h>
-    #include <platform.h> // slice
-                          // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
-    #include <syscall.h>  // _XTC new for me
-    #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
-    #include <stdio.h>    // printf
-    #include <iso646.h>   // not etc.
-    #include <xassert.h>
-    #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
-#endif
-
-#define KNOCK_COME_VERSION_STR "0.925.1" // x.yzz
+ #define KNOCK_COME_VERSION_STR "0.926" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 27Jul2026 0.926   LOCAL_XORSHIFT32 using xorshift32 creates unique values
 // 27Jul2026 0.925.1 Moved /workspace one level down, under a new /xc to /xc/workspace. Quit VS Code and GitHub desktop
 //                   first, then after, GitHub desktop "locate" and VS Code just deleting the /build directory fixed everything
 // 26Jul2026 0.925.1 DO_LIB_RANDOM_EXAMPLE is new, testing XMOS lib_random, will be sent to XMOS
 //                   XMOS Ticket 339260 "lib_random seems to give repeated pattern"
 // 24Jul2026 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
 //                   Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
-//                   and PRINT_OR_SCOPE. USE_RANDOM_SYMMETRIC=1 compiles and runs but algorithm not verified yet
+//                   and PRINT_OR_SCOPE. USE_RANDOM_TYPE=1 compiles and runs but algorithm not verified yet
 // 02Jun2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
 // 02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
 // 30Jun2026 0.0.922 typo
-// 30Jun2026 0.0.922 USE_RANDOM_SYMMETRIC 0 and 1 new and see _log.txt
+// 30Jun2026 0.0.922 USE_RANDOM_TYPE 0 and 1 new and see _log.txt
 // 30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
 // 30Jun2026 0.0.920 randoms_t new, not used yet
 // 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
 // 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
-// 24Jun2026 0.0.918 USE_RANDOM_HW_SEED is new. Observe somewhat different "DT xx.yys" from this!
+// 24Jun2026 0.0.918 USE_RANDOM_TYPE is new. Observe somewhat different "DT xx.yys" from this!
 // 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
 // 10Jun2026 0.0.916 Prettier
 // 09Jun2026 0.0.916 Removed three not needed include files
@@ -98,6 +80,25 @@
 // 21May2026 0.0.900 Initial version. Sent to Antonio
 // =============================================================================================
 
+#define DO_LIB_RANDOM_EXAMPLE 0
+#if (DO_LIB_RANDOM_EXAMPLE == 0)
+
+#define _XTC           (XCC_VERSION_MAJOR >= 1503)
+#define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
+
+#define INCLUDES
+#ifdef INCLUDES
+    #include <xs1.h>
+    #include <platform.h> // slice
+                          // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
+    #include <syscall.h>  // _XTC new for me
+    #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
+    #include <stdio.h>    // printf
+    #include <iso646.h>   // not etc.
+    #include <xassert.h>
+    #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
+#endif
+
 typedef enum {false,true} bool;
 
 typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned) both ok, as long as they are monotoneously increasing
@@ -105,6 +106,13 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
                              // ie. divide by 100 mill = 42.9.. seconds
 
 typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
+
+// typedef enum seems to compile but builds incorrectly
+#define LIB_RANDOM_SW_SEED                 0 // see XMOS Ticket 339260
+#define LIB_RANDOM_HW_SEED                 1 // --''--
+#define LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC 2
+#define LOCAL_XORSHIFT32                   3 // Creates unique values
+
 
 //                                LEDS COUNT ABOUT THE SAME RATE FOR BOTH
 #define SPEED_SLOW_AND_PRINT 0 // Scope possible: use ROLL scope
@@ -116,10 +124,8 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK  0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
 #define USE_ORDERED_PRI_SELECT_MASTER     0 // 0 default, 1 to test (*)
 #define USE_ORDERED_PRI_SELECT_SLAVE      0 // 0 default, 1 to test (*)
-#define USE_RANDOM_HW_SEED                0 // 0 default, 1 to test
-#define USE_RANDOM_SYMMETRIC              0 // 0 default, 1 to test with full random_generator_t
+#define USE_RANDOM_TYPE                   LOCAL_XORSHIFT32
 #define PRINT_RANDOM_VALS                 1 // 0 default, 1 to test
-
 //
 // (*) Observe that the Promela code to verify this pattern proves that it does not deadlock with its
 // non-deterministic handling of the if :: case 1 :: case 2 fi; select / ALT. No [[ordered]] or "biased" (Rust tokio) 
@@ -330,51 +336,39 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 //
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
-typedef unsigned random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
-typedef signed   random_signed32_t;
+typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
+typedef int32_t  random_signed32_t;
 
 typedef struct {
-    random_generator_t  random_generator_sw_seed;
-    random_unsigned32_t next_random_number;  // Will then be used as (unsigned)((signed)(-next_random_number))
-    bool                use_random_negated; 
-    unsigned            max_loop_pos_cnt;    // debug
-    unsigned            max_loop_neg_cnt;    // debug
+    // random_seed (s), random_state (s), random_generator (g) and random_number (n) are often only really three names of the same,
+    // thing! You can see an example here, where as used in lib_random file pr_random: 
+    //     unsigned random_get_random_number(random_generator_t *g) {
+    //         do crc32 on *g; 
+    //         return (unsigned) *g;
+    //     }
+    // The value g aliases the return value. Therefore..
+    random_generator_t random_ssgn;        // random (s)seed (s)state (g)generator (n)number
+    bool               use_random_negated; // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
+    unsigned           max_loop_pos_cnt;   // debug --''--
+    unsigned           max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
 #define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
 
 
-// See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
+// Started from https://en.wikipedia.org/wiki/Xorshift#Example_implementation
 //
-#define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
-#define RANDOM_SEED_MASTER 8765 // --''--
-//
-// random_get_random_number: New value of random_seed or just let random_get_random_number use the one that it stores in
-// random seed yields the same result
-//
-// Use of random_create_generator_from_seed or random_create_generator_from_hw_seed 
-// Both create pesudo random numbers, and starting point is not interesting here, so I chose the second (starting at 0.0.917).
-// It uses a 32-bit LFSR (linear-feedback-shift register) to generate a pseudo random string of random bits.
-// The alternative slower (*) method in lib_random uses the on-chip ring oscillators to create a random bit
-// after some time has elapsed. I have not set this generation off to a saparate task, so I won't use it.
-// (*) Slower means RANDOM_RO_MIN_TIME_FOR_ONE_BIT gives 5000 bits/second, ie. [0-99] is seven bits, so it 
-// would mean 5000/7=715 new random values per second. Ok for the max 100 ms (average 50). For [0..9] we 
-// four bits, 5000/4=1250 per second, much too few than the 200000 needed for 5us average. However, since
-// the shortest is always 0, a new random value would have to be there immediately, which completely
-// outrules the ring oscillator solution. 
-//
-// Since update_fairness_cnts is called in task_master the theoretical values of "DT xx.yys" in the log
-// is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
-//
-// See https://www.xcore.com/viewtopic.php?t=9317 "Different average random values when hw or sw seed and use of LFSR" on XCore Exchange
-//
-#if (USE_RANDOM_HW_SEED==0)
-    #define RANDOM_CREATE_GENERATOR(seed) random_create_generator_from_seed(seed)    // Typical "DT 23.78s", "DT 23.95s"
-#elif (USE_RANDOM_HW_SEED==1)
-    #define RANDOM_CREATE_GENERATOR(not_used) random_create_generator_from_hw_seed() // Typical "DT 26.46s", "DT 26.61s"
-#else
-    #error
-#endif
+// Used if USE_RANDOM_TYPE == LOCAL_XORSHIFT32
+random_unsigned32_t xorshift32 (randoms_t &randoms) {
+	// Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
+	random_unsigned32_t x = randoms.random_ssgn; 
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+    randoms.random_ssgn = x;
+	return x; // aliases randoms.random_ssgn
+}
+
 
 typedef struct {
     unsigned sent_cnt;
@@ -433,17 +427,18 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 
    sprintf(max_loop_drop_neg_cnt_str, "P %u N %u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt);
    
-   printf ("%sREC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
-           (USE_RANDOM_SYMMETRIC==1) ? max_loop_drop_neg_cnt_str : "",
-           cnts.rec_cnt,
-           cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
-           cnts.sent_cnt,
-           cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
-           cnts.sum_rec_cnt,
-          (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
-           cnts.sum_sent_cnt,
-           delta_print_secs,
-           delta_print_10ms);
+   printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
+            (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) ? max_loop_drop_neg_cnt_str : "",
+            USE_RANDOM_TYPE,
+            cnts.rec_cnt,
+            cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
+            cnts.sent_cnt,
+            cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
+            cnts.sum_rec_cnt,
+            (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
+            cnts.sum_sent_cnt,
+            delta_print_secs,
+            delta_print_10ms);
    
    randoms.max_loop_neg_cnt = 0;
    randoms.max_loop_pos_cnt = 0;
@@ -454,11 +449,11 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 // #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT or SPEED_FAST_AND_SCOPE)
 void print_welcome_banner()
 {
-    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us HW seed %u, %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n//\n",
+    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us RanT %u %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n//\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
-            RANDOM_VAL_MAX_US, USE_RANDOM_HW_SEED, 
+            RANDOM_VAL_MAX_US, USE_RANDOM_TYPE, 
             PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
             MAX_SUM_CNT,
             PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : ")",
@@ -504,20 +499,64 @@ void print_ordered_banner()
 #endif
 
 
+// See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
+//
+#define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
+#define RANDOM_SEED_MASTER 8765 // --''--
+//
+// random_get_random_number: New value of random_seed or just let random_get_random_number use the one that it stores in
+// random seed yields the same result
+//
+// Use of random_create_generator_from_seed or random_create_generator_from_hw_seed 
+// Both create pesudo random numbers, and starting point is not interesting here, so I chose the second (starting at 0.0.917).
+// It uses a 32-bit LFSR (linear-feedback-shift register) to generate a pseudo random string of random bits.
+// The alternative slower (*) method in lib_random uses the on-chip ring oscillators to create a random bit
+// after some time has elapsed. I have not set this generation off to a saparate task, so I won't use it.
+// (*) Slower means RANDOM_RO_MIN_TIME_FOR_ONE_BIT gives 5000 bits/second, ie. [0-99] is seven bits, so it 
+// would mean 5000/7=715 new random values per second. Ok for the max 100 ms (average 50). For [0..9] we 
+// four bits, 5000/4=1250 per second, much too few than the 200000 needed for 5us average. However, since
+// the shortest is always 0, a new random value would have to be there immediately, which completely
+// outrules the ring oscillator solution. 
+//
+// Since update_fairness_cnts is called in task_master the theoretical values of "DT xx.yys" in the log
+// is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
+//
+// See https://www.xcore.com/viewtopic.php?t=9317 "Different average random values when hw or sw seed and use of LFSR" on XCore Exchange
+
+random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed) {
+    xassert (random_seed != 0);
+    random_unsigned32_t random_generator = random_seed; // Some value when not used
+    
+    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
+        random_generator = random_create_generator_from_seed(random_seed);
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
+        random_generator = random_create_generator_from_hw_seed(random_seed); 
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+        random_generator = random_seed;
+    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
+       random_generator = random_seed;
+    #else
+        #error
+    #endif
+
+    return random_generator;
+} // random_create_generator
+
+
 void init_randoms (
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed) {
 
-    randoms.random_generator_sw_seed = RANDOM_CREATE_GENERATOR(random_seed); // No value assigned
-    // randoms.next_random_number    = 0; Not here
-    randoms.use_random_negated       = false;
-    randoms.max_loop_pos_cnt         = 0;
-    randoms.max_loop_neg_cnt         = 0;
+    random_create_generator (random_seed); // randoms.random_ssgn old value in and new value out (ignoring return value)
+    
+    randoms.use_random_negated = false;
+    randoms.max_loop_pos_cnt   = 0;
+    randoms.max_loop_neg_cnt   = 0;
 } // init_randoms
 
 
 // Algorithm invented by me, Øyvind Teig in June 2026
-// Not yet tested. For every even number of pseudo-random values asked for,
+// Not yet tested. For every even number of pseudorandom values asked for,
 // the mean value will be half the value of the UINT_MAX range
 //
 void next_symmetric_random_get_random_number (randoms_t &randoms) {
@@ -527,16 +566,12 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // .. seem as unsigned it is symmetric on half the number range
         random_signed32_t random_signed32;
         
-        random_signed32            = (random_signed32_t) randoms.next_random_number;
-        randoms.next_random_number = (random_unsigned32_t) (-random_signed32);
+        random_signed32            = (random_signed32_t) randoms.random_ssgn;
+        randoms.random_ssgn        = (random_unsigned32_t) (-random_signed32);
         randoms.use_random_negated = false;
-        #if (PRINT_RANDOM_VALS==1)
-            printf (" %d\n", -random_signed32);
-        #endif
     } else { // randoms.use_random_negated false
-        random_unsigned32_t next_random_number_unsigned32 = 0;
-        unsigned            max_loop_pos_cnt  = 1;
-        unsigned            max_loop_neg_cnt = 0;
+        unsigned max_loop_pos_cnt    = 1;
+        unsigned max_loop_neg_cnt    = 0;
 
         // From limits.h plus here
         // __INT_MAX__ =                                          2147483647
@@ -547,13 +582,9 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // INT_MIN     = (-INT_MAX-1)       = -2147483647-1    = -2147483648 = 0x80000000
 
         while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert 
-            next_random_number_unsigned32 = random_get_random_number (randoms.random_generator_sw_seed); 
-            if (next_random_number_unsigned32 < (UINT_MAX/2)) {
+            random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+            if (randoms.random_ssgn < (UINT_MAX/2)) {
                 // Use postive value, but next time, use the negative value of it
-                randoms.next_random_number = next_random_number_unsigned32;
-                #if (PRINT_RANDOM_VALS==1)
-                    printf ("  %u\n", next_random_number_unsigned32);
-                #endif
                 randoms.use_random_negated = true; // Use as negative next time
                 max_loop_pos_cnt++;
                 if (max_loop_pos_cnt > randoms.max_loop_pos_cnt) {
@@ -575,15 +606,20 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
     }
 } // next_symmetric_random_get_random_number
 
-
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
-    #if (USE_RANDOM_SYMMETRIC == 0)
-        randoms.next_random_number = random_get_random_number (randoms.random_generator_sw_seed); // Returns unsigned
-    #elif (USE_RANDOM_SYMMETRIC == 1)
-        next_symmetric_random_get_random_number (randoms); // Return value already in randoms.next_random_number
+    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
+        random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+        #warning LIB_RANDOM_SW_SEED
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
+        random_get_random_number (randoms.random_ssgn); 
+        #warning LIB_RANDOM_HW_SEED
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+        next_symmetric_random_get_random_number (randoms); 
+    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
+        xorshift32 (randoms);
     #endif
 
-    return randoms.next_random_number;
+    return randoms.random_ssgn;
 } // random_get_random_number_special
 
 
@@ -762,8 +798,12 @@ void task_master (
             case tmr when timerafter (time_ticks) :> void : {       
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms);
                 time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #if (PRINT_RANDOM_VALS==1)
-                    printf ("%u\n", random_number); // Print (not in slave)
+                #if (PRINT_RANDOM_VALS==1) // Print (not in slave)
+                    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+                        printf ("%d\n", (signed)random_number); 
+                    #else
+                        printf ("%u\n", random_number);
+                    #endif
                 #endif
 
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
