@@ -1,6 +1,21 @@
 Newest in top:
 
  *  Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.927 on date Jul 28 2026 14:54:13
+Time random max 100000 us RanT 3 cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+//
+RanT 3 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+RanT 3 REC 515  >       SENT 485        (>931 =20 <49)  SUM (REC 515 > SENT 485)        DT 24.4s
+RanT 3 REC 494  >       SENT 506        (>62 =19 <919)  SUM (REC 1009 > SENT 991)       DT 24.16s
+RanT 3 REC 492  >       SENT 508        (>60 =57 <883)  SUM (REC 1501 > SENT 1499)      DT 25.8s
+RanT 3 REC 498  >       SENT 502        (>55 =23 <922)  SUM (REC 1999 < SENT 2001)      DT 25.17s
+RanT 3 REC 473  >       SENT 527        (>39 =24 <937)  SUM (REC 2472 < SENT 2528)      DT 24.9s
+RanT 3 REC 508  >       SENT 492        (>705 =9 <286)  SUM (REC 2980 < SENT 3020)      DT 24.98s
+RanT 3 REC 506  >       SENT 494        (>780 =83 <137) SUM (REC 3486 < SENT 3514)      DT 24.43s
+
+ *  Running xc_test_knock_come.xe
 XCC 1503.1 KNOCK-COME v0.925.1 on date Jul 27 2026 21:12:25
 Time random max 100000 us RanT 3 cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
