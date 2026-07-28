@@ -9,11 +9,9 @@ project(xc_test_knock_come)
 set(CMAKE_BUILD_TYPE Debug)
 
 # Flags used specifically for the Debug configuration (-O0 disables optimization)
-# -save_temps does not seem to work. Even if 
-#  https://www.xmos.com/documentation/XM-014363-PC/html/tools-guide/tools-ref/cmd-line-tools/xcc-manual/xcc-manual.html#cmdoption-xcc-save-temps
-#  With qoutes is "safest" (Google AI):
-set(XCC_FLAGS_DEBUG "-O0 -g -save-temps")
-set(CMAKE_XC_OUTPUT_EXTENSION_REPLACE 1)
+#  https://www.xmos.com/documentation/XM-015090-PC/html/doc/api_reference/variables.html#optional-application-variables
+set(APP_COMPILER_FLAGS -O0 -g -save-temps)
+# set(CMAKE_XC_OUTPUT_EXTENSION_REPLACE 1)
 
 set(APP_DEPENDENT_MODULES lib_xassert lib_random)
 set(APP_HW_TARGET XK-EVK-XU316)

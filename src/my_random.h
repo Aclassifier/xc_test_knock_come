@@ -14,8 +14,9 @@
 #define LIB_RANDOM_HW_SEED                 1 // --''--
 #define LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC 2 // --''-- Creates every other positive and negative value
 #define LOCAL_XORSHIFT32                   3 // Creates unique values with xorshift32
+#define LOCAL_XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
 //
-#define USE_RANDOM_TYPE LOCAL_XORSHIFT32
+#define USE_RANDOM_TYPE LOCAL_XORSHIFT32_SYMMETRIC
 
 typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
 typedef int32_t  random_signed32_t;
@@ -28,18 +29,19 @@ typedef struct {
     //         return (unsigned) *g;
     //     }
     // The value g aliases the return value. Therefore..
-    random_generator_t random_ssgn;        // random (s)seed (s)state (g)generator (n)number
+    random_generator_t random_ssgn;        // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
     bool               use_random_negated; // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
     unsigned           max_loop_pos_cnt;   // debug --''--
     unsigned           max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 10 // No idea how large, testing small value (if this may be considered "small")
-
+#define DROP_NEG_CNT_MAX 20 // 10: crash XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:01:59 and LOCAL_XORSHIFT32_SYMMETRIC
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 
 random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed);
+
+random_unsigned32_t random_get_random_number_special (randoms_t &randoms);
 
 void init_randoms (
     randoms_t                 &randoms,

@@ -1,5 +1,52 @@
 Newest in top:
 
+
+
+ *  Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:01:59
+Time random max 100000 us RanT 4 cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+//
+P 0 N 0 RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+P 2 N 10        RanT 4 REC 501  >       SENT 499        (>960 =21 <19)  SUM (REC 501 > SENT 499)        DT 25.36s
+P 2 N 9 RanT 4 REC 494  >       SENT 506        (>108 =32 <860) SUM (REC 995 < SENT 1005)       DT 25.6s
+
+ *  Thread 1.2 hit Catchpoint -1 (XCore Exception ET_ECALL), 0x0008026e in next_symmetric_random_get_random_number (randoms=...) at /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/xc/workspace/xc_test_knock_come/src/my_random.xc:166
+ *  XCore Application failed with exit code: 255.
+ *  Terminal will be reused by future launches.
+
+Tha crash was because DROP_NEG_CNT_MAX was 10. Increased to 20:
+
+ *  Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:05:22
+Time random max 100000 us RanT 4 cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+//
+P 0 N 0 RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+P 2 N 10        RanT 4 REC 501  >       SENT 499        (>958 =19 <23)  SUM (REC 501 > SENT 499)        DT 25.36s
+P 2 N 9 RanT 4 REC 494  >       SENT 506        (>103 =31 <866) SUM (REC 995 < SENT 1005)       DT 25.9s
+P 2 N 7 RanT 4 REC 498  >       SENT 502        (>291 =69 <640) SUM (REC 1493 < SENT 1507)      DT 25.26s
+P 2 N 8 RanT 4 REC 507  >       SENT 493        (>962 =11 <27)  SUM (REC 2000 = SENT 2000)      DT 25.25s
+P 2 N 9 RanT 4 REC 502  >       SENT 498        (>54 =19 <927)  SUM (REC 2502 > SENT 2498)      DT 25.39s
+P 2 N 5 RanT 4 REC 496  >       SENT 504        (>20 =4 <976)   SUM (REC 2998 < SENT 3002)      DT 24.91s
+P 2 N 11        RanT 4 REC 494  >       SENT 506        (>676 =61 <263) SUM (REC 3492 < SENT 3508)      DT 24.86s
+P 2 N 6 RanT 4 REC 485  >       SENT 515        (>0 =0 <1000)   SUM (REC 3977 < SENT 4023)      DT 24.89s
+P 2 N 10        RanT 4 REC 507  >       SENT 493        (>916 =14 <70)  SUM (REC 4484 < SENT 4516)      DT 25.56s
+P 2 N 7 RanT 4 REC 494  >       SENT 506        (>5 =19 <976)   SUM (REC 4978 < SENT 5022)      DT 24.80s
+P 2 N 7 RanT 4 REC 516  >       SENT 484        (>863 =34 <103) SUM (REC 5494 < SENT 5506)      DT 25.23s
+P 2 N 8 RanT 4 REC 491  >       SENT 509        (>11 =21 <968)  SUM (REC 5985 < SENT 6015)      DT 25.55s
+P 2 N 7 RanT 4 REC 488  >       SENT 512        (>46 =29 <925)  SUM (REC 6473 < SENT 6527)      DT 24.28s
+P 2 N 6 RanT 4 REC 521  >       SENT 479        (>926 =16 <58)  SUM (REC 6994 < SENT 7006)      DT 24.82s
+P 2 N 11        RanT 4 REC 501  >       SENT 499        (>336 =41 <623) SUM (REC 7495 < SENT 7505)      DT 25.21s
+P 2 N 7 RanT 4 REC 498  >       SENT 502        (>106 =58 <836) SUM (REC 7993 < SENT 8007)      DT 25.30s
+P 2 N 7 RanT 4 REC 496  >       SENT 504        (>133 =60 <807) SUM (REC 8489 < SENT 8511)      DT 25.95s
+P 2 N 6 RanT 4 REC 495  >       SENT 505        (>1 =7 <992)    SUM (REC 8984 < SENT 9016)      DT 24.75s
+P 2 N 9 RanT 4 REC 495  >       SENT 505        (>730 =44 <226) SUM (REC 9479 < SENT 9521)      DT 24.32s
+
+
+
  *  Running xc_test_knock_come.xe
 XCC 1503.1 KNOCK-COME v0.927 on date Jul 28 2026 14:54:13
 Time random max 100000 us RanT 3 cnt events at 1000

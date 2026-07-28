@@ -69,13 +69,34 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
         random_generator = random_seed;
     #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
-       random_generator = random_seed;
+        random_generator = random_seed;  
+    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+        random_generator = random_seed; 
     #else
         #error
     #endif
 
-    return random_generator;
+    return random_generator; // See random_ssgn
 } // random_create_generator
+
+
+random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
+    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
+        random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+        #warning LIB_RANDOM_SW_SEED
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
+        random_get_random_number (randoms.random_ssgn); 
+        #warning LIB_RANDOM_HW_SEED
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+        next_symmetric_random_get_random_number (randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
+    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
+        xorshift32 (randoms); // // Updates randoms.random_ssgn only
+    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+        next_symmetric_random_get_random_number (randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
+    #endif
+
+    return randoms.random_ssgn;
+} // random_get_random_number_special
 
 
 void init_randoms (
@@ -119,7 +140,13 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // INT_MIN     = (-INT_MAX-1)       = -2147483647-1    = -2147483648 = 0x80000000
 
         while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert 
-            random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+            #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+                random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+            #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+                xorshift32 (randoms); // Updates randoms.random_ssgn
+            #else
+                xassert (false); 
+            #endif
             if (randoms.random_ssgn < (UINT_MAX/2)) {
                 // Use postive value, but next time, use the negative value of it
                 randoms.use_random_negated = true; // Use as negative next time

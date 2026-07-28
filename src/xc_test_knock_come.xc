@@ -28,14 +28,16 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.927" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.928" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
+
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 28Jul2027 0.927   This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
+// 28Jul2026 0.928   LOCAL_XORSHIFT32_SYMMETRIC is new  (see _log.txt). APP_COMPILER_FLAGS instead of XCC_FLAGS_DEBUG
+// 28Jul2026 0.927   This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
 // 27Jul2026 0.926   LOCAL_XORSHIFT32 using xorshift32 creates unique values. See _log.txt.
 // 27Jul2026 0.925.1 Moved /workspace one level down, under a new /xc to /xc/workspace. Quit VS Code and GitHub desktop
 //                   first, then after, GitHub desktop "locate" and VS Code just deleting the /build directory fixed everything
@@ -382,7 +384,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
    sprintf(max_loop_drop_neg_cnt_str, "P %u N %u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt);
    
    printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
-            (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) ? max_loop_drop_neg_cnt_str : "",
+            ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) or (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)) ? max_loop_drop_neg_cnt_str : "",
             USE_RANDOM_TYPE,
             cnts.rec_cnt,
             cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
@@ -455,22 +457,6 @@ void print_ordered_banner()
 
 #define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
 #define RANDOM_SEED_MASTER 8765 // --''--
-
-random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
-    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
-        random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-        #warning LIB_RANDOM_SW_SEED
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
-        random_get_random_number (randoms.random_ssgn); 
-        #warning LIB_RANDOM_HW_SEED
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
-        next_symmetric_random_get_random_number (randoms); 
-    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
-        xorshift32 (randoms);
-    #endif
-
-    return randoms.random_ssgn;
-} // random_get_random_number_special
 
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
@@ -649,7 +635,7 @@ void task_master (
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms);
                 time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
                 #if (PRINT_RANDOM_VALS==1) // Print (not in slave)
-                    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+                    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) or (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC))
                         printf ("%d\n", (signed)random_number); 
                     #else
                         printf ("%u\n", random_number);
