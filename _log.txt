@@ -1,17 +1,22 @@
-Newest in top (new log with 0.929 only)
+Newest in top 
 
  *  Running xc_test_knock_come.xe
-XCC 1503.1 KNOCK-COME v0.929 on date Jul 29 2026 09:03:44
+XCC 1503.1 KNOCK-COME v0.931 on date Jul 29 2026 10:47:07
 Time random max 100000 us RanT 4 cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
 Deadlock if LEDS stop to count (Teig)
 //
 P 0 N 0 RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
-P 2 N 8 RanT 4 REC 502  >       SENT 498        (>795 =46 <159) SUM (REC 502 > SENT 498)        DT 24.57s
-P 2 N 8 RanT 4 REC 518  >       SENT 482        (>901 =55 <44)  SUM (REC 1020 > SENT 980)       DT 25.37s
-P 2 N 7 RanT 4 REC 478  >       SENT 522        (>0 =0 <1000)   SUM (REC 1498 < SENT 1502)      DT 25.41s
-P 2 N 7 RanT 4 REC 489  >       SENT 511        (>349 =108 <543)        SUM (REC 1987 < SENT 2013)      DT 25.16s
-P 2 N 9 RanT 4 REC 489  >       SENT 511        (>25 =13 <962)  SUM (REC 2476 < SENT 2524)      DT 25.28s
-P 2 N 7 RanT 4 REC 491  >       SENT 509        (>0 =0 <1000)   SUM (REC 2967 < SENT 3033)      DT 25.0s
-P 2 N 6 RanT 4 REC 484  >       SENT 516        (>4 =8 <988)    SUM (REC 3451 < SENT 3549)      DT 25.7s
-P 2 N 13        RanT 4 REC 512  >       SENT 488        (>786 =57 <157) SUM (REC 3963 < SENT 4037)      DT 24.89s
+P 1 N 8 RanT 4 REC 502  >       SENT 498        (>748 =42 <210) SUM (REC 502 > SENT 498)        DT 24.59s
+P 1 N 8 RanT 4 REC 517  >       SENT 483        (>890 =55 <55)  SUM (REC 1019 > SENT 981)       DT 25.39s
+P 1 N 7 RanT 4 REC 478  >       SENT 522        (>0 =1 <999)    SUM (REC 1497 < SENT 1503)      DT 25.40s
+P 1 N 7 RanT 4 REC 490  >       SENT 510        (>378 =105 <517)        SUM (REC 1987 < SENT 2013)      DT 25.12s
+P 1 N 9 RanT 4 REC 488  >       SENT 512        (>4 =10 <986)   SUM (REC 2475 < SENT 2525)      DT 25.35s
+P 1 N 7 RanT 4 REC 492  >       SENT 508        (>0 =0 <1000)   SUM (REC 2967 < SENT 3033)      DT 25.1s
+P 1 N 6 RanT 4 REC 484  >       SENT 516        (>0 =0 <1000)   SUM (REC 3451 < SENT 3549)      DT 25.7s
+
+
+
+
+
+

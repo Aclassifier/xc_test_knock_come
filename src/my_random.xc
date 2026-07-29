@@ -129,8 +129,8 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         randoms.use_random_negated = false;
 
     } else { // randoms.use_random_negated false
-        unsigned max_loop_pos_cnt    = 1;
-        unsigned max_loop_neg_cnt    = 0;
+        unsigned max_loop_pos_cnt = 0;
+        unsigned max_loop_neg_cnt = 0;
 
         // From limits.h plus here
         // __INT_MAX__ =                                          2147483647
