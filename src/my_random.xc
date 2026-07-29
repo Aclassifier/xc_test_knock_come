@@ -83,10 +83,8 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
         random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-        #warning LIB_RANDOM_SW_SEED
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
         random_get_random_number (randoms.random_ssgn); 
-        #warning LIB_RANDOM_HW_SEED
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
         next_symmetric_random_get_random_number (randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
     #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
@@ -99,13 +97,15 @@ random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
 } // random_get_random_number_special
 
 
+// 0.029 hopefully ok now
 void init_randoms (
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed) {
 
-    random_create_generator (random_seed); // randoms.random_ssgn old value in and new value out (ignoring return value)
+    randoms.random_ssgn = random_create_generator (random_seed); 
     
-    randoms.use_random_negated = false;
+    randoms.use_random_negated = false; 
+    randoms.random_ssgn_prev   = randoms.random_ssgn;
     randoms.max_loop_pos_cnt   = 0;
     randoms.max_loop_neg_cnt   = 0;
 } // init_randoms
@@ -123,10 +123,11 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // This makes it symmetric around zero, seen as signed, however..
         // .. seem as unsigned it is symmetric on half the number range
         random_signed32_t random_signed32;
-        
+      
         random_signed32            = (random_signed32_t) randoms.random_ssgn;
         randoms.random_ssgn        = (random_unsigned32_t) (-random_signed32);
         randoms.use_random_negated = false;
+
     } else { // randoms.use_random_negated false
         unsigned max_loop_pos_cnt    = 1;
         unsigned max_loop_neg_cnt    = 0;
@@ -138,8 +139,11 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         // INT_MAX     = __INT_MAX__        =                     2147483647 = 0x7fffffff (UINT_MAX/2)
         // UINT_MIN    =                                                   0 = 0x00000000
         // INT_MIN     = (-INT_MAX-1)       = -2147483647-1    = -2147483648 = 0x80000000
-
-        while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert 
+        
+        randoms.random_ssgn = randoms.random_ssgn_prev; // Restore previous used in the generator
+        
+        while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert
+            
             #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
                 random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
             #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
@@ -149,7 +153,8 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
             #endif
             if (randoms.random_ssgn < (UINT_MAX/2)) {
                 // Use postive value, but next time, use the negative value of it
-                randoms.use_random_negated = true; // Use as negative next time
+                randoms.use_random_negated = true;                // Use as negative next time in next_symmetric_random_get_random_number
+                randoms.random_ssgn_prev   = randoms.random_ssgn; // But after that, use this here
                 max_loop_pos_cnt++;
                 if (max_loop_pos_cnt > randoms.max_loop_pos_cnt) {
                     randoms.max_loop_pos_cnt = max_loop_pos_cnt;

@@ -29,13 +29,15 @@ typedef struct {
     //         return (unsigned) *g;
     //     }
     // The value g aliases the return value. Therefore..
-    random_generator_t random_ssgn;        // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
-    bool               use_random_negated; // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
-    unsigned           max_loop_pos_cnt;   // debug --''--
-    unsigned           max_loop_neg_cnt;   // debug --''--
+    random_generator_t  random_ssgn;        // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
+    random_unsigned32_t random_ssgn_prev;   // When a negative is slided in between the next _to_ the generator must be the last _from_ it
+                                            // Used only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC and LOCAL_XORSHIFT32_SYMMETRIC
+    bool                use_random_negated; // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
+    unsigned            max_loop_pos_cnt;   // debug --''--
+    unsigned            max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 20 // 10: crash XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:01:59 and LOCAL_XORSHIFT32_SYMMETRIC
+#define DROP_NEG_CNT_MAX 200 // 10: crash XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:01:59 and LOCAL_XORSHIFT32_SYMMETRIC
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 
