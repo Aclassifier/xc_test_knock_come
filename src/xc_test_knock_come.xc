@@ -36,7 +36,7 @@
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 29Jul2026 0.932   find_max_negative_run by Google AI is new. For DROP_NEG_CNT_MAX
+// 29Jul2026 0.932   find_max_negative_run by Google AI is new. For DROP_NEG_CNT_MAX (More on the sort)
 // 29Jul2026 0.931   DROP_NEG_CNT_MAX questions stated
 // 29Jul2026 0.931   max_loop_pos_cnt was initialised to 1, should be 0. So now "P 1" as it should in _log.txt
 // 29Jul2026 0.930   DROP_NEG_CNT_MAX 20 -> 25 since 20 seen (tested with 200)

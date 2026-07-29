@@ -48,17 +48,27 @@ typedef struct {
 //     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
-// Here is a Google AI answer. This was the second after I presssured it on its initial max of 31, which I doubted.
-// It generated find_max_negative_run to find it. The code is included in my_random.xc
+// Here are some Google AI discussions and answers. Surely open for discussions!
+// This was the second after I presssured it on its initial max of 31, which I doubted.
+// It generated find_max_negative_run to find it. The code is included in my_random.xc. It gave 21.
 // The problems here are:
 //   1. What is the longest sequence of repeating negative values?
-//      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple.
+//      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple. (Found with find_max_negative_run)
+//      -> (For 64 bits it did matrix calculations and a linear equations matrix to find the value, answer was 64.
+//         When I asked about the same maths for 32 bits it answered 32 (instead of the find_max_negative_run 21)
+//         When confronted with it I got "Something went wrong and an AI response wasn't generated.")
 //   2. Is this dependent on the initial seed?
 //      -> No. Because xorshift32 is a single maximal-length loop, every 
 //         non-zero seed will eventually pass through this exact same worst-case run.
 //   3. Is it possible to calculate this, or is it an NP-complete problem?
 //      -> It is a deterministic state-space boundary problem, fully verified 
 //         via cycle simulation to be exactly 21.
+//      -> This problem belongs to O(1) (Constant Time) or O(log N) (Logarithmic Time) depending on 
+//         how you define the input, but it is definitively in P (Polynomial Time)
+//         You mentioned I didn't create a formula, but a formula does exist. Because xorshift32 is a linear transformation 
+//         over a Galois field F, its steps can be written as a 32 X 32 binary matrix M. Finding the longest run of a specific 
+//         bit is equivalent to finding the properties of the characteristic polynomial of that matrix. Mathematicians can 
+//         compute this analytically using matrix exponentiation in O(log N) steps without running the generator at all.
 
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
