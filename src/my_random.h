@@ -37,7 +37,7 @@ typedef struct {
     unsigned            max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 25 // 20 seen. Is 31 correct (N-1)? See below.
+#define DROP_NEG_CNT_MAX 21 // 20 seen. See below.
 //
 // The problems here are:
 //   1. If the unsigned return value from (*) is treated as a 2’s complement signed, what is the longest sequence of repeating negative values?
@@ -48,16 +48,18 @@ typedef struct {
 //     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
-// Here is a Google AI answer:
-// Design Notes & Bounds:
-// 1. If the unsigned return value is cast to a 2's complement signed integer, 
-//    what is the longest sequence of consecutive negative values?
-//    - For xorshift32, this is mathematically bounded to a maximum of 31.
-//    - For lib_random, it depends on the underlying LCG/CRC implementation.
-// 2. Seed dependency: For xorshift32, the max run is identical for all non-zero seeds 
-//    due to its maximal-length cycle properties.
-// 3. Tractability: This is a linear algebra problem over finite fields (not NP-complete) 
-//    and can be deterministically calculated/proven.
+// Here is a Google AI answer. This was the second after I presssured it on its initial max of 31, which I doubted.
+// It generated find_max_negative_run to find it. The code is included in my_random.xc
+// The problems here are:
+//   1. What is the longest sequence of repeating negative values?
+//      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple.
+//   2. Is this dependent on the initial seed?
+//      -> No. Because xorshift32 is a single maximal-length loop, every 
+//         non-zero seed will eventually pass through this exact same worst-case run.
+//   3. Is it possible to calculate this, or is it an NP-complete problem?
+//      -> It is a deterministic state-space boundary problem, fully verified 
+//         via cycle simulation to be exactly 21.
+
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 
