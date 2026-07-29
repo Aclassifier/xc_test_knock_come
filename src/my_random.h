@@ -37,7 +37,7 @@ typedef struct {
     unsigned            max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 200 // 10: crash XCC 1503.1 KNOCK-COME v0.928 on date Jul 28 2026 21:01:59 and LOCAL_XORSHIFT32_SYMMETRIC
+#define DROP_NEG_CNT_MAX 25 // 20 seen
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 

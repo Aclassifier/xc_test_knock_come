@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.929" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.930" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,7 @@
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 29Jul2026 v0930   DROP_NEG_CNT_MAX 20 -> 25 since 20 seen (tested with 200)
 // 29Jul2026 0.929   Init and symmetric modes hopefulley fixed. Follow random_ssgn_prev
 // 28Jul2026 0.928   LOCAL_XORSHIFT32_SYMMETRIC is new  (see _log.txt). APP_COMPILER_FLAGS instead of XCC_FLAGS_DEBUG
 // 28Jul2026 0.927   This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
