@@ -37,7 +37,7 @@ typedef struct {
     unsigned            max_loop_neg_cnt;   // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 21 // 20 seen. See below.
+#define DROP_NEG_CNT_MAX 21 // 20 seen. See below. 21 or 32?
 //
 // The problems here are:
 //   1. If the unsigned return value from (*) is treated as a 2’s complement signed, what is the longest sequence of repeating negative values?
@@ -48,9 +48,12 @@ typedef struct {
 //     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
+uint32_t find_max_negative_run(uint32_t initial_seed);
+//
 // Here are some Google AI discussions and answers. Surely open for discussions!
 // This was the second after I presssured it on its initial max of 31, which I doubted.
 // It generated find_max_negative_run to find it. The code is included in my_random.xc. It gave 21.
+// When I ran it on the XCORE here, with DO_FIND_DROP_NEG_CNT_MAX it gave 32§
 // The problems here are:
 //   1. What is the longest sequence of repeating negative values?
 //      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple. (Found with find_max_negative_run)

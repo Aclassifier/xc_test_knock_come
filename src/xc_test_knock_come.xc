@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.932" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.933" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,7 @@
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 29Jul2026 0.933   DO_FIND_DROP_NEG_CNT_MAX is new
 // 29Jul2026 0.932   find_max_negative_run by Google AI is new. For DROP_NEG_CNT_MAX (More on the sort)
 // 29Jul2026 0.931   DROP_NEG_CNT_MAX questions stated
 // 29Jul2026 0.931   max_loop_pos_cnt was initialised to 1, should be 0. So now "P 1" as it should in _log.txt
@@ -88,8 +89,11 @@
 // 21May2026 0.0.900 Initial version. Sent to Antonio
 // =============================================================================================
 
-#define DO_LIB_RANDOM_EXAMPLE 0
-#if (DO_LIB_RANDOM_EXAMPLE == 0)
+#define DO_KNOCK_COME            0
+#define DO_LIB_RANDOM_EXAMPLE    1
+#define DO_FIND_DROP_NEG_CNT_MAX 2
+
+#define DO_COMPILE_RUN DO_KNOCK_COME
 
 #define _XTC           (XCC_VERSION_MAJOR >= 1503)
 #define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
@@ -108,6 +112,8 @@
     #include "__globals.h"
     #include "my_random.h"
 #endif
+
+#if (DO_COMPILE_RUN == DO_KNOCK_COME)
 
 //                                LEDS COUNT ABOUT THE SAME RATE FOR BOTH
 #define SPEED_SLOW_AND_PRINT 0 // Scope possible: use ROLL scope
@@ -725,8 +731,7 @@ int main()
     return 0;
 } // main
 
-#elif (DO_LIB_RANDOM_EXAMPLE == 1)
-
+#elif (DO_COMPILE_RUN == DO_LIB_RANDOM_EXAMPLE)
 #warning DO_LIB_RANDOM_EXAMPLE, NO KNOCK_COME!
 int main()
 {
@@ -734,4 +739,18 @@ int main()
     return 0;
 } // main
 
+#elif (DO_COMPILE_RUN == DO_FIND_DROP_NEG_CNT_MAX)
+
+#warning DO_FIND_DROP_NEG_CNT_MAX, NO KNOCK_COME!
+int main()
+{
+    printf ("Started find_max_negative_run\n");
+    find_max_negative_run(1);
+    // === Simulation Complete ===
+    // Total numbers checked:  4294967295 (2^32 - 1)
+    // Max consecutive negatives found: 32
+    return 0;
+} // main
+#else
+    #error NO CODE!
 #endif
