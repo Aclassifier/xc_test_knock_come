@@ -28,14 +28,15 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.933" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.934" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
-
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 31Jul2026 0.934   Experimenting with DO_FIND_DROP_NEG_CNT_MAX, see _log.txt
+// 30Jul2026 0.934   max_loop_neg_cnt_ever is new
 // 29Jul2026 0.933   DO_FIND_DROP_NEG_CNT_MAX is new
 // 29Jul2026 0.932   find_max_negative_run by Google AI is new. For DROP_NEG_CNT_MAX (More on the sort)
 // 29Jul2026 0.931   DROP_NEG_CNT_MAX questions stated
@@ -392,7 +393,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
    const unsigned delta_print_10ms = cnts.delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 % 100 = 87 for "DT 23.87s"
    char max_loop_drop_neg_cnt_str[25];
 
-   sprintf(max_loop_drop_neg_cnt_str, "P %u N %u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt);
+   sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
    
    printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
             ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) or (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)) ? max_loop_drop_neg_cnt_str : "",
@@ -742,10 +743,10 @@ int main()
 #elif (DO_COMPILE_RUN == DO_FIND_DROP_NEG_CNT_MAX)
 
 #warning DO_FIND_DROP_NEG_CNT_MAX, NO KNOCK_COME!
+port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {
-    printf ("Started find_max_negative_run\n");
-    find_max_negative_run(1);
+    find_max_negative_run (1, p1_out_blue);
     // === Simulation Complete ===
     // Total numbers checked:  4294967295 (2^32 - 1)
     // Max consecutive negatives found: 32

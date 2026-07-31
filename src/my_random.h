@@ -29,15 +29,16 @@ typedef struct {
     //         return (unsigned) *g;
     //     }
     // The value g aliases the return value. Therefore..
-    random_generator_t  random_ssgn;        // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
-    random_unsigned32_t random_ssgn_prev;   // When a negative is slided in between the next _to_ the generator must be the last _from_ it
-                                            // Used only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC and LOCAL_XORSHIFT32_SYMMETRIC
-    bool                use_random_negated; // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
-    unsigned            max_loop_pos_cnt;   // debug --''--
-    unsigned            max_loop_neg_cnt;   // debug --''--
+    random_generator_t  random_ssgn;           // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
+    random_unsigned32_t random_ssgn_prev;      // When a negative is slided in between the next _to_ the generator must be the last _from_ it
+                                               // Used only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC and LOCAL_XORSHIFT32_SYMMETRIC
+    bool                use_random_negated;    // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
+    unsigned            max_loop_pos_cnt;      // debug --''--
+    unsigned            max_loop_neg_cnt;      // debug --''--
+    unsigned            max_loop_neg_cnt_ever; // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 21 // 20 seen. See below. 21 or 32?
+#define DROP_NEG_CNT_MAX 32 // 20 seen. See below. 21 or 32?
 //
 // The problems here are:
 //   1. If the unsigned return value from (*) is treated as a 2’s complement signed, what is the longest sequence of repeating negative values?
@@ -48,7 +49,9 @@ typedef struct {
 //     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
-uint32_t find_max_negative_run(uint32_t initial_seed);
+uint32_t find_max_negative_run 
+    (const uint32_t initial_seed,
+    port out        p1_out_blue);
 //
 // Here are some Google AI discussions and answers. Surely open for discussions!
 // This was the second after I presssured it on its initial max of 31, which I doubted.
@@ -72,7 +75,6 @@ uint32_t find_max_negative_run(uint32_t initial_seed);
 //         over a Galois field F, its steps can be written as a 32 X 32 binary matrix M. Finding the longest run of a specific 
 //         bit is equivalent to finding the properties of the characteristic polynomial of that matrix. Mathematicians can 
 //         compute this analytically using matrix exponentiation in O(log N) steps without running the generator at all.
-
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 

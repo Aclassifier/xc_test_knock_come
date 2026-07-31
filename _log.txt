@@ -1,5 +1,12 @@
 Newest in top 
 
+Starting full state-space simulation with seed 1 in code at 11:36:27 Jul 30 2026. Please wait some minutes...
+
+=== Simulation Complete ===
+After 3064 seconds, total numbers checked:  4294967295 (2^32 - 1)
+Max consecutive negatives found: 32
+
+
  *  Running xc_test_knock_come.xe
 XCC 1503.1 KNOCK-COME v0.931 on date Jul 29 2026 10:47:07
 Time random max 100000 us RanT 4 cnt events at 1000
