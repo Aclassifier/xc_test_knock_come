@@ -12,3 +12,5 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
                              // ie. divide by 100 mill = 42.9.. seconds
 
 typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
+
+#define BITSNUM32 32

@@ -56,7 +56,15 @@ random_unsigned32_t xorshift32 (randoms_t &randoms) {
  } stats_t;
 
 
-void do_xorshift32_etc (stats_t &stats) {
+void init_stats (stats_t &stats, const uint32_t initial_seed) {
+    stats.state = initial_seed;
+    stats.max_run = 0;
+    stats.current_run = 0;
+    stats.total_elements = 0;
+} // init_stats
+
+
+void do_xorshift32_etc (stats_t &stats, const uint32_t bitmask) {
     
     // Standard xorshift32 algorithm (Marsaglia triples: 13, 17, 5)
     stats.state ^= stats.state << 13;
@@ -64,18 +72,12 @@ void do_xorshift32_etc (stats_t &stats) {
     stats.state ^= stats.state << 5;
     
     // In 2's complement, a number is negative if its MSB is 1
-    if (stats.state & INT_MIN) { // Negative (AI was 0x80000000)
+    if (stats.state & bitmask) { 
         stats.current_run++;
         if (stats.current_run > stats.max_run) { // This Google AI placed when positive and finally, I place it here
             stats.max_run = stats.current_run;
         }
     } else { // Positive
-        /* Sequence broken; check if this was the longest run so far
-        Google AI had this here, not necessary since I placed the max update after every inc
-        if (current_run > max_run) {
-            max_run = current_run;
-        }
-        */
         stats.current_run = 0;
     }           
     stats.total_elements++; 
@@ -87,23 +89,19 @@ uint32_t find_max_negative_run
     port out        p1_out_blue) {
     
     stats_t  stats;
-
-    stats.state = initial_seed;
-    stats.max_run = 0;
-    stats.current_run = 0;
-    stats.total_elements = 0;
-
     timer    tmr;
     time32_t time_ticks;
     unsigned num_seconds = 0;
-    bool p1_val = false;
+    bool     p1_val = false;
 
-    printf("Starting full state-space simulation with seed %u in code at %s %s. Please wait about 103 minutes...\nmins:\n\n", initial_seed, __TIME__, __DATE__);
+    printf("Starting full state-space simulation with seed %u in code at %s %s. Please wait about 52 minutes...\nmins:\n\n", initial_seed, __TIME__, __DATE__);
+
+    init_stats (stats, initial_seed);
 
     tmr :> time_ticks;
     p1_out_blue <: p1_val;
-    do_xorshift32_etc (stats);
-    // Now while-cond does not hit after 1 round
+    do_xorshift32_etc (stats, INT_MIN); // Now while-cond does not hit after 1 round
+
     do {
         [[ordered]] 
         select {
@@ -117,17 +115,10 @@ uint32_t find_max_negative_run
             default: {               
                 p1_out_blue <: p1_val; // Every (1.43 us / 2) * 4294967296 (32 bits full range) = 3064 secs = 51.07 mins
                 p1_val = not p1_val;
-                do_xorshift32_etc (stats);
+                do_xorshift32_etc (stats, INT_MIN);
             } break;
         }          
     } while (stats.state != initial_seed); // Terminates when we complete the full cycle
-
-    /* Final safety check if the longest sequence crossed the wrap-around point 
-    Google AI had this here, not necessary since I placed the max update after every inc
-    if (current_run > max_run) { 
-        max_run = current_run;
-    }
-    */
 
     // All terminal outputs are now grouped together here
     printf("\n=== Simulation Complete ===\n");
@@ -136,6 +127,63 @@ uint32_t find_max_negative_run
     
     return stats.max_run;
 } // find_max_negative_run
+
+
+uint32_t find_max_allbits_run 
+    (const uint32_t initial_seed,
+    port out        p1_out_blue) {
+   
+    timer    tmr;
+    time32_t time_ticks;
+    unsigned num_seconds = 0;
+    bool     p1_val = false;
+
+    printf("Starting full state-space simulation with seed %u in code at %s %s. Please wait some 25 hours...\nhours:\n\n", initial_seed, __TIME__, __DATE__);
+    stats_t stats [BITSNUM32];
+
+    for (unsigned ix=0; ix<BITSNUM32; ix++){
+       init_stats (stats[ix], initial_seed);
+    }
+
+    tmr :> time_ticks;
+    p1_out_blue <: p1_val;
+
+    for (unsigned ix=0; ix<BITSNUM32; ix++){
+       do_xorshift32_etc (stats[ix], 1<<ix);
+    }
+    // Now while-cond does not hit after 1 round
+    do {
+        [[ordered]] 
+        select {
+            case tmr when timerafter (time_ticks) :> void: {
+                time_ticks += XS1_TIMER_HZ;
+                num_seconds++;
+                if ((num_seconds % 3600) == 0) {
+                    printf("%u\n", num_seconds / 3600);
+                }
+            } break;
+            default: {               
+                p1_out_blue <: p1_val; // Every (21 us) * 4294967296 (32 bits full range) = 90194 secs = 25.05 hours
+                p1_val = not p1_val;
+                for (unsigned ix=0; ix<BITSNUM32; ix++){
+                    do_xorshift32_etc (stats[ix], 1<<ix);
+                }
+            } break;
+        }          
+    } while (stats[0].state != initial_seed); // Terminates when we complete the full cycle
+    // } while (stats[0].total_elements < 1000); To test
+
+    // All terminal outputs are now grouped together here
+    printf("\n=== Simulation Complete ===\n");
+    printf("After %u seconds, total numbers checked:  %llu (2^32 - 1)\n", num_seconds, (unsigned long long)stats[0].total_elements);
+    printf("Max consecutive negatives found:\n");
+
+    for (unsigned ix=0; ix<BITSNUM32; ix++){
+        printf ("[%u]=%u\n", ix, stats[ix].max_run);
+    }
+    
+    return stats[0].max_run;
+} // find_max_allbits_run
 
 
 // See https://www.xmos.com/documentation/XM-011312-UG/html/doc/rst/lib_random.html
