@@ -98,6 +98,9 @@ void do_xorshift32_etc (stats_t &stats, const uint32_t bitmask) {
 
 // Soleley to find by brute force the value I need for DROP_BIT_CNT_MAX as needed in next_symmetric_random_get_random_number
 //
+// After 3064 seconds, total numbers checked:  4294967295 (2^32 - 1)
+// Max consecutive negatives found: 32 (=DROP_BIT_CNT_MAX)
+//
 uint32_t find_max_consecutive_bit31_xorshift32 
     (const uint32_t initial_seed,
     port out        p1_out_blue) {
@@ -148,17 +151,17 @@ uint32_t find_max_consecutive_bit31_xorshift32
 // ALL BIT'S MAXRUN SEQUENCES ARE 32 LONG:
 //
 // Pretty-printed (by Google AI) log, as of 02Aug2026 v0.936
-// Simulation Hours
+// Simulation hours
 // Row 1: 1-16, Row 2: 17-24
 // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 // 17, 18, 19, 20, 21, 22, 23, 24
 
-// Max consecutive negatives found
+// Max consecutive bit sequences found
 // Row 1: Indices 0-15, Row 2: Indices 16-31
 // 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
 // 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
 
-// Simulation Metadata:
+// Simulation metadata:
 // Start: 10:11:16 Aug 1 2026
 // Duration: 89170 seconds
 // Total checked: 4294967295 (2^32 - 1)
