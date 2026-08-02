@@ -28,21 +28,24 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.935" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.936" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 01Aug2026 0.935   DO_FIND_32BITS_DROP_CNT_MAX is new, and so is find_max_allbits_run (should take some 25h)
+// 02Aug2026 0.936   Quite some new names that I hope carriy the semnatics better, without being extraordinary long.
+//                   like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
+//                   that every bit has a max conesequtive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
+// 01Aug2026 0.935   DO_FIND_32BITS_DROP_CNT_MAX is new, and so is find_max_consecutive_allbits_xorshift32 (should take some 25h)
 // 31Jul2026 0.934   Experimenting with DO_FIND_BIT31_DROP_CNT_MAX, see _log.txt
 // 30Jul2026 0.934   max_loop_neg_cnt_ever is new
 // 29Jul2026 0.933   DO_FIND_BIT31_DROP_CNT_MAX is new
-// 29Jul2026 0.932   find_max_negative_run by Google AI is new. For DROP_NEG_CNT_MAX (More on the sort)
-// 29Jul2026 0.931   DROP_NEG_CNT_MAX questions stated
+// 29Jul2026 0.932   find_max_consecutive_bit31_xorshift32 by Google AI is new. For DROP_BIT_CNT_MAX (More on the sort)
+// 29Jul2026 0.931   DROP_BIT_CNT_MAX questions stated
 // 29Jul2026 0.931   max_loop_pos_cnt was initialised to 1, should be 0. So now "P 1" as it should in _log.txt
-// 29Jul2026 0.930   DROP_NEG_CNT_MAX 20 -> 25 since 20 seen (tested with 200)
+// 29Jul2026 0.930   DROP_BIT_CNT_MAX 20 -> 25 since 20 seen (tested with 200)
 // 29Jul2026 0.929   Init and symmetric modes hopefulley fixed. Follow random_ssgn_prev
 // 28Jul2026 0.928   LOCAL_XORSHIFT32_SYMMETRIC is new  (see _log.txt). APP_COMPILER_FLAGS instead of XCC_FLAGS_DEBUG
 // 28Jul2026 0.927   This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
@@ -748,7 +751,7 @@ int main()
 port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {
-    find_max_negative_run (1, p1_out_blue);
+    find_max_consecutive_bit31_xorshift32 (1, p1_out_blue);
     return 0;
 } // main
 
@@ -758,7 +761,7 @@ int main()
 port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {
-    find_max_allbits_run (1, p1_out_blue);
+    find_max_consecutive_allbits_xorshift32 (1, p1_out_blue);
     return 0;
 } // main
 

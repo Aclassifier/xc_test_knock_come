@@ -38,7 +38,7 @@ typedef struct {
     unsigned            max_loop_neg_cnt_ever; // debug --''--
 } randoms_t;
 //
-#define DROP_NEG_CNT_MAX 32 // 20 seen. See below. 21 or 32?
+#define DROP_BIT_CNT_MAX 32 // 32 for all bits, really. See find_max_consecutive_bit31_xorshift32 or find_max_consecutive_allbits_xorshift32
 //
 // The problems here are:
 //   1. If the unsigned return value from (*) is treated as a 2’s complement signed, what is the longest sequence of repeating negative values?
@@ -49,23 +49,23 @@ typedef struct {
 //     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
-uint32_t find_max_negative_run // bit31
+uint32_t find_max_consecutive_bit31_xorshift32 
     (const uint32_t initial_seed,
     port out        p1_out_blue);
 
-uint32_t find_max_allbits_run 
+uint32_t find_max_consecutive_allbits_xorshift32 
     (const uint32_t initial_seed,
     port out        p1_out_blue);
 //
 // Here are some Google AI discussions and answers. Surely open for discussions!
 // This was the second after I presssured it on its initial max of 31, which I doubted.
-// It generated find_max_negative_run to find it. The code is included in my_random.xc. It gave 21.
+// It generated find_max_consecutive_bit31_xorshift32 to find it. The code is included in my_random.xc. It gave 21.
 // When I ran it on the XCORE here, with DO_FIND_BIT31_DROP_CNT_MAX it gave 32§
 // The problems here are:
 //   1. What is the longest sequence of repeating negative values?
-//      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple. (Found with find_max_negative_run)
+//      -> Exactly 21 consecutive calls max for the standard [13, 17, 5] triple. (Found with find_max_consecutive_bit31_xorshift32)
 //      -> (For 64 bits it did matrix calculations and a linear equations matrix to find the value, answer was 64.
-//         When I asked about the same maths for 32 bits it answered 32 (instead of the find_max_negative_run 21)
+//         When I asked about the same maths for 32 bits it answered 32 (instead of the find_max_consecutive_bit31_xorshift32 21)
 //         When confronted with it I got "Something went wrong and an AI response wasn't generated.")
 //   2. Is this dependent on the initial seed?
 //      -> No. Because xorshift32 is a single maximal-length loop, every 
