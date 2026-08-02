@@ -35,9 +35,9 @@
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 02Aug2026 0.936   Quite some new names that I hope carriy the semnatics better, without being extraordinary long.
-//                   like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
-//                   that every bit has a max conesequtive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
+// 02Aug2026 0.936   Quite some new names that I hope carry the semantics better, without being extraordinary long.
+//                   Like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
+//                   that every bit has a max consecutive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
 // 01Aug2026 0.935   DO_FIND_32BITS_DROP_CNT_MAX is new, and so is find_max_consecutive_allbits_xorshift32 (should take some 25h)
 // 31Jul2026 0.934   Experimenting with DO_FIND_BIT31_DROP_CNT_MAX, see _log.txt
 // 30Jul2026 0.934   max_loop_neg_cnt_ever is new
