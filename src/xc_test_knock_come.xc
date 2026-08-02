@@ -28,13 +28,14 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.936" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.937" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
+// 02Aug2026 0.937   Just running as DO_KNOCK_COME and LOCAL_XORSHIFT32_SYMMETRIC. print_welcome_banner extended
 // 02Aug2026 0.936   Quite some new names that I hope carry the semantics better, without being extraordinary long.
 //                   Like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
 //                   that every bit has a max consecutive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
@@ -99,7 +100,7 @@
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3
 
-#define DO_COMPILE_RUN DO_FIND_32BITS_DROP_CNT_MAX
+#define DO_COMPILE_RUN DO_KNOCK_COME
 
 #define _XTC           (XCC_VERSION_MAJOR >= 1503)
 #define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
@@ -422,17 +423,19 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 // #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT or SPEED_FAST_AND_SCOPE)
 void print_welcome_banner()
 {
-    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us RanT %u %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n//\n",
+    printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
-            RANDOM_VAL_MAX_US, USE_RANDOM_TYPE, 
+            RANDOM_VAL_MAX_US, 
             PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
             MAX_SUM_CNT,
             PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : ")",
             USE_ORDERED_PRI_SELECT_MASTER,
             USE_ORDERED_PRI_SELECT_SLAVE,
             PRINT_OR_SCOPE);
+
+    printf ("DO_COMPILE_RUN %u USE_RANDOM_TYPE %u\n\n", DO_COMPILE_RUN, USE_RANDOM_TYPE);
 } // print_welcome_banner
 
 
