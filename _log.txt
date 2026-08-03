@@ -1,4 +1,38 @@
 Newest on top 
+
+> Analysis of the below with Claude Sonnet 5 medium
+
+Sum of all DT values: 1346.48
+Count: 54
+Mean: 1346.48 / 54 ≈ 24.94 seconds
+
+> Which distribution type would you say it is? Normal distribution?
+
+I wouldn't call it normal. A couple of things jump out:
+
+Main cluster: about 80% of the values sit tightly between 24.35s and 25.0s, roughly symmetric around ~24.8s.
+Secondary bump: a smaller group of values (25.13–25.8s, including four runs that hit exactly 25.8s) sits noticeably higher, with a gap between it and the main cluster.
+Right skew: there's essentially no equivalent cluster on the low side — nothing drops much below 24.35s.
+
+That combination — a tight main mode plus a separated slower cluster — is a classic right-skewed / mixture distribution, not a Gaussian. It's very typical of latency 
+or timing data: most runs complete in a "fast path" with small random jitter, while a subset hits some extra step (retry, cache miss, longer generation, etc.) that 
+pushes them into a "slow path" a few tenths of a second higher. If you fit a normal distribution to this, it would underestimate the frequency of those 25.1–25.8s 
+runs and imply values below ~24.3s that don't actually occur.
+
+If it'd help, I could pull the raw REC/SENT numbers to check whether those slower runs correlate with something (e.g. token count, ratio) that explains the split.
+
+Almost zero correlation
+
+> It's the values from a distribution function I have deviced, that from xorshift32 for any even number of values will give an avarrage of half the range. The runs 
+perhaps change because the XMOS XCORE processor that I run this on actualley stop the processor during the prints
+
+That fits perfectly with what we found. If the print/UART call is blocking the XCORE while it flushes each line, then DT is really measuring "computation time + however
+long the print happened to take to drain," and that second part depends on things like buffer state, output pipe backpressure, or thread scheduling — none of which show 
+up in your REC/SENT/tally numbers. That's exactly why there was zero correlation with the actual distribution data: the slowdown is a side effect of the logging 
+mechanism, not the xorshift32 generator or the values it produced.
+
+=== The log ===
+
 XCC 1503.1 KNOCK-COME v0.938 on date Aug  3 2026 13:29:56
 Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
@@ -6,6 +40,7 @@ Deadlock if LEDS stop to count (Teig)
 DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
 
 P 0 N 0/0       RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+
 P 1 N 9/9       RanT 4 REC 504  >       SENT 496        (>968 =22 <10)  SUM (REC 504 > SENT 496)        DT 24.91s
 P 1 N 9/9       RanT 4 REC 494  >       SENT 506        (>55 =136 <809) SUM (REC 998 < SENT 1002)       DT 25.8s
 P 1 N 9/9       RanT 4 REC 496  >       SENT 504        (>2 =5 <993)    SUM (REC 1494 < SENT 1506)      DT 24.89s
@@ -40,3 +75,25 @@ P 1 N 9/15      RanT 4 REC 494  >       SENT 506        (>0 =0 <1000)   SUM (REC
 P 1 N 9/15      RanT 4 REC 500  >       SENT 500        (>805 =107 <88) SUM (REC 15932 < SENT 16068)    DT 24.70s
 P 1 N 9/15      RanT 4 REC 498  >       SENT 502        (>32 =93 <875)  SUM (REC 16430 < SENT 16570)    DT 25.0s
 P 1 N 7/15      RanT 4 REC 508  >       SENT 492        (>871 =63 <66)  SUM (REC 16938 < SENT 17062)    DT 25.20s
+P 1 N 8/15      RanT 4 REC 498  >       SENT 502        (>107 =125 <768)        SUM (REC 17436 < SENT 17564)    DT 24.97s
+P 1 N 8/15      RanT 4 REC 500  >       SENT 500        (>281 =207 <512)        SUM (REC 17936 < SENT 18064)    DT 24.91s
+P 1 N 7/15      RanT 4 REC 500  >       SENT 500        (>657 =113 <230)        SUM (REC 18436 < SENT 18564)    DT 24.96s
+P 1 N 6/15      RanT 4 REC 504  >       SENT 496        (>793 =110 <97) SUM (REC 18940 < SENT 19060)    DT 24.84s
+P 1 N 7/15      RanT 4 REC 494  >       SENT 506        (>0 =5 <995)    SUM (REC 19434 < SENT 19566)    DT 24.67s
+P 1 N 12/15     RanT 4 REC 499  >       SENT 501        (>562 =165 <273)        SUM (REC 19933 < SENT 20067)    DT 24.65s
+P 1 N 7/15      RanT 4 REC 500  >       SENT 500        (>0 =5 <995)    SUM (REC 20433 < SENT 20567)    DT 24.86s
+P 1 N 6/15      RanT 4 REC 497  >       SENT 503        (>0 =10 <990)   SUM (REC 20930 < SENT 21070)    DT 24.76s
+P 1 N 8/15      RanT 4 REC 501  >       SENT 499        (>121 =207 <672)        SUM (REC 21431 < SENT 21569)    DT 24.79s
+P 1 N 8/15      RanT 4 REC 497  >       SENT 503        (>442 =157 <401)        SUM (REC 21928 < SENT 22072)    DT 24.90s
+P 1 N 9/15      RanT 4 REC 494  >       SENT 506        (>4 =13 <983)   SUM (REC 22422 < SENT 22578)    DT 24.85s
+P 1 N 6/15      RanT 4 REC 492  >       SENT 508        (>51 =97 <852)  SUM (REC 22914 < SENT 23086)    DT 24.68s
+P 1 N 6/15      RanT 4 REC 493  >       SENT 507        (>0 =0 <1000)   SUM (REC 23407 < SENT 23593)    DT 24.67s
+P 1 N 11/15     RanT 4 REC 489  >       SENT 511        (>0 =7 <993)    SUM (REC 23896 < SENT 24104)    DT 24.35s
+P 1 N 7/15      RanT 4 REC 493  >       SENT 507        (>0 =0 <1000)   SUM (REC 24389 < SENT 24611)    DT 24.99s
+P 1 N 9/15      RanT 4 REC 501  >       SENT 499        (>41 =92 <867)  SUM (REC 24890 < SENT 25110)    DT 25.7s
+P 1 N 5/15      RanT 4 REC 499  >       SENT 501        (>0 =1 <999)    SUM (REC 25389 < SENT 25611)    DT 24.77s
+P 1 N 7/15      RanT 4 REC 497  >       SENT 503        (>33 =82 <885)  SUM (REC 25886 < SENT 26114)    DT 24.74s
+P 1 N 8/15      RanT 4 REC 500  >       SENT 500        (>265 =115 <620)        SUM (REC 26386 < SENT 26614)    DT 25.13s
+P 1 N 10/15     RanT 4 REC 502  >       SENT 498        (>734 =110 <156)        SUM (REC 26888 < SENT 27112)    DT 24.89s
+P 1 N 7/15      RanT 4 REC 498  >       SENT 502        (>99 =92 <809)  SUM (REC 27386 < SENT 27614)    DT 24.80s
+P 1 N 10/15     RanT 4 REC 500  >       SENT 500        (>623 =176 <201)        SUM (REC 27886 < SENT 28114)    DT 24.89s

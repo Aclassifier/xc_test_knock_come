@@ -37,7 +37,8 @@
 // ===================================================================================================================
 /*
 03Aug2026 0.938
-All "LOCAL_".. removed. like LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC -> LIB_RANDOM_SW_SEED_SYMMETRIC
+* Analysis of the log with Claude Sonnet 5 medium in _log.txt
+* All "LOCAL_".. removed. like LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC -> LIB_RANDOM_SW_SEED_SYMMETRIC
 get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower 
 half of next_timeout_ticks range. See _log.txt. New layout of this list, easier to paste into Git changes
 
@@ -526,7 +527,7 @@ time32_t get_until_next_timeout_ticks (const random_unsigned32_t random_number) 
     
     #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
         // "50" is zero point 
-        if ((random_number bitand INT_MIN) == 0) { // "Postive half"                 ">= 50"
+        if ((random_number bitand INT_MIN) == 0) { // "Positive half"                ">= 50"
             //                             "100 + 99                               / 2 = 99.5"
             //                             "100 + 76                               / 2 = 88"
             next_timeout_ticks = (HALF_RANGE_US + ((random_unsigned32_in_range_us) / 2)) * XS1_TIMER_MHZ; // Above half
