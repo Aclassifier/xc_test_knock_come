@@ -10,13 +10,13 @@
 // typedef enum compiles but preprocessor always takes first #if, see
 // https://www.teigfam.net/oyvind/home/technology/165-xc-code-examples/#no_enum
 //
-#define LIB_RANDOM_SW_SEED                 0 // see XMOS Ticket 339260
-#define LIB_RANDOM_HW_SEED                 1 // --''--
-#define LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC 2 // --''-- Creates every other positive and negative value
-#define LOCAL_XORSHIFT32                   3 // Creates unique values with xorshift32
-#define LOCAL_XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
+#define LIB_RANDOM_SW_SEED           0 // see XMOS Ticket 339260
+#define LIB_RANDOM_HW_SEED           1 // --''--
+#define LIB_RANDOM_SW_SEED_SYMMETRIC 2 // --''-- Creates every other positive and negative value
+#define XORSHIFT32                   3 // Creates unique values with xorshift32
+#define XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
 //
-#define USE_RANDOM_TYPE LOCAL_XORSHIFT32_SYMMETRIC
+#define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC
 
 typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
 typedef int32_t  random_signed32_t;
@@ -31,8 +31,8 @@ typedef struct {
     // The value g aliases the return value. Therefore..
     random_generator_t  random_ssgn;           // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
     random_unsigned32_t random_ssgn_prev;      // When a negative is slided in between the next _to_ the generator must be the last _from_ it
-                                               // Used only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC and LOCAL_XORSHIFT32_SYMMETRIC
-    bool                use_random_negated;    // Only for LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC
+                                               // Used only for LIB_RANDOM_SW_SEED_SYMMETRIC and XORSHIFT32_SYMMETRIC
+    bool                use_random_negated;    // Only for LIB_RANDOM_SW_SEED_SYMMETRIC
     unsigned            max_loop_pos_cnt;      // debug --''--
     unsigned            max_loop_neg_cnt;      // debug --''--
     unsigned            max_loop_neg_cnt_ever; // debug --''--
@@ -45,8 +45,8 @@ typedef struct {
 //   2. Is this dependent on the initial seed?
 //   3. Is it possible to calculate this, or is it an NP-complete problem?
 // 
-// (*) xorshift32               if LOCAL_XORSHIFT32_SYMMETRIC,
-//     random_get_random_number if LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC (from XMOS lib_random).
+// (*) xorshift32               if XORSHIFT32_SYMMETRIC,
+//     random_get_random_number if LIB_RANDOM_SW_SEED_SYMMETRIC (from XMOS lib_random).
 //     For other values of USE_RANDOM_TYPE the questions are not relevant
 //
 uint32_t find_max_consecutive_bit31_xorshift32 

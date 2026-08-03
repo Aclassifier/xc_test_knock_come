@@ -27,7 +27,7 @@
 // xorshift32
 // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
 //
-// For use when USE_RANDOM_TYPE is LOCAL_XORSHIFT32 or LOCAL_XORSHIFT32_SYMMETRIC
+// For use when USE_RANDOM_TYPE is XORSHIFT32 or XORSHIFT32_SYMMETRIC
 //
 // Started from https://en.wikipedia.org/wiki/Xorshift#Example_implementation
 // Linear polynomial function, a subset of the "clean" LFSR (linear-feedback-shift register).
@@ -261,11 +261,11 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
         random_generator = random_create_generator_from_seed(random_seed);
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
         random_generator = random_create_generator_from_hw_seed(random_seed); 
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
         random_generator = random_seed;
-    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
+    #elif (USE_RANDOM_TYPE == XORSHIFT32)
         random_generator = random_seed;  
-    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+    #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
         random_generator = random_seed; 
     #else
         #error
@@ -281,11 +281,11 @@ random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
         random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
         random_get_random_number (randoms.random_ssgn); 
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
         next_symmetric_random_get_random_number (randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
-    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32)
+    #elif (USE_RANDOM_TYPE == XORSHIFT32)
         xorshift32 (randoms); // // Updates randoms.random_ssgn only
-    #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+    #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
         next_symmetric_random_get_random_number (randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
     #else
         #error
@@ -327,7 +327,7 @@ void init_randoms (
 // xorshift32 does not pass the BigCrush test suite, as would not this function either, then.
 // But if like xorwow were used in next_symmetric_random_get_random_number, maybe?
 //
-// For use when USE_RANDOM_TYPE is LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC or LOCAL_XORSHIFT32_SYMMETRIC
+// For use when USE_RANDOM_TYPE is LIB_RANDOM_SW_SEED_SYMMETRIC or XORSHIFT32_SYMMETRIC
 //
 void next_symmetric_random_get_random_number (randoms_t &randoms) {
     if (randoms.use_random_negated) {
@@ -356,9 +356,9 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
         
         while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert
             
-            #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC)
+            #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
                 random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-            #elif (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)
+            #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
                 xorshift32 (randoms); // Updates randoms.random_ssgn
             #else
                 xassert (false); // One that's not _SYMMETRIC

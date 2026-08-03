@@ -28,72 +28,97 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.937" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.938" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 // ===================================================================================================================
 // VERSIONS / COMMITS
 // ===================================================================================================================
-// 02Aug2026 0.937   Just running as DO_KNOCK_COME and LOCAL_XORSHIFT32_SYMMETRIC. print_welcome_banner extended
-// 02Aug2026 0.936   Quite some new names that I hope carry the semantics better, without being extraordinary long.
-//                   Like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
-//                   that every bit has a max consecutive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
-// 01Aug2026 0.935   DO_FIND_32BITS_DROP_CNT_MAX is new, and so is find_max_consecutive_allbits_xorshift32 (should take some 25h)
-// 31Jul2026 0.934   Experimenting with DO_FIND_BIT31_DROP_CNT_MAX, see _log.txt
-// 30Jul2026 0.934   max_loop_neg_cnt_ever is new
-// 29Jul2026 0.933   DO_FIND_BIT31_DROP_CNT_MAX is new
-// 29Jul2026 0.932   find_max_consecutive_bit31_xorshift32 by Google AI is new. For DROP_BIT_CNT_MAX (More on the sort)
-// 29Jul2026 0.931   DROP_BIT_CNT_MAX questions stated
-// 29Jul2026 0.931   max_loop_pos_cnt was initialised to 1, should be 0. So now "P 1" as it should in _log.txt
-// 29Jul2026 0.930   DROP_BIT_CNT_MAX 20 -> 25 since 20 seen (tested with 200)
-// 29Jul2026 0.929   Init and symmetric modes hopefulley fixed. Follow random_ssgn_prev
-// 28Jul2026 0.928   LOCAL_XORSHIFT32_SYMMETRIC is new  (see _log.txt). APP_COMPILER_FLAGS instead of XCC_FLAGS_DEBUG
-// 28Jul2026 0.927   This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
-// 27Jul2026 0.926   LOCAL_XORSHIFT32 using xorshift32 creates unique values. See _log.txt.
-// 27Jul2026 0.925.1 Moved /workspace one level down, under a new /xc to /xc/workspace. Quit VS Code and GitHub desktop
-//                   first, then after, GitHub desktop "locate" and VS Code just deleting the /build directory fixed everything
-// 26Jul2026 0.925.1 DO_LIB_RANDOM_EXAMPLE is new, testing XMOS lib_random, will be sent to XMOS
-//                   XMOS Ticket 339260 "lib_random seems to give repeated pattern"
-// 24Jul2026 0.925   New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
-//                   Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
-//                   and PRINT_OR_SCOPE. USE_RANDOM_TYPE=1 compiles and runs but algorithm not verified yet
-// 02Jun2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
-// 02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
-// 30Jun2026 0.0.922 typo
-// 30Jun2026 0.0.922 USE_RANDOM_TYPE 0 and 1 new and see _log.txt
-// 30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
-// 30Jun2026 0.0.920 randoms_t new, not used yet
-// 24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
-// 24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
-// 24Jun2026 0.0.918 USE_RANDOM_TYPE is new. Observe somewhat different "DT xx.yys" from this!
-// 23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
-// 10Jun2026 0.0.916 Prettier
-// 09Jun2026 0.0.916 Removed three not needed include files
-// 09Jun2026 0.0.916 Prettier code file here 
-// 09Jun2026 0.0.916 Possible to use ports for scope instead of logs.
-//                   <syscall.h> introduced since XTC_ExampleXCommonCMake came with it
-//                   PRINT_OR_SCOPE is new 
-//                   TIMER_FACTOR_KNOCKCOME_US is new, to enable fast scope'ing
-// 27May2026 0.0.915 First commit with XTC compiled ok, CMake and CMakeLists.txt
-// 26May2026 0.0.914 Welcome printing different sequence
-// 26May2026 0.0.913 No code change, another XCore Exchange entry referenced. Some empty lines
-// 26May2026 0.0.913 No change of code, more comments
-// 26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
-//                   USE_ORDERED_PRI_SELECT_MASTER is new
-// 25May2026 0.0.912 was committed by GitHub desktop on macOS Tahoe and then
-//                   https://github.com/Aclassifier/xc_test_knock_come/tree/master created
-//                   Then ChronoSync'ed back to the xTIMEcomposer 2010 mac Mini. No code change
-// 24May2026 0.0.912 URL to blog note updated
-//                   Description uodated and some renaming
-//                   task_a_master -> task_master
-// 24May2026 0.0.911 print_and_clear_debug_cnts added last > = <
-//                   print_welcome_banner is new
-//                   Conditional printing done in macros
-// 23May2026 0.0.910 ch_ba_knock -> ch_knock
-//                   TEST_DEADLOCK_NO_STREAMING_CHAN is new
-// 21May2026 0.0.900 Initial version. Sent to Antonio
-// =============================================================================================
+/*
+03Aug2026 0.938
+All "LOCAL_".. removed. like LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC -> LIB_RANDOM_SW_SEED_SYMMETRIC
+get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower 
+half of next_timeout_ticks range. See _log.txt. New layout of this list, easier to paste into Git changes
+
+02Aug2026 0.937 Just running as DO_KNOCK_COME and XORSHIFT32_SYMMETRIC. print_welcome_banner extended
+02Aug2026 0.936 Quite some new names that I hope carry the semantics better, without being extraordinary long.
+Like find_max_consecutive_allbits_xorshift32 now (for DO_FIND_32BITS_DROP_CNT_MAX). The result is
+that every bit has a max consecutive sequence of DROP_BIT_CNT_MAX = 32 (was DROP_NEG_CNT_MAX)
+
+01Aug2026 0.935 DO_FIND_32BITS_DROP_CNT_MAX is new, and so is find_max_consecutive_allbits_xorshift32 (should take some 25h)
+
+31Jul2026 0.934 Experimenting with DO_FIND_BIT31_DROP_CNT_MAX, see _log.txt
+
+30Jul2026 0.934 max_loop_neg_cnt_ever is new
+
+29Jul2026 0.933 DO_FIND_BIT31_DROP_CNT_MAX is new
+29Jul2026 0.932 find_max_consecutive_bit31_xorshift32 by Google AI is new. For DROP_BIT_CNT_MAX (More on the sort)
+29Jul2026 0.931 DROP_BIT_CNT_MAX questions stated
+29Jul2026 0.931 max_loop_pos_cnt was initialised to 1, should be 0. So now "P 1" as it should in _log.txt
+29Jul2026 0.930 DROP_BIT_CNT_MAX 20 -> 25 since 20 seen (tested with 200)
+29Jul2026 0.929 Init and symmetric modes hopefulley fixed. Follow random_ssgn_prev
+
+28Jul2026 0.928 XORSHIFT32_SYMMETRIC is new (see _log.txt). APP_COMPILER_FLAGS instead of XCC_FLAGS_DEBUG
+28Jul2026 0.927 This file had become messy, moved some into new files __globals.h my_random.h and my_random.xc
+
+27Jul2026 0.926 XORSHIFT32 using xorshift32 creates unique values. See _log.txt.
+27Jul2026 0.925.1 Moved /workspace one level down, under a new /xc to /xc/workspace. Quit VS Code and GitHub desktop
+first, then after, GitHub desktop "locate" and VS Code just deleting the /build directory fixed everything
+
+26Jul2026 0.925.1 DO_LIB_RANDOM_EXAMPLE is new, testing XMOS lib_random, will be sent to XMOS
+XMOS Ticket 339260 "lib_random seems to give repeated pattern"
+
+24Jul2026 0.925 New version naming. USE_ORDERED_PRI_SELECT_SLAVE, USE_ORDERED_PRI_SELECT_MASTER new
+Names of tasks and channels more corresponding with Rust code, like task_b_master -> task_master
+and PRINT_OR_SCOPE. USE_RANDOM_TYPE=1 compiles and runs but algorithm not verified yet
+
+02Jul2026 0.0.924 next_symmetric_pseudo_random_number -> next_symmetric_random_get_random_number
+02Jul2026 0.0.923 next_symmetric_pseudo_random_number is new, but algorithm not verified yet
+
+30Jun2026 0.0.922 typo
+30Jun2026 0.0.922 USE_RANDOM_TYPE 0 and 1 new and see _log.txt
+30Jun2026 0.0.921 Using random_generator_t from lib_random, but randoms_t not finished
+30Jun2026 0.0.920 randoms_t new, not used yet
+
+24Jun2026 0.0.919 Welcome tesxt now "0.0.918" -> "v0.0.919"
+24Jun2026 0.0.918 URL til XCore Exchange forum added ().. random ..) and updated _log.txt
+24Jun2026 0.0.918 USE_RANDOM_TYPE is new. Observe somewhat different "DT xx.yys" from this!
+
+23Jun2026 0.0.917 Time for each log added, similar to rust_test_knock_come.rs "DT 23.87s"
+
+10Jun2026 0.0.916 Prettier
+
+09Jun2026 0.0.916 Removed three not needed include files
+09Jun2026 0.0.916 Prettier code file here 
+09Jun2026 0.0.916 Possible to use ports for scope instead of logs.
+<syscall.h> introduced since XTC_ExampleXCommonCMake came with it
+PRINT_OR_SCOPE is new. TIMER_FACTOR_KNOCKCOME_US is new, to enable fast scope'ing
+
+27May2026 0.0.915 First commit with XTC compiled ok, CMake and CMakeLists.txt
+
+26May2026 0.0.914 Welcome printing different sequence
+26May2026 0.0.913 No code change, another XCore Exchange entry referenced. Some empty lines
+26May2026 0.0.913 No change of code, more comments
+26May2026 0.0.913 This file has been cleaned up with hopefully better comments. 
+USE_ORDERED_PRI_SELECT_MASTER is new
+
+25May2026 0.0.912 was committed by GitHub desktop on macOS Tahoe and then
+https://github.com/Aclassifier/xc_test_knock_come/tree/master created
+Then ChronoSync'ed back to the xTIMEcomposer 2010 mac Mini. No code change
+
+24May2026 0.0.912 URL to blog note updated
+Description uodated and some renaming. task_a_master -> task_master
+
+24May2026 0.0.911 print_and_clear_debug_cnts added last > = <
+print_welcome_banner is new. Conditional printing done in macros
+
+23May2026 0.0.910 ch_ba_knock -> ch_knock
+TEST_DEADLOCK_NO_STREAMING_CHAN is new
+
+21May2026 0.0.900 Initial version. Sent to Antonio
+*/
+// ===================================================================================================================
 
 #define DO_KNOCK_COME               0
 #define DO_LIB_RANDOM_EXAMPLE       1
@@ -126,13 +151,13 @@
 #define SPEED_SLOW_AND_PRINT 0 // Scope possible: use ROLL scope
 #define SPEED_FAST_AND_SCOPE 1 // Scope 5 us/div two channels and SINGLE shots
 
-#define DEBUG_KNOCKCOME                   1 // 0 default, 1 test of state transitions
-#define PRINT_OR_SCOPE                    SPEED_SLOW_AND_PRINT
-#define TEST_DEADLOCK_NO_STREAMING_CHAN   0 // 0 default to get it to work, 1 deadlocks
-#define TEST_STREAMING_CHAN_DOUBLE_KNOCK  0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
-#define USE_ORDERED_PRI_SELECT_MASTER     0 // 0 default, 1 to test (*)
-#define USE_ORDERED_PRI_SELECT_SLAVE      0 // 0 default, 1 to test (*)
-#define PRINT_RANDOM_VALS                 0 // 0 default, 1 to test
+#define DEBUG_KNOCKCOME                  1 // 0 default, 1 test of state transitions
+#define PRINT_OR_SCOPE                   SPEED_SLOW_AND_PRINT
+#define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
+#define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
+#define USE_ORDERED_PRI_SELECT_MASTER    0 // 0 default, 1 to test (*)
+#define USE_ORDERED_PRI_SELECT_SLAVE     0 // 0 default, 1 to test (*)
+#define PRINT_RANDOM_VALS_MASTER         0 // 0 default, 1 to test
 
 //
 // (*) Observe that the Promela code to verify this pattern proves that it does not deadlock with its
@@ -402,7 +427,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
    sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
    
    printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
-            ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) or (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC)) ? max_loop_drop_neg_cnt_str : "",
+            ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)) ? max_loop_drop_neg_cnt_str : "",
             USE_RANDOM_TYPE,
             cnts.rec_cnt,
             cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
@@ -490,8 +515,37 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
     p1_out_purple_master <: PORT_LOW; // Since 99 yields a '1' PORT_HIGH
 } // exercise_p1_out_purple_master
 
+// ===============================================================================================================================
+// get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
+//
+time32_t get_until_next_timeout_ticks (const random_unsigned32_t random_number) {
+    
+    time32_t next_timeout_ticks;
+    const random_unsigned32_t random_unsigned32_in_range_us = random_number % RANDOM_VAL_MAX_US; // "[0..99]" Say "76" or "24".
+    #define HALF_RANGE_US (RANDOM_VAL_MAX_US / 2)
+    
+    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
+        // "50" is zero point 
+        if ((random_number bitand INT_MIN) == 0) { // "Postive half"                 ">= 50"
+            //                             "100 + 99                               / 2 = 99.5"
+            //                             "100 + 76                               / 2 = 88"
+            next_timeout_ticks = (HALF_RANGE_US + ((random_unsigned32_in_range_us) / 2)) * XS1_TIMER_MHZ; // Above half
+        } else { //                                                                   "< 50"
+            //                             "100 - 24                               / 2 = 38"
+            //                             "100 - 0                                / 2 = 0"
+            next_timeout_ticks = (HALF_RANGE_US - ((random_unsigned32_in_range_us) / 2)) * XS1_TIMER_MHZ; // Below half
+        }
+    #else
+       next_timeout_ticks = random_unsigned32_in_range_us * XS1_TIMER_MHZ;
+    #endif
 
-// =========================================================================================================================
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range
+
+    return next_timeout_ticks;
+} // get_until_next_timeout_ticks
+
+
+// ===================================================================================================================
 // Can only KNOCK to task_master and then wait for COME from task_master and then atomic send its DATA to task_master.
 // Must be able to accept DATA from task_master any time.
 //
@@ -558,7 +612,7 @@ void task_slave (
 
             case tmr when timerafter (time_ticks) :> void: {
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms); // Easier to print
-                time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
+                time_ticks += get_until_next_timeout_ticks (random_number);
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
@@ -653,10 +707,13 @@ void task_master (
 
             case tmr when timerafter (time_ticks) :> void : {       
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms);
-                time_ticks += (random_number % RANDOM_VAL_MAX_US) * XS1_TIMER_MHZ; // random_generator updated!
-                #if (PRINT_RANDOM_VALS==1) // Print (not in slave)
-                    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC) or (USE_RANDOM_TYPE == LOCAL_XORSHIFT32_SYMMETRIC))
-                        printf ("%d\n", (signed)random_number); 
+                time_ticks += get_until_next_timeout_ticks (random_number);
+
+                #if (PRINT_RANDOM_VALS_MASTER==1) // Print (not in slave)
+                    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
+                        printf ("%s%d\n", 
+                        ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
+                        (signed)random_number); 
                     #else
                         printf ("%u\n", random_number);
                     #endif

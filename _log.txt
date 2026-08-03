@@ -1,96 +1,42 @@
 Newest on top 
-
-
-Running xc_test_knock_come.xe
-Starting full state-space simulation with seed 1 in code at 10:11:16 Aug  1 2026. Please wait some 25 hours...
-hours:
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-
-=== Simulation Complete ===
-After 89170 seconds, total numbers checked:  4294967295 (2^32 - 1)
-Max consecutive negatives found:
-[0]=32
-[1]=32
-[2]=32
-[3]=32
-[4]=32
-[5]=32
-[6]=32
-[7]=32
-[8]=32
-[9]=32
-[10]=32
-[11]=32
-[12]=32
-[13]=32
-[14]=32
-[15]=32
-[16]=32
-[17]=32
-[18]=32
-[19]=32
-[20]=32
-[21]=32
-[22]=32
-[23]=32
-[24]=32
-[25]=32
-[26]=32
-[27]=32
-[28]=32
-[29]=32
-[30]=32
-[31]=32
-
-Starting full state-space simulation with seed 1 in code at 11:36:27 Jul 30 2026. Please wait some minutes...
-
-
-=== Simulation Complete ===
-After 3064 seconds, total numbers checked:  4294967295 (2^32 - 1)
-Max consecutive negatives found: 32
-
-
- *  Running xc_test_knock_come.xe
-XCC 1503.1 KNOCK-COME v0.931 on date Jul 29 2026 10:47:07
-Time random max 100000 us RanT 4 cnt events at 1000
+XCC 1503.1 KNOCK-COME v0.938 on date Aug  3 2026 13:29:56
+Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
 Deadlock if LEDS stop to count (Teig)
-//
-P 0 N 0 RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
-P 1 N 8 RanT 4 REC 502  >       SENT 498        (>748 =42 <210) SUM (REC 502 > SENT 498)        DT 24.59s
-P 1 N 8 RanT 4 REC 517  >       SENT 483        (>890 =55 <55)  SUM (REC 1019 > SENT 981)       DT 25.39s
-P 1 N 7 RanT 4 REC 478  >       SENT 522        (>0 =1 <999)    SUM (REC 1497 < SENT 1503)      DT 25.40s
-P 1 N 7 RanT 4 REC 490  >       SENT 510        (>378 =105 <517)        SUM (REC 1987 < SENT 2013)      DT 25.12s
-P 1 N 9 RanT 4 REC 488  >       SENT 512        (>4 =10 <986)   SUM (REC 2475 < SENT 2525)      DT 25.35s
-P 1 N 7 RanT 4 REC 492  >       SENT 508        (>0 =0 <1000)   SUM (REC 2967 < SENT 3033)      DT 25.1s
-P 1 N 6 RanT 4 REC 484  >       SENT 516        (>0 =0 <1000)   SUM (REC 3451 < SENT 3549)      DT 25.7s
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
 
-
-
-
-
-
+P 0 N 0/0       RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
+P 1 N 9/9       RanT 4 REC 504  >       SENT 496        (>968 =22 <10)  SUM (REC 504 > SENT 496)        DT 24.91s
+P 1 N 9/9       RanT 4 REC 494  >       SENT 506        (>55 =136 <809) SUM (REC 998 < SENT 1002)       DT 25.8s
+P 1 N 9/9       RanT 4 REC 496  >       SENT 504        (>2 =5 <993)    SUM (REC 1494 < SENT 1506)      DT 24.89s
+P 1 N 10/10     RanT 4 REC 504  >       SENT 496        (>869 =50 <81)  SUM (REC 1998 < SENT 2002)      DT 24.79s
+P 1 N 9/10      RanT 4 REC 492  >       SENT 508        (>28 =55 <917)  SUM (REC 2490 < SENT 2510)      DT 24.82s
+P 1 N 10/10     RanT 4 REC 500  >       SENT 500        (>462 =155 <383)        SUM (REC 2990 < SENT 3010)      DT 25.8s
+P 1 N 9/10      RanT 4 REC 501  >       SENT 499        (>512 =255 <233)        SUM (REC 3491 < SENT 3509)      DT 24.86s
+P 1 N 8/10      RanT 4 REC 502  >       SENT 498        (>801 =109 <90) SUM (REC 3993 < SENT 4007)      DT 24.56s
+P 1 N 10/10     RanT 4 REC 499  >       SENT 501        (>65 =109 <826) SUM (REC 4492 < SENT 4508)      DT 24.84s
+P 1 N 8/10      RanT 4 REC 499  >       SENT 501        (>250 =90 <660) SUM (REC 4991 < SENT 5009)      DT 24.58s
+P 1 N 10/10     RanT 4 REC 500  >       SENT 500        (>683 =161 <156)        SUM (REC 5491 < SENT 5509)      DT 25.4s
+P 1 N 9/10      RanT 4 REC 503  >       SENT 497        (>373 =82 <545) SUM (REC 5994 < SENT 6006)      DT 24.57s
+P 1 N 6/10      RanT 4 REC 496  >       SENT 504        (>4 =20 <976)   SUM (REC 6490 < SENT 6510)      DT 24.83s
+P 1 N 11/11     RanT 4 REC 496  >       SENT 504        (>219 =118 <663)        SUM (REC 6986 < SENT 7014)      DT 24.98s
+P 1 N 10/11     RanT 4 REC 500  >       SENT 500        (>175 =94 <731) SUM (REC 7486 < SENT 7514)      DT 24.88s
+P 1 N 9/11      RanT 4 REC 496  >       SENT 504        (>108 =125 <767)        SUM (REC 7982 < SENT 8018)      DT 25.8s
+P 1 N 10/11     RanT 4 REC 500  >       SENT 500        (>59 =115 <826) SUM (REC 8482 < SENT 8518)      DT 24.71s
+P 1 N 8/11      RanT 4 REC 497  >       SENT 503        (>2 =13 <985)   SUM (REC 8979 < SENT 9021)      DT 25.16s
+P 1 N 6/11      RanT 4 REC 502  >       SENT 498        (>687 =133 <180)        SUM (REC 9481 < SENT 9519)      DT 24.87s
+P 1 N 7/11      RanT 4 REC 501  >       SENT 499        (>848 =85 <67)  SUM (REC 9982 < SENT 10018)     DT 25.21s
+P 1 N 10/11     RanT 4 REC 494  >       SENT 506        (>0 =0 <1000)   SUM (REC 10476 < SENT 10524)    DT 24.85s
+P 1 N 8/11      RanT 4 REC 497  >       SENT 503        (>18 =76 <906)  SUM (REC 10973 < SENT 11027)    DT 24.97s
+P 1 N 11/11     RanT 4 REC 493  >       SENT 507        (>0 =4 <996)    SUM (REC 11466 < SENT 11534)    DT 24.95s
+P 1 N 9/11      RanT 4 REC 499  >       SENT 501        (>81 =119 <800) SUM (REC 11965 < SENT 12035)    DT 24.78s
+P 1 N 8/11      RanT 4 REC 494  >       SENT 506        (>12 =35 <953)  SUM (REC 12459 < SENT 12541)    DT 24.95s
+P 1 N 10/11     RanT 4 REC 493  >       SENT 507        (>0 =4 <996)    SUM (REC 12952 < SENT 13048)    DT 24.56s
+P 1 N 5/11      RanT 4 REC 492  >       SENT 508        (>0 =0 <1000)   SUM (REC 13444 < SENT 13556)    DT 24.77s
+P 1 N 5/11      RanT 4 REC 504  >       SENT 496        (>924 =42 <34)  SUM (REC 13948 < SENT 14052)    DT 24.79s
+P 1 N 15/15     RanT 4 REC 498  >       SENT 502        (>410 =172 <418)        SUM (REC 14446 < SENT 14554)    DT 25.0s
+P 1 N 5/15      RanT 4 REC 492  >       SENT 508        (>4 =35 <961)   SUM (REC 14938 < SENT 15062)    DT 25.8s
+P 1 N 9/15      RanT 4 REC 494  >       SENT 506        (>0 =0 <1000)   SUM (REC 15432 < SENT 15568)    DT 24.82s
+P 1 N 9/15      RanT 4 REC 500  >       SENT 500        (>805 =107 <88) SUM (REC 15932 < SENT 16068)    DT 24.70s
+P 1 N 9/15      RanT 4 REC 498  >       SENT 502        (>32 =93 <875)  SUM (REC 16430 < SENT 16570)    DT 25.0s
+P 1 N 7/15      RanT 4 REC 508  >       SENT 492        (>871 =63 <66)  SUM (REC 16938 < SENT 17062)    DT 25.20s
