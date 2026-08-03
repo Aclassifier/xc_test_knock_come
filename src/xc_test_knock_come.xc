@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.939" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.940" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,9 +36,11 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+03Aug2926 0.940
+print_and_clear_debug_cnts has got caller_id, perhaps the change in DT values comes from the id. See _log.txt
 03Aug2026 0.939
 * Ref for Claude, to analyse my code, since SPEED_SLOW_AND_PRINT_LESS with less printing did not help with
-the small changes. Maybe it's knock-come by itself, since delta_print_10ms and arr_delta_print_10ms counts
+the small changes. Maybe it's knock-come by itself, since from_10ms_delta_print_10ms and arr_delta_print_10ms counts
 the changes caused by both task_slave and task_master
 03Aug2026 0.938
 * Analysis of the log with Claude Sonnet 5 medium in _log.txt
@@ -160,7 +162,7 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define SPEED_SLOW_AND_PRINT_12 ((PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT) or (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS))
 
 #define DEBUG_KNOCKCOME                  1 // 0 default, 1 test of state transitions
-#define PRINT_OR_SCOPE                   SPEED_SLOW_AND_PRINT_LESS
+#define PRINT_OR_SCOPE                   SPEED_SLOW_AND_PRINT
 #define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
 #define USE_ORDERED_PRI_SELECT_MASTER    0 // 0 default, 1 to test (*)
@@ -359,7 +361,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 } // Master_Set_KnockCome_State
 
-// Rename delta_print_10ms if these change:
+// Rename from_10ms_delta_print_10ms if these change:
 #define PRINT_TIMEOUT_RESOLUTION_MS 10
 #define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
 #define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
@@ -391,9 +393,12 @@ typedef struct {
     //
     timer    print_tmr;
     time32_t print_time_ticks;
-    unsigned delta_print_10ms;
+    unsigned from_10ms_delta_print_10ms;
     unsigned iof_arr; // This:
     unsigned arr_delta_print_10ms [ARR_DELTA_PRINT_DIM];
+    // 
+    uint64_t sum_ticks_u64;
+    unsigned num_ticks;
 } cnts_t;
 
 void reset_debug_cnts (cnts_t &cnts)
@@ -407,7 +412,10 @@ void reset_debug_cnts (cnts_t &cnts)
     // Don't touch sum_sent_cnt, sum_rec_cnt
 
     cnts.print_tmr :> cnts.print_time_ticks;  
-    cnts.delta_print_10ms = 0;
+    cnts.from_10ms_delta_print_10ms = 0;
+
+    cnts.sum_ticks_u64 = 0LL;
+    cnts.num_ticks     = 0;
 } // reset_debug_cnts
 
 
@@ -441,25 +449,30 @@ void update_fairness_cnts (cnts_t &cnts)
 } // update_fairness_cnts
 
 
-unsigned delta_print_secs (const unsigned delta_print_10ms) {
-    return delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC;
+unsigned from_10ms_delta_print_secs (const unsigned from_10ms_delta_print_10ms) {
+    return from_10ms_delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC;
+}
+unsigned from_10ms_delta_print_10ms (const unsigned from_10ms_delta_print_10ms) {
+    return from_10ms_delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC;
 }
 
-unsigned delta_print_10ms (const unsigned delta_print_10ms) {
-    return delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC;
-}
-
-
-void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
+void print_and_clear_debug_cnts (
+    const unsigned caller_id, 
+    cnts_t         &cnts, 
+    randoms_t      &randoms)
 {
     #if (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT)
+        unsigned medium_us = 0;
+        if (cnts.num_ticks != 0) {
+            medium_us = ((unsigned) (cnts.sum_ticks_u64 / (uint64_t) cnts.num_ticks)) / XS1_TIMER_MHZ;
+        } else {} // 0
+
         char max_loop_drop_neg_cnt_str[25];
         sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
-    
-        #define IS_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
         
-        printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
-            IS_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
+        printf ("%u! %sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us ms %u.%u\n",
+            caller_id,
+            USE_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
             USE_RANDOM_TYPE,
             cnts.rec_cnt,
             cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
@@ -468,16 +481,18 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
             cnts.sum_rec_cnt,
             (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
             cnts.sum_sent_cnt,
-            delta_print_secs (cnts.delta_print_10ms),
-            delta_print_10ms (cnts.delta_print_10ms));
+            from_10ms_delta_print_secs (cnts.from_10ms_delta_print_10ms), // absolute time in 10ms
+            from_10ms_delta_print_10ms (cnts.from_10ms_delta_print_10ms), // absolute time in 10ms
+            medium_us/1000,  // 123456789 / 1000 = 123456  Average sum of random times, how good is the random function generator..
+            medium_us%1000); // 123456789 % 1000 = 789     ..in delivering average in exactly in the middle?                    
     #elif (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS)
-        cnts.arr_delta_print_10ms [cnts.iof_arr] = cnts.delta_print_10ms;
+        cnts.arr_delta_print_10ms [cnts.iof_arr] = cnts.from_10ms_delta_print_10ms;
         cnts.iof_arr++;
         if ((cnts.iof_arr % ARR_DELTA_PRINT_DIM) == 0) {
             for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
                 printf ("DT %u.%us\n",
-                delta_print_secs (cnts.arr_delta_print_10ms [ix]),
-                delta_print_10ms (cnts.arr_delta_print_10ms [ix]));
+                from_10ms_delta_print_secs (cnts.arr_delta_print_10ms [ix]),
+                from_10ms_delta_print_10ms (cnts.arr_delta_print_10ms [ix]));
             }
             printf ("--\n");
             reset_debug_cnts_arr (cnts);
@@ -526,9 +541,9 @@ void print_ordered_banner()
 #define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
 
 #if (SPEED_SLOW_AND_PRINT_12)
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
+    #define PRINT_AND_CLEAR_CNTS(id,cnts,randoms) print_and_clear_debug_cnts(id,cnts,randoms) 
 #else // SPEED_FAST_AND_SCOPE
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
+    #define PRINT_AND_CLEAR_CNTS(id,cnts,randoms)
 #endif
 
 #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
@@ -568,7 +583,7 @@ time32_t get_until_next_timeout_ticks (const random_unsigned32_t random_number) 
     const random_unsigned32_t random_unsigned32_in_range_us = random_number % RANDOM_VAL_MAX_US; // "[0..99]" Say "76" or "24".
     #define HALF_RANGE_US (RANDOM_VAL_MAX_US / 2)
     
-    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
+    #if (USE_SYMMETRIC)
         // "50" is zero point 
         if ((random_number bitand INT_MIN) == 0) { // "Positive half"                ">= 50"
             //                             "100 + 99                               / 2 = 99.5"
@@ -683,8 +698,8 @@ void task_master (
 {
     timer              tmr;
     time32_t           time_ticks;
-    ch_come_or_sdata_t      data_ch_ab_bidir;
-    ch_knock_t      data_ch_ab_knock;
+    ch_come_or_sdata_t data_ch_ab_bidir;
+    ch_knock_t         data_ch_ab_knock;
     unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
     unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
     cnts_t             cnts;
@@ -694,13 +709,13 @@ void task_master (
     
     init_debug_cnts (cnts); // Also sets print_time_ticks
     cnts.print_tmr :> cnts.print_time_ticks;  
-    cnts.delta_print_10ms = 0;
+    cnts.from_10ms_delta_print_10ms = 0;
     exercise_p1_out_purple_master (p1_out_purple_master);
 
     PRINT_WELCOME_BANNER;
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
-    PRINT_AND_CLEAR_CNTS (cnts, randoms);
+    PRINT_AND_CLEAR_CNTS (0, cnts, randoms);
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
@@ -712,7 +727,7 @@ void task_master (
             case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on the etop
                 // Every 10 ms RESOLUTION_PRINT_TIMEOUT_MS
                 cnts.print_time_ticks += PRINT_TIMEOUT_TICKS;
-                cnts.delta_print_10ms += 1; 
+                cnts.from_10ms_delta_print_10ms += 1; 
             } break;
 
             case ch_knock :> data_ch_ab_knock : {
@@ -741,20 +756,26 @@ void task_master (
                 xassert (data_ch_ab_bidir.source == task_a);
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
 
+                /*
                 #if (SPEED_SLOW_AND_PRINT_12)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_debug_cnts (cnts, randoms);
+                        PRINT_AND_CLEAR_CNTS (1, cnts, randoms);
                     } else {}
                 #endif
+                */
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {       
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms);
-                time_ticks += get_until_next_timeout_ticks (random_number);
+                time32_t delta_ticks = get_until_next_timeout_ticks (random_number);
+                time_ticks          += delta_ticks;
 
+                cnts.sum_ticks_u64 += (uint64_t) delta_ticks;
+                cnts.num_ticks++;
+            
                 #if (PRINT_RANDOM_VALS_MASTER == 1) // Print (not in slave)
-                    #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
+                    #if (USE_SYMMETRIC)
                         printf ("%s%d\n", 
                         ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
                         (signed)random_number); 
@@ -778,8 +799,8 @@ void task_master (
 
                 #if (SPEED_SLOW_AND_PRINT_12)
                     update_fairness_cnts (cnts);
-                    if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        print_and_clear_debug_cnts (cnts, randoms);
+                    if (cnts.num_ticks == MAX_SUM_CNT) {
+                        PRINT_AND_CLEAR_CNTS (2, cnts, randoms);
                     } else {}
                 #endif
             } break;

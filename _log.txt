@@ -1,174 +1,18 @@
 Newest on top 
 
-
-> Analysis of the below with Claude Sonnet 5 medium
-
-That suggests print-blocking is probably not the main cause of the bimodal pattern, since the effect persists 
-almost unchanged even after moving the print call out of the timed loop.
-
- *  Running xc_test_knock_come.xe
-XCC 1503.1 KNOCK-COME v0.939 on date Aug  3 2026 15:12:15
-Time random max 100000 us cnt events at 1000
-Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 1
-Deadlock if LEDS stop to count (Teig)
-DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
-
-DT 0.0s
-DT 24.93s
-DT 25.16s
-DT 24.97s
-DT 24.90s
-DT 24.92s
-DT 25.20s
-DT 24.94s
-DT 24.63s
-DT 24.98s
-DT 24.62s
-DT 25.15s
-DT 24.71s
-DT 24.93s
-DT 25.3s
-DT 24.98s
-DT 25.9s
-DT 24.90s
-DT 25.31s
-DT 24.96s
-DT 24.80s
-DT 24.91s
-DT 25.4s
-DT 25.8s
-DT 24.84s
-DT 24.99s
-DT 24.67s
-DT 24.91s
-DT 24.85s
-DT 25.7s
-DT 25.15s
-DT 24.95s
-DT 24.74s
-DT 25.8s
-DT 25.37s
-DT 24.99s
-DT 25.6s
-DT 25.2s
-DT 24.86s
-DT 24.83s
-DT 24.19s
-DT 24.95s
-DT 24.87s
-DT 24.88s
-DT 24.99s
-DT 24.99s
-DT 24.75s
-DT 24.75s
-DT 24.47s
-DT 25.13s
-DT 25.14s
-DT 24.86s
-DT 24.88s
-DT 25.20s
-DT 24.97s
-DT 24.88s
-DT 24.97s
-DT 24.99s
-DT 24.91s
-DT 24.76s
-
-
-> Analysis of the below with Claude Sonnet 5 medium
-
-Sum of all DT values: 1346.48
-Count: 54
-Mean: 1346.48 / 54 ≈ 24.94 seconds
-
-> Which distribution type would you say it is? Normal distribution?
-
-I wouldn't call it normal. A couple of things jump out:
-
-Main cluster: about 80% of the values sit tightly between 24.35s and 25.0s, roughly symmetric around ~24.8s.
-Secondary bump: a smaller group of values (25.13–25.8s, including four runs that hit exactly 25.8s) sits noticeably higher, with a gap between it and the main cluster.
-Right skew: there's essentially no equivalent cluster on the low side — nothing drops much below 24.35s.
-
-That combination — a tight main mode plus a separated slower cluster — is a classic right-skewed / mixture distribution, not a Gaussian. It's very typical of latency 
-or timing data: most runs complete in a "fast path" with small random jitter, while a subset hits some extra step (retry, cache miss, longer generation, etc.) that 
-pushes them into a "slow path" a few tenths of a second higher. If you fit a normal distribution to this, it would underestimate the frequency of those 25.1–25.8s 
-runs and imply values below ~24.3s that don't actually occur.
-
-If it'd help, I could pull the raw REC/SENT numbers to check whether those slower runs correlate with something (e.g. token count, ratio) that explains the split.
-
-Almost zero correlation
-
-> It's the values from a distribution function I have deviced, that from xorshift32 for any even number of values will give an avarrage of half the range. The runs 
-perhaps change because the XMOS XCORE processor that I run this on actualley stop the processor during the prints
-
-That fits perfectly with what we found. If the print/UART call is blocking the XCORE while it flushes each line, then DT is really measuring "computation time + however
-long the print happened to take to drain," and that second part depends on things like buffer state, output pipe backpressure, or thread scheduling — none of which show 
-up in your REC/SENT/tally numbers. That's exactly why there was zero correlation with the actual distribution data: the slowdown is a side effect of the logging 
-mechanism, not the xorshift32 generator or the values it produced.
-
-=== The log ===
-
-XCC 1503.1 KNOCK-COME v0.938 on date Aug  3 2026 13:29:56
+XCC 1503.1 KNOCK-COME v0.940 on date Aug  3 2026 21:52:08
 Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
 Deadlock if LEDS stop to count (Teig)
 DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
 
-P 0 N 0/0       RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s
-
-P 1 N 9/9       RanT 4 REC 504  >       SENT 496        (>968 =22 <10)  SUM (REC 504 > SENT 496)        DT 24.91s
-P 1 N 9/9       RanT 4 REC 494  >       SENT 506        (>55 =136 <809) SUM (REC 998 < SENT 1002)       DT 25.8s
-P 1 N 9/9       RanT 4 REC 496  >       SENT 504        (>2 =5 <993)    SUM (REC 1494 < SENT 1506)      DT 24.89s
-P 1 N 10/10     RanT 4 REC 504  >       SENT 496        (>869 =50 <81)  SUM (REC 1998 < SENT 2002)      DT 24.79s
-P 1 N 9/10      RanT 4 REC 492  >       SENT 508        (>28 =55 <917)  SUM (REC 2490 < SENT 2510)      DT 24.82s
-P 1 N 10/10     RanT 4 REC 500  >       SENT 500        (>462 =155 <383)        SUM (REC 2990 < SENT 3010)      DT 25.8s
-P 1 N 9/10      RanT 4 REC 501  >       SENT 499        (>512 =255 <233)        SUM (REC 3491 < SENT 3509)      DT 24.86s
-P 1 N 8/10      RanT 4 REC 502  >       SENT 498        (>801 =109 <90) SUM (REC 3993 < SENT 4007)      DT 24.56s
-P 1 N 10/10     RanT 4 REC 499  >       SENT 501        (>65 =109 <826) SUM (REC 4492 < SENT 4508)      DT 24.84s
-P 1 N 8/10      RanT 4 REC 499  >       SENT 501        (>250 =90 <660) SUM (REC 4991 < SENT 5009)      DT 24.58s
-P 1 N 10/10     RanT 4 REC 500  >       SENT 500        (>683 =161 <156)        SUM (REC 5491 < SENT 5509)      DT 25.4s
-P 1 N 9/10      RanT 4 REC 503  >       SENT 497        (>373 =82 <545) SUM (REC 5994 < SENT 6006)      DT 24.57s
-P 1 N 6/10      RanT 4 REC 496  >       SENT 504        (>4 =20 <976)   SUM (REC 6490 < SENT 6510)      DT 24.83s
-P 1 N 11/11     RanT 4 REC 496  >       SENT 504        (>219 =118 <663)        SUM (REC 6986 < SENT 7014)      DT 24.98s
-P 1 N 10/11     RanT 4 REC 500  >       SENT 500        (>175 =94 <731) SUM (REC 7486 < SENT 7514)      DT 24.88s
-P 1 N 9/11      RanT 4 REC 496  >       SENT 504        (>108 =125 <767)        SUM (REC 7982 < SENT 8018)      DT 25.8s
-P 1 N 10/11     RanT 4 REC 500  >       SENT 500        (>59 =115 <826) SUM (REC 8482 < SENT 8518)      DT 24.71s
-P 1 N 8/11      RanT 4 REC 497  >       SENT 503        (>2 =13 <985)   SUM (REC 8979 < SENT 9021)      DT 25.16s
-P 1 N 6/11      RanT 4 REC 502  >       SENT 498        (>687 =133 <180)        SUM (REC 9481 < SENT 9519)      DT 24.87s
-P 1 N 7/11      RanT 4 REC 501  >       SENT 499        (>848 =85 <67)  SUM (REC 9982 < SENT 10018)     DT 25.21s
-P 1 N 10/11     RanT 4 REC 494  >       SENT 506        (>0 =0 <1000)   SUM (REC 10476 < SENT 10524)    DT 24.85s
-P 1 N 8/11      RanT 4 REC 497  >       SENT 503        (>18 =76 <906)  SUM (REC 10973 < SENT 11027)    DT 24.97s
-P 1 N 11/11     RanT 4 REC 493  >       SENT 507        (>0 =4 <996)    SUM (REC 11466 < SENT 11534)    DT 24.95s
-P 1 N 9/11      RanT 4 REC 499  >       SENT 501        (>81 =119 <800) SUM (REC 11965 < SENT 12035)    DT 24.78s
-P 1 N 8/11      RanT 4 REC 494  >       SENT 506        (>12 =35 <953)  SUM (REC 12459 < SENT 12541)    DT 24.95s
-P 1 N 10/11     RanT 4 REC 493  >       SENT 507        (>0 =4 <996)    SUM (REC 12952 < SENT 13048)    DT 24.56s
-P 1 N 5/11      RanT 4 REC 492  >       SENT 508        (>0 =0 <1000)   SUM (REC 13444 < SENT 13556)    DT 24.77s
-P 1 N 5/11      RanT 4 REC 504  >       SENT 496        (>924 =42 <34)  SUM (REC 13948 < SENT 14052)    DT 24.79s
-P 1 N 15/15     RanT 4 REC 498  >       SENT 502        (>410 =172 <418)        SUM (REC 14446 < SENT 14554)    DT 25.0s
-P 1 N 5/15      RanT 4 REC 492  >       SENT 508        (>4 =35 <961)   SUM (REC 14938 < SENT 15062)    DT 25.8s
-P 1 N 9/15      RanT 4 REC 494  >       SENT 506        (>0 =0 <1000)   SUM (REC 15432 < SENT 15568)    DT 24.82s
-P 1 N 9/15      RanT 4 REC 500  >       SENT 500        (>805 =107 <88) SUM (REC 15932 < SENT 16068)    DT 24.70s
-P 1 N 9/15      RanT 4 REC 498  >       SENT 502        (>32 =93 <875)  SUM (REC 16430 < SENT 16570)    DT 25.0s
-P 1 N 7/15      RanT 4 REC 508  >       SENT 492        (>871 =63 <66)  SUM (REC 16938 < SENT 17062)    DT 25.20s
-P 1 N 8/15      RanT 4 REC 498  >       SENT 502        (>107 =125 <768)        SUM (REC 17436 < SENT 17564)    DT 24.97s
-P 1 N 8/15      RanT 4 REC 500  >       SENT 500        (>281 =207 <512)        SUM (REC 17936 < SENT 18064)    DT 24.91s
-P 1 N 7/15      RanT 4 REC 500  >       SENT 500        (>657 =113 <230)        SUM (REC 18436 < SENT 18564)    DT 24.96s
-P 1 N 6/15      RanT 4 REC 504  >       SENT 496        (>793 =110 <97) SUM (REC 18940 < SENT 19060)    DT 24.84s
-P 1 N 7/15      RanT 4 REC 494  >       SENT 506        (>0 =5 <995)    SUM (REC 19434 < SENT 19566)    DT 24.67s
-P 1 N 12/15     RanT 4 REC 499  >       SENT 501        (>562 =165 <273)        SUM (REC 19933 < SENT 20067)    DT 24.65s
-P 1 N 7/15      RanT 4 REC 500  >       SENT 500        (>0 =5 <995)    SUM (REC 20433 < SENT 20567)    DT 24.86s
-P 1 N 6/15      RanT 4 REC 497  >       SENT 503        (>0 =10 <990)   SUM (REC 20930 < SENT 21070)    DT 24.76s
-P 1 N 8/15      RanT 4 REC 501  >       SENT 499        (>121 =207 <672)        SUM (REC 21431 < SENT 21569)    DT 24.79s
-P 1 N 8/15      RanT 4 REC 497  >       SENT 503        (>442 =157 <401)        SUM (REC 21928 < SENT 22072)    DT 24.90s
-P 1 N 9/15      RanT 4 REC 494  >       SENT 506        (>4 =13 <983)   SUM (REC 22422 < SENT 22578)    DT 24.85s
-P 1 N 6/15      RanT 4 REC 492  >       SENT 508        (>51 =97 <852)  SUM (REC 22914 < SENT 23086)    DT 24.68s
-P 1 N 6/15      RanT 4 REC 493  >       SENT 507        (>0 =0 <1000)   SUM (REC 23407 < SENT 23593)    DT 24.67s
-P 1 N 11/15     RanT 4 REC 489  >       SENT 511        (>0 =7 <993)    SUM (REC 23896 < SENT 24104)    DT 24.35s
-P 1 N 7/15      RanT 4 REC 493  >       SENT 507        (>0 =0 <1000)   SUM (REC 24389 < SENT 24611)    DT 24.99s
-P 1 N 9/15      RanT 4 REC 501  >       SENT 499        (>41 =92 <867)  SUM (REC 24890 < SENT 25110)    DT 25.7s
-P 1 N 5/15      RanT 4 REC 499  >       SENT 501        (>0 =1 <999)    SUM (REC 25389 < SENT 25611)    DT 24.77s
-P 1 N 7/15      RanT 4 REC 497  >       SENT 503        (>33 =82 <885)  SUM (REC 25886 < SENT 26114)    DT 24.74s
-P 1 N 8/15      RanT 4 REC 500  >       SENT 500        (>265 =115 <620)        SUM (REC 26386 < SENT 26614)    DT 25.13s
-P 1 N 10/15     RanT 4 REC 502  >       SENT 498        (>734 =110 <156)        SUM (REC 26888 < SENT 27112)    DT 24.89s
-P 1 N 7/15      RanT 4 REC 498  >       SENT 502        (>99 =92 <809)  SUM (REC 27386 < SENT 27614)    DT 24.80s
-P 1 N 10/15     RanT 4 REC 500  >       SENT 500        (>623 =176 <201)        SUM (REC 27886 < SENT 28114)    DT 24.89s
+0! P 0 N 0/0    RanT 4 REC 0    =       SENT 0  (>0 =0 <0)      SUM (REC 0 = SENT 0)    DT 0.0s ms 0.0
+2! P 1 N 9/9    RanT 4 REC 997  >       SENT 1000       (>914 =17 <69)  SUM (REC 997 < SENT 1000)       DT 49.99s ms 50.79
+2! P 1 N 10/10  RanT 4 REC 999  >       SENT 1000       (>77 =84 <839)  SUM (REC 1996 < SENT 2000)      DT 49.75s ms 49.867
+2! P 1 N 10/10  RanT 4 REC 983  >       SENT 1000       (>0 =25 <975)   SUM (REC 2979 < SENT 3000)      DT 49.58s ms 49.687
+2! P 1 N 9/10   RanT 4 REC 1007 >       SENT 1000       (>924 =50 <26)  SUM (REC 3986 < SENT 4000)      DT 49.66s ms 49.771
+2! P 1 N 10/10  RanT 4 REC 997  >       SENT 1000       (>252 =130 <618)        SUM (REC 4983 < SENT 5000)      DT 49.45s ms 49.574
+2! P 1 N 10/10  RanT 4 REC 1006 >       SENT 1000       (>610 =151 <239)        SUM (REC 5989 < SENT 6000)      DT 49.93s ms 50.51
+2! P 1 N 11/11  RanT 4 REC 988  >       SENT 1000       (>2 =16 <982)   SUM (REC 6977 < SENT 7000)      DT 49.60s ms 49.671
+2! P 1 N 10/11  RanT 4 REC 991  >       SENT 1000       (>3 =46 <951)   SUM (REC 7968 < SENT 8000)      DT 49.73s ms 49.836
+2! P 1 N 10/11  RanT 4 REC 992  >       SENT 1000       (>2 =5 <993)    SUM (REC 8960 < SENT 9000)      DT 49.89s ms 50.27

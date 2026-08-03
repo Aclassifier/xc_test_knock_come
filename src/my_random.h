@@ -15,6 +15,8 @@
 #define LIB_RANDOM_SW_SEED_SYMMETRIC 2 // --''-- Creates every other positive and negative value
 #define XORSHIFT32                   3 // Creates unique values with xorshift32
 #define XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
+
+#define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
 //
 #define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC
 
