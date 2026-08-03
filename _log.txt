@@ -1,5 +1,80 @@
 Newest on top 
 
+
+> Analysis of the below with Claude Sonnet 5 medium
+
+That suggests print-blocking is probably not the main cause of the bimodal pattern, since the effect persists 
+almost unchanged even after moving the print call out of the timed loop.
+
+ *  Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.939 on date Aug  3 2026 15:12:15
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 1
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+
+DT 0.0s
+DT 24.93s
+DT 25.16s
+DT 24.97s
+DT 24.90s
+DT 24.92s
+DT 25.20s
+DT 24.94s
+DT 24.63s
+DT 24.98s
+DT 24.62s
+DT 25.15s
+DT 24.71s
+DT 24.93s
+DT 25.3s
+DT 24.98s
+DT 25.9s
+DT 24.90s
+DT 25.31s
+DT 24.96s
+DT 24.80s
+DT 24.91s
+DT 25.4s
+DT 25.8s
+DT 24.84s
+DT 24.99s
+DT 24.67s
+DT 24.91s
+DT 24.85s
+DT 25.7s
+DT 25.15s
+DT 24.95s
+DT 24.74s
+DT 25.8s
+DT 25.37s
+DT 24.99s
+DT 25.6s
+DT 25.2s
+DT 24.86s
+DT 24.83s
+DT 24.19s
+DT 24.95s
+DT 24.87s
+DT 24.88s
+DT 24.99s
+DT 24.99s
+DT 24.75s
+DT 24.75s
+DT 24.47s
+DT 25.13s
+DT 25.14s
+DT 24.86s
+DT 24.88s
+DT 25.20s
+DT 24.97s
+DT 24.88s
+DT 24.97s
+DT 24.99s
+DT 24.91s
+DT 24.76s
+
+
 > Analysis of the below with Claude Sonnet 5 medium
 
 Sum of all DT values: 1346.48

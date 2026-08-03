@@ -10,25 +10,25 @@
  *       https://www.teigfam.net/oyvind/home/technology/009-the-knock-come-deadlock-free-pattern/
  *   [xc_test_knock_come GitHub XC]
  *       https://github.com/Aclassifier/xc_test_knock_come/tree/master
- *   [My Beep-BRRR notes - Decoupling slave_task_a and master_task_b - Implementation D]
+ *   [My Beep-BRRR notes - Decoupling task_slave and master_task_b - Implementation D]
  *       https://www.teigfam.net/oyvind/home/technology/219-my-beep-brrr-notes/#implementation_d
  *   [xc_test_knock_come GitHub Rust]
  *       https://github.com/Aclassifier/rust_test_knock_come/tree/master
  *
  * Some discussion here:
- * slave_task_a and master_task_b want to spontaneously send to the other part. With only synchronous non-buffered
+ * task_slave and task_master want to spontaneously send to the other part. With only synchronous non-buffered
  * channels available we either could introduce a one element buffer task in one of the channels, and make sure
  * that sending to this buffer task never overflows it. This is how it would have been solved in occam.
  * For the XC language by XMOS, on the XCORE architecture, a channel may be tagged as "streaming"
  * (see above) - making up for a one-element buffer task. This channel carries the data-less "knock" from
- * the slave_task_ak, which cannot just send data on a zero-buffered synchronous channel in fear of a deadlock
+ * the task_slavek, which cannot just send data on a zero-buffered synchronous channel in fear of a deadlock
  * with a master_task_b. Both tasks trigger themselves to initiate send (knock) or actually send (data)
  * with an internal timer, with pseudorandom timeout valuse, inlcuding immediate action.
  * 
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.938" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.939" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,10 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+03Aug2026 0.939
+* Ref for Claude, to analyse my code, since SPEED_SLOW_AND_PRINT_LESS with less printing did not help with
+the small changes. Maybe it's knock-come by itself, since delta_print_10ms and arr_delta_print_10ms counts
+the changes caused by both task_slave and task_master
 03Aug2026 0.938
 * Analysis of the log with Claude Sonnet 5 medium in _log.txt
 * All "LOCAL_".. removed. like LIB_RANDOM_SW_SEED_LOCAL_SYMMETRIC -> LIB_RANDOM_SW_SEED_SYMMETRIC
@@ -148,12 +152,15 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 
 #if (DO_COMPILE_RUN == DO_KNOCK_COME)
 
-//                                LEDS COUNT ABOUT THE SAME RATE FOR BOTH
-#define SPEED_SLOW_AND_PRINT 0 // Scope possible: use ROLL scope
-#define SPEED_FAST_AND_SCOPE 1 // Scope 5 us/div two channels and SINGLE shots
+//                                     LEDS COUNT ABOUT THE SAME RATE FOR BOTH
+#define SPEED_SLOW_AND_PRINT      0 // Scope possible: use ROLL scope
+#define SPEED_SLOW_AND_PRINT_LESS 1 // Scope possible: use ROLL scope
+#define SPEED_FAST_AND_SCOPE      2 // Scope 5 us/div two channels and SINGLE shots
+
+#define SPEED_SLOW_AND_PRINT_12 ((PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT) or (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS))
 
 #define DEBUG_KNOCKCOME                  1 // 0 default, 1 test of state transitions
-#define PRINT_OR_SCOPE                   SPEED_SLOW_AND_PRINT
+#define PRINT_OR_SCOPE                   SPEED_SLOW_AND_PRINT_LESS
 #define TEST_DEADLOCK_NO_STREAMING_CHAN  0 // 0 default to get it to work, 1 deadlocks
 #define TEST_STREAMING_CHAN_DOUBLE_KNOCK 0 // 0 default single spontaneous send on streaming ch_knock, 1 double send will cause double COME and crash
 #define USE_ORDERED_PRI_SELECT_MASTER    0 // 0 default, 1 to test (*)
@@ -357,16 +364,18 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 #define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
 #define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
 
-#if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
+#if (SPEED_SLOW_AND_PRINT_12)
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
     #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
+    #define ARR_DELTA_PRINT_DIM        20
 #else // SPEED_FAST_AND_SCOPE
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
     #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
+    #define ARR_DELTA_PRINT_DIM        1
 #endif
 //
-#define MAX_SUM_CNT 1000
-#define DATA_FIRST_AND_INC 1
+#define MAX_SUM_CNT        1000
+#define DATA_FIRST_AND_INC    1
 //
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
@@ -383,6 +392,8 @@ typedef struct {
     timer    print_tmr;
     time32_t print_time_ticks;
     unsigned delta_print_10ms;
+    unsigned iof_arr; // This:
+    unsigned arr_delta_print_10ms [ARR_DELTA_PRINT_DIM];
 } cnts_t;
 
 void reset_debug_cnts (cnts_t &cnts)
@@ -399,9 +410,20 @@ void reset_debug_cnts (cnts_t &cnts)
     cnts.delta_print_10ms = 0;
 } // reset_debug_cnts
 
+
+void reset_debug_cnts_arr (cnts_t &cnts)
+{
+    cnts.iof_arr = 0;
+    for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
+        cnts.arr_delta_print_10ms [ix] = 0;
+    }
+} // init_debug_cnts
+
+
 void init_debug_cnts (cnts_t &cnts)
 {
     reset_debug_cnts (cnts);
+    reset_debug_cnts_arr (cnts);
 
     cnts.sum_sent_cnt = 0;
     cnts.sum_rec_cnt  = 0;
@@ -418,17 +440,26 @@ void update_fairness_cnts (cnts_t &cnts)
     }
 } // update_fairness_cnts
 
-// #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
+
+unsigned delta_print_secs (const unsigned delta_print_10ms) {
+    return delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC;
+}
+
+unsigned delta_print_10ms (const unsigned delta_print_10ms) {
+    return delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC;
+}
+
+
 void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 {
-   const unsigned delta_print_secs = cnts.delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 / 100 = 23
-   const unsigned delta_print_10ms = cnts.delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC; // 2387 % 100 = 87 for "DT 23.87s"
-   char max_loop_drop_neg_cnt_str[25];
-
-   sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
-   
-   printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
-            ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)) ? max_loop_drop_neg_cnt_str : "",
+    #if (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT)
+        char max_loop_drop_neg_cnt_str[25];
+        sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
+    
+        #define IS_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
+        
+        printf ("%sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us\n",
+            IS_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
             USE_RANDOM_TYPE,
             cnts.rec_cnt,
             cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
@@ -437,16 +468,28 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
             cnts.sum_rec_cnt,
             (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
             cnts.sum_sent_cnt,
-            delta_print_secs,
-            delta_print_10ms);
+            delta_print_secs (cnts.delta_print_10ms),
+            delta_print_10ms (cnts.delta_print_10ms));
+    #elif (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS)
+        cnts.arr_delta_print_10ms [cnts.iof_arr] = cnts.delta_print_10ms;
+        cnts.iof_arr++;
+        if ((cnts.iof_arr % ARR_DELTA_PRINT_DIM) == 0) {
+            for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
+                printf ("DT %u.%us\n",
+                delta_print_secs (cnts.arr_delta_print_10ms [ix]),
+                delta_print_10ms (cnts.arr_delta_print_10ms [ix]));
+            }
+            printf ("--\n");
+            reset_debug_cnts_arr (cnts);
+        }
+    #endif
    
-   randoms.max_loop_neg_cnt = 0;
-   randoms.max_loop_pos_cnt = 0;
-   reset_debug_cnts (cnts);
+    randoms.max_loop_neg_cnt = 0;
+    randoms.max_loop_pos_cnt = 0;
+    reset_debug_cnts (cnts);
 } // print_and_clear_debug_cnts
 
 
-// #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT or SPEED_FAST_AND_SCOPE)
 void print_welcome_banner()
 {
     printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n",
@@ -454,9 +497,9 @@ void print_welcome_banner()
             KNOCK_COME_VERSION_STR,
             KNOCK_COME_DATE, KNOCK_COME_TIME,
             RANDOM_VAL_MAX_US, 
-            PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
+            SPEED_SLOW_AND_PRINT_12 ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
             MAX_SUM_CNT,
-            PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT ? "" : ")",
+            SPEED_SLOW_AND_PRINT_12 ? "" : ")",
             USE_ORDERED_PRI_SELECT_MASTER,
             USE_ORDERED_PRI_SELECT_SLAVE,
             PRINT_OR_SCOPE);
@@ -482,7 +525,7 @@ void print_ordered_banner()
 
 #define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
 
-#if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
+#if (SPEED_SLOW_AND_PRINT_12)
     #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
 #else // SPEED_FAST_AND_SCOPE
     #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
@@ -698,7 +741,7 @@ void task_master (
                 xassert (data_ch_ab_bidir.source == task_a);
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
 
-                #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
+                #if (SPEED_SLOW_AND_PRINT_12)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_debug_cnts (cnts, randoms);
@@ -710,7 +753,7 @@ void task_master (
                 const random_unsigned32_t random_number = random_get_random_number_special (randoms);
                 time_ticks += get_until_next_timeout_ticks (random_number);
 
-                #if (PRINT_RANDOM_VALS_MASTER==1) // Print (not in slave)
+                #if (PRINT_RANDOM_VALS_MASTER == 1) // Print (not in slave)
                     #if ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
                         printf ("%s%d\n", 
                         ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
@@ -733,7 +776,7 @@ void task_master (
                 cnts.rec_sent_cnt++;
                 cnts.sum_sent_cnt++;
 
-                #if (PRINT_OR_SCOPE==SPEED_SLOW_AND_PRINT)
+                #if (SPEED_SLOW_AND_PRINT_12)
                     update_fairness_cnts (cnts);
                     if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
                         print_and_clear_debug_cnts (cnts, randoms);
