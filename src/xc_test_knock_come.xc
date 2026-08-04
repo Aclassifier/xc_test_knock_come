@@ -389,10 +389,6 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 typedef struct {
     unsigned sent_cnt;
     unsigned rec_cnt;
-    //qwe unsigned rec_sent_cnt;
-    //qweunsigned rec_gt_sent_cnt;
-    //qweunsigned rec_eq_sent_cnt;
-    //qweunsigned rec_lt_sent_cnt;
     unsigned sum_sent_cnt;
     unsigned sum_rec_cnt;
     //
