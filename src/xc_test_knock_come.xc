@@ -37,7 +37,8 @@
 // ===================================================================================================================
 /*
 04Aug2026 0.941
-print_and_clear_debug_cnts and cnts_t much shorter, and perhaps clearer
+* non-essential detail
+* print_and_clear_debug_cnts and cnts_t much shorter, and perhaps clearer
 04Aug2026 0.940
 Last long _log.txt. Next version will have considerably less max verbose log
 
@@ -660,8 +661,7 @@ void task_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                const random_unsigned32_t random_number = random_get_random_number_special (randoms); // Easier to print
-                time_ticks += get_until_next_timeout_ticks (random_number);
+                time_ticks += get_until_next_timeout_ticks (random_get_random_number_special (randoms));
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
