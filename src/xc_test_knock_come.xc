@@ -36,7 +36,9 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
-03Aug2926 0.940
+04Aug2026 0.940
+Last long _log.txt. Next version will have considerably less max verbose log
+03Aug2026 0.940
 print_and_clear_debug_cnts has got caller_id, perhaps the change in DT values comes from the id. See _log.txt
 03Aug2026 0.939
 * Ref for Claude, to analyse my code, since SPEED_SLOW_AND_PRINT_LESS with less printing did not help with
