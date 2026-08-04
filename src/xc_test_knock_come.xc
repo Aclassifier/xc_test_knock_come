@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.940" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.941" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,8 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+04Aug2026 0.941
+print_and_clear_debug_cnts and cnts_t much shorter, and perhaps clearer
 04Aug2026 0.940
 Last long _log.txt. Next version will have considerably less max verbose log
 03Aug2026 0.940
@@ -386,10 +388,10 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 typedef struct {
     unsigned sent_cnt;
     unsigned rec_cnt;
-    unsigned rec_sent_cnt;
-    unsigned rec_gt_sent_cnt;
-    unsigned rec_eq_sent_cnt;
-    unsigned rec_lt_sent_cnt;
+    //qwe unsigned rec_sent_cnt;
+    //qweunsigned rec_gt_sent_cnt;
+    //qweunsigned rec_eq_sent_cnt;
+    //qweunsigned rec_lt_sent_cnt;
     unsigned sum_sent_cnt;
     unsigned sum_rec_cnt;
     //
@@ -405,12 +407,8 @@ typedef struct {
 
 void reset_debug_cnts (cnts_t &cnts)
 {
-    cnts.sent_cnt        = 0;
-    cnts.rec_cnt         = 0;
-    cnts.rec_sent_cnt    = 0;
-    cnts.rec_gt_sent_cnt = 0;
-    cnts.rec_eq_sent_cnt = 0;
-    cnts.rec_lt_sent_cnt = 0;
+    cnts.sent_cnt = 0;
+    cnts.rec_cnt  = 0;
     // Don't touch sum_sent_cnt, sum_rec_cnt
 
     cnts.print_tmr :> cnts.print_time_ticks;  
@@ -439,29 +437,24 @@ void init_debug_cnts (cnts_t &cnts)
     cnts.sum_rec_cnt  = 0;
 } // init_debug_cnts
 
-void update_fairness_cnts (cnts_t &cnts)
-{
-    if (cnts.rec_cnt > cnts.sent_cnt) {
-        cnts.rec_gt_sent_cnt++;
-    } else if (cnts.rec_cnt < cnts.sent_cnt) {
-        cnts.rec_lt_sent_cnt++;
-    } else {
-        cnts.rec_eq_sent_cnt++;
-    }
-} // update_fairness_cnts
 
-
-unsigned from_10ms_delta_print_secs (const unsigned from_10ms_delta_print_10ms) {
-    return from_10ms_delta_print_10ms / PRINT_TIMEOUT_NUMS_PER_SEC;
-}
-unsigned from_10ms_delta_print_10ms (const unsigned from_10ms_delta_print_10ms) {
-    return from_10ms_delta_print_10ms % PRINT_TIMEOUT_NUMS_PER_SEC;
+extern inline unsigned get_integer_part (const unsigned value, const unsigned divisor); 
+inline        unsigned get_integer_part (const unsigned value, const unsigned divisor) {
+    return (value / divisor);
 }
 
-void print_and_clear_debug_cnts (
-    const unsigned caller_id, 
-    cnts_t         &cnts, 
-    randoms_t      &randoms)
+
+extern unsigned get_fraction_part (const unsigned value, const unsigned modulus);
+inline unsigned get_fraction_part (const unsigned value, const unsigned modulus) {
+    // When printing you MUST: mod 10 %01u, mod 100 %02u, mod 1000 %03u etc. for fraction after decimal point:
+    //  4999 = 49.99  with %02u
+    //  5001 = 50.01  with %02u
+    // 50079 = 50.079 with %03u
+    // 49867 = 49.867 with %03u
+    return (value % modulus); 
+}
+
+void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 {
     #if (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT)
         unsigned medium_us = 0;
@@ -469,32 +462,30 @@ void print_and_clear_debug_cnts (
             medium_us = ((unsigned) (cnts.sum_ticks_u64 / (uint64_t) cnts.num_ticks)) / XS1_TIMER_MHZ;
         } else {} // 0
 
-        char max_loop_drop_neg_cnt_str[25];
-        sprintf(max_loop_drop_neg_cnt_str, "P %u N %u/%u\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
-        
-        printf ("%u! %sRanT %u REC %u\t%s\tSENT %u\t(>%u =%u <%u)\tSUM (REC %u %s SENT %u)\tDT %u.%us ms %u.%u\n",
-            caller_id,
+        char max_loop_drop_neg_cnt_str[25]; // SYM means symmetric random properties
+        sprintf (max_loop_drop_neg_cnt_str,   "SYM(P %u N %u/%u)\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
+       
+        // From v0.941
+        // M: SYMCNT(P 1 N 9/9)        RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.09s sum, RND CLK 50.079ms mean
+        //       tm means task_master
+        printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%02us sum, RND CLK %u.%03ums mean\n",
             USE_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
-            USE_RANDOM_TYPE,
             cnts.rec_cnt,
-            cnts.rec_cnt ? ">" : cnts.sent_cnt ? "<" : "=",
             cnts.sent_cnt,
-            cnts.rec_gt_sent_cnt, cnts.rec_eq_sent_cnt, cnts.rec_lt_sent_cnt,
             cnts.sum_rec_cnt,
-            (cnts.sum_rec_cnt > cnts.sum_sent_cnt) ? ">" : cnts.sum_rec_cnt < cnts.sum_sent_cnt ? "<" : "=",
             cnts.sum_sent_cnt,
-            from_10ms_delta_print_secs (cnts.from_10ms_delta_print_10ms), // absolute time in 10ms
-            from_10ms_delta_print_10ms (cnts.from_10ms_delta_print_10ms), // absolute time in 10ms
-            medium_us/1000,  // 123456789 / 1000 = 123456  Average sum of random times, how good is the random function generator..
-            medium_us%1000); // 123456789 % 1000 = 789     ..in delivering average in exactly in the middle?                    
+            get_integer_part  (cnts.from_10ms_delta_print_10ms, PRINT_TIMEOUT_NUMS_PER_SEC), // s
+            get_fraction_part (cnts.from_10ms_delta_print_10ms, PRINT_TIMEOUT_NUMS_PER_SEC), // %02 since div 100
+            get_integer_part  (medium_us, 1000),  // ms                    Average sum of random times, how good is the random function generator..
+            get_fraction_part (medium_us, 1000)); // %03 since div 1000 ms ..in delivering average in exactly in the middle?                    
     #elif (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS)
         cnts.arr_delta_print_10ms [cnts.iof_arr] = cnts.from_10ms_delta_print_10ms;
         cnts.iof_arr++;
         if ((cnts.iof_arr % ARR_DELTA_PRINT_DIM) == 0) {
             for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
-                printf ("DT %u.%us\n",
-                from_10ms_delta_print_secs (cnts.arr_delta_print_10ms [ix]),
-                from_10ms_delta_print_10ms (cnts.arr_delta_print_10ms [ix]));
+                printf ("DT %u.%02us\n",
+                get_integer_part  (cnts.arr_delta_print_10ms [ix], PRINT_TIMEOUT_NUMS_PER_SEC), // absolute time in 10ms
+                get_fraction_part (cnts.arr_delta_print_10ms [ix], PRINT_TIMEOUT_NUMS_PER_SEC), // %02 since div 100
             }
             printf ("--\n");
             reset_debug_cnts_arr (cnts);
@@ -543,9 +534,9 @@ void print_ordered_banner()
 #define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
 
 #if (SPEED_SLOW_AND_PRINT_12)
-    #define PRINT_AND_CLEAR_CNTS(id,cnts,randoms) print_and_clear_debug_cnts(id,cnts,randoms) 
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
 #else // SPEED_FAST_AND_SCOPE
-    #define PRINT_AND_CLEAR_CNTS(id,cnts,randoms)
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
 #endif
 
 #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
@@ -717,7 +708,7 @@ void task_master (
     PRINT_WELCOME_BANNER;
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
-    PRINT_AND_CLEAR_CNTS (0, cnts, randoms);
+    PRINT_AND_CLEAR_CNTS (cnts, randoms);
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
@@ -751,21 +742,11 @@ void task_master (
                 data_from_task_a_slave = data_from_task_a_slave_now;
                 p4_leds <: data_from_task_a_slave_now / MEAN_LEDS_BLINKING_DIVISOR;
                 cnts.rec_cnt++;
-                cnts.rec_sent_cnt++;
                 cnts.sum_rec_cnt++;
 
                 // Analyze reponse
                 xassert (data_ch_ab_bidir.source == task_a);
                 xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
-
-                /*
-                #if (SPEED_SLOW_AND_PRINT_12)
-                    update_fairness_cnts (cnts);
-                    if (cnts.rec_sent_cnt == MAX_SUM_CNT) {
-                        PRINT_AND_CLEAR_CNTS (1, cnts, randoms);
-                    } else {}
-                #endif
-                */
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {       
@@ -796,13 +777,11 @@ void task_master (
                 data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
 
                 cnts.sent_cnt++;
-                cnts.rec_sent_cnt++;
                 cnts.sum_sent_cnt++;
 
                 #if (SPEED_SLOW_AND_PRINT_12)
-                    update_fairness_cnts (cnts);
                     if (cnts.num_ticks == MAX_SUM_CNT) {
-                        PRINT_AND_CLEAR_CNTS (2, cnts, randoms);
+                        PRINT_AND_CLEAR_CNTS (cnts, randoms);
                     } else {}
                 #endif
             } break;
