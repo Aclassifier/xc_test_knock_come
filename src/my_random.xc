@@ -63,7 +63,7 @@ random_unsigned32_t xorshift32 (randoms_t &randoms) {
     uint32_t state; // number, value or seed, any name goes
     uint32_t bit_con_seq_cnt_max;  
     uint32_t bit_con_seq_cnt;
-    uint64_t bit_round_cnt;
+    uint32_t bit_round_cnt;
  } stats_t;
 
 void init_stats (stats_t &stats, const uint32_t initial_seed) {
@@ -145,6 +145,16 @@ uint32_t find_max_consecutive_bit31_xorshift32
     return stats.bit_con_seq_cnt_max;
 } // find_max_consecutive_bit31_xorshift32
 
+typedef struct {
+    uint32_t bit_con_seq_cnt_max;
+    uint32_t bit_round_cnt;
+} con_sec_log_t;
+
+void init_con_sec_log (con_sec_log_t &con_sec_log) {
+    con_sec_log.bit_con_seq_cnt_max = 0;
+    con_sec_log.bit_round_cnt       = 0;
+}
+
 // Find by brute force the values for "DROP_BIT_CNT_MAX" for all 32 bits. Those for bit0..bit30 are not really needed, this is just for fun.
 // That one for bit31 is DROP_BIT_CNT_MAX, but it's already found in find_max_consecutive_bit31_xorshift32.
 //
@@ -176,10 +186,12 @@ uint32_t find_max_consecutive_allbits_xorshift32
     bool     p1_val = false;
 
     printf("Starting full state-space simulation with seed %u in code at %s %s. Please wait some 25 hours...\nhours:\n\n", initial_seed, __TIME__, __DATE__);
-    stats_t stats [BITSNUM32];
+    stats_t       stats       [BITSNUM32];
+    con_sec_log_t con_sec_log [BITSNUM32];
 
     for (unsigned ix=0; ix<BITSNUM32; ix++){
-       init_stats (stats[ix], initial_seed);
+       init_stats       (stats[ix], initial_seed);
+       init_con_sec_log (con_sec_log[ix]);
     }
 
     tmr :> time_ticks;
@@ -203,12 +215,20 @@ uint32_t find_max_consecutive_allbits_xorshift32
                 p1_out_blue <: p1_val; // Every (21 us) * 4294967296 (32 bits full range) = 89170 secs = 24.77 hours (as printed out, see above)
                 p1_val = not p1_val;
                 for (unsigned ix=0; ix<BITSNUM32; ix++){
+                    uint32_t bit_con_seq_cnt_max_pre = stats[ix].bit_con_seq_cnt_max;
+                    uint32_t bit_round_cnt_pre       = stats[ix].bit_round_cnt;
+                    
                     do_xorshift32_etc (stats[ix], 1<<ix);
+                    
+                    if (stats[ix].bit_con_seq_cnt_max > bit_con_seq_cnt_max_pre) {
+                        con_sec_log[ix].bit_con_seq_cnt_max = bit_con_seq_cnt_max_pre;
+                        con_sec_log[ix].bit_round_cnt       = bit_round_cnt_pre;
+                    }
                 }
             } break;
         }          
     } while (stats[0].state != initial_seed); // Terminates when we complete the full cycle
-    // } while (stats[0].bit_round_cnt < 1000); To test
+    // } while (stats[0].bit_round_cnt < 1000); // To test
 
     // All terminal outputs are now grouped together here
     printf("\n=== Simulation Complete ===\n");
@@ -216,7 +236,7 @@ uint32_t find_max_consecutive_allbits_xorshift32
     printf("Max consecutive negatives found:\n");
 
     for (unsigned ix=0; ix<BITSNUM32; ix++){
-        printf ("[%u]=%u\n", ix, stats[ix].bit_con_seq_cnt_max);
+        printf ("[%u]=\t%u\tinto\t%u\tat\t%u\n", ix, stats[ix].bit_con_seq_cnt_max, con_sec_log[ix].bit_con_seq_cnt_max, con_sec_log[ix].bit_round_cnt);
     }
     
     return stats[0].bit_con_seq_cnt_max;

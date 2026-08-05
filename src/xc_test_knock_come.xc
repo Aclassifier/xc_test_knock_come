@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.943" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.944" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,8 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+05Aug2026 0.944
+DO_FIND_32BITS_DROP_CNT_MAX added index as where changes happen, con_sec_log_t new in my_random.xc
 05Aug2026 0.943
 Now "0.000" not "0.  0" in prints. Tested. I can test the appearance later with an extended DO_FIND_32BITS_DROP_CNT_MAX
 05Aug2026 0.942
@@ -144,7 +146,7 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3
 
-#define DO_COMPILE_RUN DO_KNOCK_COME
+#define DO_COMPILE_RUN DO_FIND_32BITS_DROP_CNT_MAX
 
 #define _XTC           (XCC_VERSION_MAJOR >= 1503)
 #define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
