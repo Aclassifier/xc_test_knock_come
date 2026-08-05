@@ -1,5 +1,20 @@
 Newest on top 
-                       
+
+XCC 1503.1 KNOCK-COME v0.943 on date Aug  5 2026 11:38:20
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+
+tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
+tm: SYM(P 1 N 9/9)      RX 996  TX 1000 ACC(RX 996      TX 1000)        TIME 49.99s sum, RND CLK 50.079ms mean
+tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 1995     TX 2000)        TIME 49.77s sum, RND CLK 49.867ms mean
+tm: SYM(P 1 N 10/10)    RX 983  TX 1000 ACC(RX 2978     TX 3000)        TIME 49.59s sum, RND CLK 49.687ms mean
+tm: SYM(P 1 N 9/10)     RX 1007 TX 1000 ACC(RX 3985     TX 4000)        TIME 49.67s sum, RND CLK 49.771ms mean
+tm: SYM(P 1 N 10/10)    RX 997  TX 1000 ACC(RX 4982     TX 5000)        TIME 49.47s sum, RND CLK 49.574ms mean
+
+===       
+
 tm: SYM(P 1 N 8/17)     RX 1005 TX 1000 ACC(RX 522181   TX 525000)      TIME 50.17s sum, RND CLK 50.276ms mean
 tm: SYM(P 1 N 10/17)    RX 995  TX 1000 ACC(RX 523176   TX 526000)      TIME 49.54s sum, RND CLK 49.655ms mean
 //               19 REACHED  AFTER                         527         TIMES 50 secs = 8.8 hours    

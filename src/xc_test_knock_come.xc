@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.942" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.943" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,8 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+05Aug2026 0.943
+Now "0.000" not "0.  0" in prints. Tested. I can test the appearance later with an extended DO_FIND_32BITS_DROP_CNT_MAX
 05Aug2026 0.942
 print syntax with "%u.%*u", integer, decimals, fraction used. New files: my_numbers.h and my_numbers.xc
 Not tested since I want to run 0.941 to see randoms.max_loop_neg_cnt develop over days. Compiles.
@@ -454,7 +456,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
         // From v0.941
         // M: SYMCNT(P 1 N 9/9)        RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.09s sum, RND CLK 50.079ms mean
         //       tm means task_master
-        printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%*us sum, RND CLK %u.%*ums mean\n",
+        printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%0*us sum, RND CLK %u.%0*ums mean\n",
             USE_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
             cnts.rec_cnt,
             cnts.sent_cnt,
@@ -471,7 +473,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
         cnts.iof_arr++;
         if ((cnts.iof_arr % ARR_DELTA_PRINT_DIM) == 0) {
             for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
-                printf ("DT %u.%*us\n", // Not "us" med "s"
+                printf ("DT %u.%*0us\n", // Not "us" med "s"
                 get_integer_part   (cnts.arr_delta_print_10ms [ix], scale_hundred), // absolute time in 10ms
                 get_trailing_zeros (scale_hundred),
                 get_fraction_part  (cnts.arr_delta_print_10ms [ix], scale_hundred), // %02 since div 100
