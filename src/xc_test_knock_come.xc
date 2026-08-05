@@ -28,7 +28,7 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.941" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.942" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
@@ -36,6 +36,10 @@
 // VERSIONS / COMMITS
 // ===================================================================================================================
 /*
+05Aug2026 0.942
+print syntax with "%u.%*u", integer, decimals, fraction used. New files: my_numbers.h and my_numbers.xc
+Not tested since I want to run 0.941 to see randoms.max_loop_neg_cnt develop over days. Compiles.
+
 04Aug2026 0.941
 * non-essential detail
 * print_and_clear_debug_cnts and cnts_t much shorter, and perhaps clearer
@@ -155,6 +159,7 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
     #include <xassert.h>
     #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
     #include "__globals.h"
+    #include "my_numbers.h"
     #include "my_random.h"
 #endif
 
@@ -370,7 +375,6 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 // Rename from_10ms_delta_print_10ms if these change:
 #define PRINT_TIMEOUT_RESOLUTION_MS 10
 #define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
-#define PRINT_TIMEOUT_NUMS_PER_SEC  (1000 / PRINT_TIMEOUT_RESOLUTION_MS) // 100
 
 #if (SPEED_SLOW_AND_PRINT_12)
     #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
@@ -436,22 +440,6 @@ void init_debug_cnts (cnts_t &cnts)
 } // init_debug_cnts
 
 
-extern inline unsigned get_integer_part (const unsigned value, const unsigned divisor); 
-inline        unsigned get_integer_part (const unsigned value, const unsigned divisor) {
-    return (value / divisor);
-}
-
-
-extern unsigned get_fraction_part (const unsigned value, const unsigned modulus);
-inline unsigned get_fraction_part (const unsigned value, const unsigned modulus) {
-    // When printing you MUST: mod 10 %01u, mod 100 %02u, mod 1000 %03u etc. for fraction after decimal point:
-    //  4999 = 49.99  with %02u
-    //  5001 = 50.01  with %02u
-    // 50079 = 50.079 with %03u
-    // 49867 = 49.867 with %03u
-    return (value % modulus); 
-}
-
 void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 {
     #if (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT)
@@ -466,24 +454,27 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
         // From v0.941
         // M: SYMCNT(P 1 N 9/9)        RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.09s sum, RND CLK 50.079ms mean
         //       tm means task_master
-        printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%02us sum, RND CLK %u.%03ums mean\n",
+        printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%*us sum, RND CLK %u.%*ums mean\n",
             USE_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
             cnts.rec_cnt,
             cnts.sent_cnt,
             cnts.sum_rec_cnt,
             cnts.sum_sent_cnt,
-            get_integer_part  (cnts.from_10ms_delta_print_10ms, PRINT_TIMEOUT_NUMS_PER_SEC), // s
-            get_fraction_part (cnts.from_10ms_delta_print_10ms, PRINT_TIMEOUT_NUMS_PER_SEC), // %02 since div 100
-            get_integer_part  (medium_us, 1000),  // ms                    Average sum of random times, how good is the random function generator..
-            get_fraction_part (medium_us, 1000)); // %03 since div 1000 ms ..in delivering average in exactly in the middle?                    
+            get_integer_part   (cnts.from_10ms_delta_print_10ms, scale_hundred), // s
+            get_trailing_zeros (scale_hundred),
+            get_fraction_part  (cnts.from_10ms_delta_print_10ms, scale_hundred), // %02 since div 100
+            get_integer_part   (medium_us, scale_thousand),  // ms Average sum of random times, how good is the random function generator..
+            get_trailing_zeros (scale_thousand),
+            get_fraction_part  (medium_us, scale_thousand)); //  ..in delivering average in exactly in the middle?                    
     #elif (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT_LESS)
         cnts.arr_delta_print_10ms [cnts.iof_arr] = cnts.from_10ms_delta_print_10ms;
         cnts.iof_arr++;
         if ((cnts.iof_arr % ARR_DELTA_PRINT_DIM) == 0) {
             for (unsigned ix = 0; ix < ARR_DELTA_PRINT_DIM; ix++) {
-                printf ("DT %u.%02us\n",
-                get_integer_part  (cnts.arr_delta_print_10ms [ix], PRINT_TIMEOUT_NUMS_PER_SEC), // absolute time in 10ms
-                get_fraction_part (cnts.arr_delta_print_10ms [ix], PRINT_TIMEOUT_NUMS_PER_SEC), // %02 since div 100
+                printf ("DT %u.%*us\n", // Not "us" med "s"
+                get_integer_part   (cnts.arr_delta_print_10ms [ix], scale_hundred), // absolute time in 10ms
+                get_trailing_zeros (scale_hundred),
+                get_fraction_part  (cnts.arr_delta_print_10ms [ix], scale_hundred), // %02 since div 100
             }
             printf ("--\n");
             reset_debug_cnts_arr (cnts);

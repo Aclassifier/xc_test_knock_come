@@ -1,4 +1,12 @@
 Newest on top 
+                       
+tm: SYM(P 1 N 8/17)     RX 1005 TX 1000 ACC(RX 522181   TX 525000)      TIME 50.17s sum, RND CLK 50.276ms mean
+tm: SYM(P 1 N 10/17)    RX 995  TX 1000 ACC(RX 523176   TX 526000)      TIME 49.54s sum, RND CLK 49.655ms mean
+//               19 REACHED  AFTER                         527         TIMES 50 secs = 13 hours 8.8 hours    
+tm: SYM(P 1 N 19/19)    RX 1015 TX 1000 ACC(RX 524191   TX 527000)      TIME 50.54s sum, RND CLK 50.655ms mean
+tm: SYM(P 1 N 11/19)    RX 799  TX 1000 ACC(RX 524990   TX 528000)      TIME 40.02s sum, RND CLK 50.206ms mean
+tm: SYM(P 1 N 9/19)     RX 1028 TX 1000 ACC(RX 526018   TX 529000)      TIME 50.69s sum, RND CLK 50.806ms mean
+
 
 XCC 1503.1 KNOCK-COME v0.941 on date Aug  4 2026 11:02:49
 Time random max 100000 us cnt events at 1000
