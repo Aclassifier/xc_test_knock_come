@@ -221,8 +221,8 @@ uint32_t find_max_consecutive_allbits_xorshift32
                     do_xorshift32_etc (stats[ix], 1<<ix);
                     
                     if (stats[ix].bit_con_seq_cnt_max > bit_con_seq_cnt_max_pre) {
-                        con_sec_log[ix].bit_con_seq_cnt_max = bit_con_seq_cnt_max_pre;
-                        con_sec_log[ix].bit_round_cnt       = bit_round_cnt_pre;
+                        con_sec_log[ix].bit_con_seq_cnt_max = stats[ix].bit_con_seq_cnt_max; // New
+                        con_sec_log[ix].bit_round_cnt       = bit_round_cnt_pre; // The old, not after increment
                     }
                 }
             } break;
