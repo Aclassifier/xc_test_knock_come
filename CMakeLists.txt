@@ -10,7 +10,12 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # Flags used specifically for the Debug configuration (-O0 disables optimization)
 #  https://www.xmos.com/documentation/XM-015090-PC/html/doc/api_reference/variables.html#optional-application-variables
-set(APP_COMPILER_FLAGS -O0 -g -save-temps)
+set(APP_COMPILER_FLAGS 
+    -O0 
+    -g 
+    -save-temps 
+    # -Wno-unknown-pragmas # For VS Code region, endregion, see https://code.visualstudio.com/docs/editing/codebasics#_folding
+)
 # set(CMAKE_XC_OUTPUT_EXTENSION_REPLACE 1)
 
 set(APP_DEPENDENT_MODULES lib_xassert lib_random)

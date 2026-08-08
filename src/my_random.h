@@ -18,7 +18,7 @@
 
 #define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
 //
-#define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC
+#define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC // Observe VS Code colour coding shades non-used code
 
 typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
 typedef int32_t  random_signed32_t;

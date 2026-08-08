@@ -28,14 +28,34 @@
  * See the full description of the algorithm in the above referenced blog note.
  */
 
-#define KNOCK_COME_VERSION_STR "0.944" // x.yzz
+#define ALWAYS 1 // Always 1, for VS Code "folding"
+
+#if ALWAYS // ========== include ==========
+
+#include <xs1.h>
+#include <platform.h> // slice
+                        // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
+#include <syscall.h>  // _XTC new for me
+#include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
+#include <stdio.h>    // printf
+#include <iso646.h>   // not etc.
+#include <xassert.h>
+#include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
+#include "__globals.h"
+#include "my_numbers.h"
+#include "my_random.h"
+
+#endif // include ==========
+
+#define KNOCK_COME_VERSION_STR "0.945" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
-// ===================================================================================================================
-// VERSIONS / COMMITS
-// ===================================================================================================================
+#if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
+08Aug2026 0.945
+Same code but moved parts around. Now enum, struct, functions etc. grouped and "folding" added "region" and 
+"endregion". See def of ALWAYS
 05Aug2026 0.944
 * Detail in find_max_consecutive_allbits_xorshift32
 * DO_FIND_32BITS_DROP_CNT_MAX added index as where changes happen, con_sec_log_t new in my_random.xc
@@ -139,36 +159,28 @@ print_welcome_banner is new. Conditional printing done in macros
 TEST_DEADLOCK_NO_STREAMING_CHAN is new
 
 21May2026 0.0.900 Initial version. Sent to Antonio
+
 */
-// ===================================================================================================================
+
+#endif // VERSIONS AND COMMITS ==========
+
+#if ALWAYS // ========== DO_KNOCK_COME #defines ==========
 
 #define DO_KNOCK_COME               0
 #define DO_LIB_RANDOM_EXAMPLE       1
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3
 
-#define DO_COMPILE_RUN DO_FIND_32BITS_DROP_CNT_MAX
+#define DO_COMPILE_RUN DO_KNOCK_COME // Observe VS Code colour coding shades non-used code
+
+#endif // DO_KNOCK_COME #defines
+
+#if (DO_COMPILE_RUN == DO_KNOCK_COME)
+
+#if ALWAYS // ========== #defines ==========
 
 #define _XTC           (XCC_VERSION_MAJOR >= 1503)
 #define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
-
-#define INCLUDES
-#ifdef INCLUDES
-    #include <xs1.h>
-    #include <platform.h> // slice
-                          // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
-    #include <syscall.h>  // _XTC new for me
-    #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
-    #include <stdio.h>    // printf
-    #include <iso646.h>   // not etc.
-    #include <xassert.h>
-    #include <random.h>   // A file "random_conf.h" here with #define RANDOM_ENABLE_HW_SEED 1 needs to be defined
-    #include "__globals.h"
-    #include "my_numbers.h"
-    #include "my_random.h"
-#endif
-
-#if (DO_COMPILE_RUN == DO_KNOCK_COME)
 
 //                                     LEDS COUNT ABOUT THE SAME RATE FOR BOTH
 #define SPEED_SLOW_AND_PRINT      0 // Scope possible: use ROLL scope
@@ -240,6 +252,72 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
     #define ORDERED_PRI_SELECT_MASTER // Seems to run just as good as the alternative
 #endif
 
+// Usage:
+// SLAVE_SET_KNOCKCOME_STATE  (PresentState,NewState)
+// MASTER_SET_KNOCKCOME_STATE (PresentState,NewState)
+//
+#if (DEBUG_KNOCKCOME == 1)
+    #define SLAVE_SET_KNOCKCOME_STATE(PresentState,NewState)  PresentState = Slave_Set_KnockCome_State (PresentState,NewState)
+    #define MASTER_SET_KNOCKCOME_STATE(PresentState,NewState) PresentState = Master_Set_KnockCome_State(PresentState,NewState)
+#else
+    // DEBUG_PRINT_F_PATTERN_KNOCKCOME not tested here, so no print in this case!
+    //
+    #define SLAVE_SET_KNOCKCOME_STATE(PresentState,NewState)  PresentState = NewState
+    #define MASTER_SET_KNOCKCOME_STATE(PresentState,NewState) PresentState = NewState
+#endif
+
+// Rename from_10ms_delta_print_10ms if these change:
+#define PRINT_TIMEOUT_RESOLUTION_MS 10
+#define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
+
+#if (SPEED_SLOW_AND_PRINT_12)
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
+    #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
+    #define ARR_DELTA_PRINT_DIM        20
+#else // SPEED_FAST_AND_SCOPE
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
+    #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
+    #define ARR_DELTA_PRINT_DIM        1
+#endif
+//
+#define MAX_SUM_CNT 1000 // Must be an even number if USE_SYMMETRIC:
+
+#if (USE_SYMMETRIC)
+    #if (((MAX_SUM_CNT % 2) != 0) or ((RANDOM_VAL_MAX_US % 2) != 0))
+        #error Symmetric pseudorandom algorithm values must be even
+    #endif
+#endif
+
+#define DATA_FIRST_AND_INC 1
+//
+// (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
+
+#define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
+
+#if (SPEED_SLOW_AND_PRINT_12)
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
+#else // SPEED_FAST_AND_SCOPE
+    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
+#endif
+
+#if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
+    #define PRINT_DEADLOCK_BANNER print_deadlock_banner()
+#else
+    #define PRINT_DEADLOCK_BANNER
+#endif
+
+#if (USE_ORDERED_PRI_SELECT_MASTER==1)
+    #define PRINT_ORDERED_BANNER print_ordered_banner()
+#else
+    #define PRINT_ORDERED_BANNER
+#endif
+
+#define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
+#define RANDOM_SEED_MASTER 8765 // --''--
+
+#endif // endegion #defines
+
+#if ALWAYS // ========== typedef enum ==========
 
 typedef enum {        // NEEDS
     KC_TYP_NONE_DATA, // Master sends spontaneous data to Slave, not part of knock-come scheme
@@ -248,12 +326,6 @@ typedef enum {        // NEEDS
     KC_TYP_COME_DATA, // Master sends "come!" to Slave, but also includes spontaneous piggy-backed data
     KC_TYP_SM_DATA    // Slave sends data to Master. Knock-Come Sequence finished
 } KnockCome_Message_Type_e;
-
-
-typedef struct {
-    KnockCome_Message_Type_e KnockCome_Message_Type; // KC_TYP_SM_KNOCK only
-} ch_knock_t;
-
 
 typedef enum {
     // We don't need a KNOCKCOME_KNOCKSEND_PENDING_TO_SEND_KNOCK_A since we can always send immediately,
@@ -271,12 +343,34 @@ typedef enum {
     //
 } KnockCome_State_e;
 
-
 typedef enum {
     task_a,
     task_b
 } ab_src_e;
 
+#endif // typedef enum
+
+#if ALWAYS // ========== typedef struct ==========
+
+typedef struct {
+    unsigned sent_cnt;
+    unsigned rec_cnt;
+    unsigned sum_sent_cnt;
+    unsigned sum_rec_cnt;
+    //
+    timer    print_tmr;
+    time32_t print_time_ticks;
+    unsigned from_10ms_delta_print_10ms;
+    unsigned iof_arr; // This:
+    unsigned arr_delta_print_10ms [ARR_DELTA_PRINT_DIM];
+    // 
+    uint64_t sum_ticks_u64;
+    unsigned num_ticks;
+} cnts_t;
+
+typedef struct {
+    KnockCome_Message_Type_e KnockCome_Message_Type; // KC_TYP_SM_KNOCK only
+} ch_knock_t;
 
 // Between task_slave and task_master
 // task_slave sends important data and task_master some times adds like new menu changes
@@ -290,21 +384,9 @@ typedef struct {
     } data;
 } ch_come_or_sdata_t;
 
+#endif // typedef struct
 
-// Usage:
-// SLAVE_SET_KNOCKCOME_STATE  (PresentState,NewState)
-// MASTER_SET_KNOCKCOME_STATE (PresentState,NewState)
-//
-#if (DEBUG_KNOCKCOME == 1)
-    #define SLAVE_SET_KNOCKCOME_STATE(PresentState,NewState)  PresentState = Slave_Set_KnockCome_State (PresentState,NewState)
-    #define MASTER_SET_KNOCKCOME_STATE(PresentState,NewState) PresentState = Master_Set_KnockCome_State(PresentState,NewState)
-#else
-    // DEBUG_PRINT_F_PATTERN_KNOCKCOME not tested here, so no print in this case!
-    //
-    #define SLAVE_SET_KNOCKCOME_STATE(PresentState,NewState)  PresentState = NewState
-    #define MASTER_SET_KNOCKCOME_STATE(PresentState,NewState) PresentState = NewState
-#endif
-
+#if ALWAYS // ========== Knock-Come state change ==========
 
 KnockCome_State_e
 Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS data
@@ -377,40 +459,9 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 } // Master_Set_KnockCome_State
 
-// Rename from_10ms_delta_print_10ms if these change:
-#define PRINT_TIMEOUT_RESOLUTION_MS 10
-#define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
+#endif // Knock-Come state change
 
-#if (SPEED_SLOW_AND_PRINT_12)
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
-    #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
-    #define ARR_DELTA_PRINT_DIM        20
-#else // SPEED_FAST_AND_SCOPE
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
-    #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
-    #define ARR_DELTA_PRINT_DIM        1
-#endif
-//
-#define MAX_SUM_CNT        1000
-#define DATA_FIRST_AND_INC    1
-//
-// (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
-
-typedef struct {
-    unsigned sent_cnt;
-    unsigned rec_cnt;
-    unsigned sum_sent_cnt;
-    unsigned sum_rec_cnt;
-    //
-    timer    print_tmr;
-    time32_t print_time_ticks;
-    unsigned from_10ms_delta_print_10ms;
-    unsigned iof_arr; // This:
-    unsigned arr_delta_print_10ms [ARR_DELTA_PRINT_DIM];
-    // 
-    uint64_t sum_ticks_u64;
-    unsigned num_ticks;
-} cnts_t;
+#if ALWAYS // ========== print and debug functions ==========
 
 void reset_debug_cnts (cnts_t &cnts)
 {
@@ -466,7 +517,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
             cnts.sum_rec_cnt,
             cnts.sum_sent_cnt,
             get_integer_part   (cnts.from_10ms_delta_print_10ms, scale_hundred), // s
-            get_trailing_zeros (scale_hundred),
+            get_trailing_zeros (scale_hundred), // For this:
             get_fraction_part  (cnts.from_10ms_delta_print_10ms, scale_hundred), // %02 since div 100
             get_integer_part   (medium_us, scale_thousand),  // ms Average sum of random times, how good is the random function generator..
             get_trailing_zeros (scale_thousand),
@@ -510,7 +561,6 @@ void print_welcome_banner()
 } // print_welcome_banner
 
 
-// #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
 void print_deadlock_banner()
 {
     printf ("ch_knock is not buffered, system will deadlock.\n"
@@ -518,37 +568,15 @@ void print_deadlock_banner()
 } // print_deadlock_banner
 
 
-// #if (USE_ORDERED_PRI_SELECT_MASTER==1)
 void print_ordered_banner()
 {
     printf ("[[ordered]] not used in select statement(s) seems to have no effect\n"
             "But watch out for stopped log\n");
 } // print_ordered_banner
 
-#define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
+#endif // print and debug functions
 
-#if (SPEED_SLOW_AND_PRINT_12)
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
-#else // SPEED_FAST_AND_SCOPE
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
-#endif
-
-#if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
-    #define PRINT_DEADLOCK_BANNER print_deadlock_banner()
-#else
-    #define PRINT_DEADLOCK_BANNER
-#endif
-
-#if (USE_ORDERED_PRI_SELECT_MASTER==1)
-    #define PRINT_ORDERED_BANNER print_ordered_banner()
-#else
-    #define PRINT_ORDERED_BANNER
-#endif
-
-
-#define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
-#define RANDOM_SEED_MASTER 8765 // --''--
-
+#if ALWAYS // ========== local functions ==========
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
 //
@@ -560,6 +588,7 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
     }
     p1_out_purple_master <: PORT_LOW; // Since 99 yields a '1' PORT_HIGH
 } // exercise_p1_out_purple_master
+
 
 // ===============================================================================================================================
 // get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
@@ -589,8 +618,121 @@ time32_t get_until_next_timeout_ticks (const random_unsigned32_t random_number) 
 
     return next_timeout_ticks;
 } // get_until_next_timeout_ticks
+#endif // local functions
 
+#if ALWAYS // ========== task_master ==========
+// ===================================================================================================================
+// task_master can send its DATA to task_slave any time, 
+// but if KNOCK is received it must respond with atomic send COME to task_slave and wait for DATA from task_slave.
+//
+void task_master (
+    chanend           ch_come_or_sdata,     // ch_come_or_sdata_t
+    STREAMING chanend ch_knock,             // ch_knock_t
+    port out          p1_out_purple_master, // bit0
+    port out          p4_leds)              // bit0-3
+{
+    timer              tmr;
+    time32_t           time_ticks;
+    ch_come_or_sdata_t data_ch_ab_bidir;
+    ch_knock_t         data_ch_ab_knock;
+    unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
+    cnts_t             cnts;
+    randoms_t          randoms;
 
+    init_randoms (randoms, RANDOM_SEED_MASTER); // Contains random_create_generator
+    
+    init_debug_cnts (cnts); // Also sets print_time_ticks
+    cnts.print_tmr :> cnts.print_time_ticks;  
+    cnts.from_10ms_delta_print_10ms = 0;
+    exercise_p1_out_purple_master (p1_out_purple_master);
+
+    PRINT_WELCOME_BANNER;
+    PRINT_ORDERED_BANNER;
+    PRINT_DEADLOCK_BANNER;
+    PRINT_AND_CLEAR_CNTS (cnts, randoms);
+
+    data_ch_ab_bidir.data.data_from_task_b_master = 0;
+
+    tmr :> time_ticks; // Almost immediately
+
+    while (true) {
+        ORDERED_PRI_SELECT_MASTER // [[ordered]] or none
+        select {
+            case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on the etop
+                // Every 10 ms RESOLUTION_PRINT_TIMEOUT_MS
+                cnts.print_time_ticks += PRINT_TIMEOUT_TICKS;
+                cnts.from_10ms_delta_print_10ms += 1; 
+            } break;
+
+            case ch_knock :> data_ch_ab_knock : {
+                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+                // Build response
+                data_ch_ab_bidir.source = task_b;
+                // No need to add any data here, so       KC_TYP_COME_DATA is never used:
+                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_COME;
+
+                // ==============================================================
+                // INSIDE THIS CASE CONTINUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
+                // ==============================================================
+
+                ch_come_or_sdata <: data_ch_ab_bidir; // SEND and ATOMIC..
+                ch_come_or_sdata :> data_ch_ab_bidir; // ..RECEIVE
+
+                unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
+                xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
+                data_from_task_a_slave = data_from_task_a_slave_now;
+                p4_leds <: data_from_task_a_slave_now / MEAN_LEDS_BLINKING_DIVISOR;
+                cnts.rec_cnt++;
+                cnts.sum_rec_cnt++;
+
+                // Analyze reponse
+                xassert (data_ch_ab_bidir.source == task_a);
+                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+            } break;
+
+            case tmr when timerafter (time_ticks) :> void : {       
+                const random_unsigned32_t random_number = random_get_random_number_special (randoms);
+                time32_t delta_ticks = get_until_next_timeout_ticks (random_number);
+                time_ticks          += delta_ticks;
+
+                cnts.sum_ticks_u64 += (uint64_t) delta_ticks;
+                cnts.num_ticks++; // to 1 the first time, etc.
+            
+                #if (PRINT_RANDOM_VALS_MASTER == 1) // Print (not in slave)
+                    #if (USE_SYMMETRIC)
+                        printf ("%s%d\n", 
+                        ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
+                        (signed)random_number); 
+                    #else
+                        printf ("%u\n", random_number);
+                    #endif
+                #endif
+
+                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
+                data_ch_ab_bidir.source = task_b;
+
+                data_ch_ab_bidir.data.data_from_task_b_master = data_from_task_b_master;
+
+                ch_come_or_sdata <: data_ch_ab_bidir; // SEND
+                p1_out_purple_master <: data_from_task_b_master; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
+                data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
+
+                cnts.sent_cnt++;
+                cnts.sum_sent_cnt++;
+
+                #if (SPEED_SLOW_AND_PRINT_12)
+                    if (cnts.num_ticks == MAX_SUM_CNT) { 
+                        PRINT_AND_CLEAR_CNTS (cnts, randoms);
+                    } else {}
+                #endif
+            } break;
+        }
+    }
+} // task_master
+#endif // task_master
+
+#if ALWAYS // ========== task_slave ==========
 // ===================================================================================================================
 // Can only KNOCK to task_master and then wait for COME from task_master and then atomic send its DATA to task_master.
 // Must be able to accept DATA from task_master any time.
@@ -609,7 +751,7 @@ void task_slave (
     unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t          randoms;
 
-    init_randoms (randoms, RANDOM_SEED_SLAVE);
+    init_randoms (randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
     data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
@@ -670,151 +812,47 @@ void task_slave (
         }
     }
 } // task_slave 
+#endif // task_slave
 
-
-// ===================================================================================================================
-// task_master can send its DATA to task_slave any time, 
-// but if KNOCK is received it must respond with atomic send COME to task_slave and wait for DATA from task_slave.
-//
-void task_master (
-    chanend           ch_come_or_sdata,     // ch_come_or_sdata_t
-    STREAMING chanend ch_knock,             // ch_knock_t
-    port out          p1_out_purple_master, // bit0
-    port out          p4_leds)              // bit0-3
-{
-    timer              tmr;
-    time32_t           time_ticks;
-    ch_come_or_sdata_t data_ch_ab_bidir;
-    ch_knock_t         data_ch_ab_knock;
-    unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
-    unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
-    cnts_t             cnts;
-    randoms_t          randoms;
-
-    init_randoms (randoms, RANDOM_SEED_MASTER);
-    
-    init_debug_cnts (cnts); // Also sets print_time_ticks
-    cnts.print_tmr :> cnts.print_time_ticks;  
-    cnts.from_10ms_delta_print_10ms = 0;
-    exercise_p1_out_purple_master (p1_out_purple_master);
-
-    PRINT_WELCOME_BANNER;
-    PRINT_ORDERED_BANNER;
-    PRINT_DEADLOCK_BANNER;
-    PRINT_AND_CLEAR_CNTS (cnts, randoms);
-
-    data_ch_ab_bidir.data.data_from_task_b_master = 0;
-
-    tmr :> time_ticks; // Almost immediately
-
-    while (true) {
-        ORDERED_PRI_SELECT_MASTER // [[ordered]] or none
-        select {
-            case cnts.print_tmr when timerafter (cnts.print_time_ticks) :> void : { // No side effect, ok to have on the etop
-                // Every 10 ms RESOLUTION_PRINT_TIMEOUT_MS
-                cnts.print_time_ticks += PRINT_TIMEOUT_TICKS;
-                cnts.from_10ms_delta_print_10ms += 1; 
-            } break;
-
-            case ch_knock :> data_ch_ab_knock : {
-                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
-                // Build response
-                data_ch_ab_bidir.source = task_b;
-                // No need to add any data here, so       KC_TYP_COME_DATA is never used:
-                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_COME;
-
-                // ==============================================================
-                // INSIDE THIS CASE CONTINUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
-                // ==============================================================
-
-                ch_come_or_sdata <: data_ch_ab_bidir; // SEND and ATOMIC..
-                ch_come_or_sdata :> data_ch_ab_bidir; // ..RECEIVE
-
-                unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
-                xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
-                data_from_task_a_slave = data_from_task_a_slave_now;
-                p4_leds <: data_from_task_a_slave_now / MEAN_LEDS_BLINKING_DIVISOR;
-                cnts.rec_cnt++;
-                cnts.sum_rec_cnt++;
-
-                // Analyze reponse
-                xassert (data_ch_ab_bidir.source == task_a);
-                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
-            } break;
-
-            case tmr when timerafter (time_ticks) :> void : {       
-                const random_unsigned32_t random_number = random_get_random_number_special (randoms);
-                time32_t delta_ticks = get_until_next_timeout_ticks (random_number);
-                time_ticks          += delta_ticks;
-
-                cnts.sum_ticks_u64 += (uint64_t) delta_ticks;
-                cnts.num_ticks++;
-            
-                #if (PRINT_RANDOM_VALS_MASTER == 1) // Print (not in slave)
-                    #if (USE_SYMMETRIC)
-                        printf ("%s%d\n", 
-                        ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
-                        (signed)random_number); 
-                    #else
-                        printf ("%u\n", random_number);
-                    #endif
-                #endif
-
-                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
-                data_ch_ab_bidir.source = task_b;
-
-                data_ch_ab_bidir.data.data_from_task_b_master = data_from_task_b_master;
-
-                ch_come_or_sdata <: data_ch_ab_bidir; // SEND
-                p1_out_purple_master <: data_from_task_b_master; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
-                data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
-
-                cnts.sent_cnt++;
-                cnts.sum_sent_cnt++;
-
-                #if (SPEED_SLOW_AND_PRINT_12)
-                    if (cnts.num_ticks == MAX_SUM_CNT) {
-                        PRINT_AND_CLEAR_CNTS (cnts, randoms);
-                    } else {}
-                #endif
-            } break;
-        }
-    }
-} // task_master
+#if ALWAYS // ========== port ==========
 
 // See different port syntax forms at https://www.teigfam.net/oyvind/home/technology/141-xc-is-c-plus-x/#port_construct_of_xc
-
+//
 // GPIO  PORT LED
 // X0D14 P4C0 0
 // X0D15 P4C1 1
 // X0D20 P4C2 2
 // X0D21 P4C3 3
+
 port out p4_leds               = on tile[0]: XS1_PORT_4C; // [X0D14,X0D15,X0D20,X0D21] LEDS   0-3 (bit0-3) also as PORT_LEDS in autogenerated platform.h)
 port out p1_out_blue_slave     = on tile[0]: XS1_PORT_1A; // [X0D00]                   J14 pin  2 (bit0)
 port out p1_out_purple_master  = on tile[0]: XS1_PORT_1D; // [X0D11]                   J14 pin 15 (bit0)
 
-/* 
-From XK-EVK-XU316 xcore.ai Evaluation Kit Manual (2022/7/21 XM014531A) page 10:
+// From XK-EVK-XU316 xcore.ai Evaluation Kit Manual (2022/7/21 XM014531A) page 10:
+// 
+// GPIO connector J14 (Tile 0). Note: Some shared with LEDs and BUTtons.
+// P1A is 1 bit  port
+// P1D is 1 bit  port
+// P4C is 4 bits port
+// P4C is 4 bits port
+// Sum 10 pins
+// 
+// XMOS naming convention: XS1_PORT_1A on tile[0] X0D00, on tile[1] : X1D00
+// 
+// Signal Port     Pin   Signal Port      Pin
+// VDDIOL            1   X0D00  P1A         2
+// X0D14  P4C0(LED0) 3   GND                4
+// X0D15  P4C1(LED1) 5   X0D16  P4D0(BUT0)  6
+// X0D17  P4D1(BUT1) 7   GND                8
+// GND               9   X0D18  P4D2       10
+// X0D19  P4D3      11   X0D20  P4C2(LED2) 12
+// GND              13   X0D21  P4C3(LED3) 14
+// X0D11  P1D       15   GND               16
 
-GPIO connector J14 (Tile 0). Note: Some shared with LEDs and BUTtons.
-P1A is 1 bit  port
-P1D is 1 bit  port
-P4C is 4 bits port
-P4C is 4 bits port
-Sum 10 pins
+#endif // port
 
-XMOS naming convention: XS1_PORT_1A on tile[0] X0D00, on tile[1] : X1D00
+#if ALWAYS // ========== main (DO_COMPILE_RUN == DO_KNOCK_COME) ==========
 
-Signal Port     Pin   Signal Port      Pin
-VDDIOL            1   X0D00  P1A         2
-X0D14  P4C0(LED0) 3   GND                4
-X0D15  P4C1(LED1) 5   X0D16  P4D0(BUT0)  6
-X0D17  P4D1(BUT1) 7   GND                8
-GND               9   X0D18  P4D2       10
-X0D19  P4D3      11   X0D20  P4C2(LED2) 12
-GND              13   X0D21  P4C3(LED3) 14
-X0D11  P1D       15   GND               16
-*/
 int main()
 {
     STREAMING chan ch_knock ; // ch_knock_t
@@ -835,9 +873,10 @@ int main()
     }
     return 0;
 } // main
+#endif // main (DO_COMPILE_RUN == DO_KNOCK_COME) ==========
 
 #elif (DO_COMPILE_RUN == DO_LIB_RANDOM_EXAMPLE)
-#warning DO_LIB_RANDOM_EXAMPLE, NO KNOCK_COME!
+
 int main()
 {
     lib_random_example();
@@ -846,7 +885,6 @@ int main()
 
 #elif (DO_COMPILE_RUN == DO_FIND_BIT31_DROP_CNT_MAX)
 
-#warning DO_FIND_BIT31_DROP_CNT_MAX, NO KNOCK_COME!
 port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {
@@ -856,7 +894,6 @@ int main()
 
 #elif (DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX)
 
-#warning DO_FIND_32BITS_DROP_CNT_MAX
 port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {

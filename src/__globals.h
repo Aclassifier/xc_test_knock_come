@@ -14,3 +14,10 @@ typedef signed int time32_t; // signed int (=signed) or unsigned int (=unsigned)
 typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 
 #define BITSNUM32 32
+
+#ifndef ALWAYS 
+    // ALWAYS is always 1, for VS Code "folding"
+    // #region or // #region do not work as I want to and extension "Explicit Folding" by zokogun is not good enough, see
+    // https://www.teigfam.net/oyvind/home/technology/060-wishes-for-a-folding-editor/#explicit_folding_by_zokogun
+    #define ALWAYS 1 
+#endif
