@@ -86,7 +86,9 @@ random_unsigned32_t xorshift32 (randoms_t &randoms);
 
 random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed);
 
-random_unsigned32_t random_get_random_number_special (randoms_t &randoms);
+random_unsigned32_t random_get_random_number_special (
+    randoms_t      &randoms,
+    const unsigned use_random_type);
 
 void init_randoms (
     randoms_t                 &randoms,

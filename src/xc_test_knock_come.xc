@@ -34,7 +34,7 @@
 
 #include <xs1.h>
 #include <platform.h> // slice
-                        // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
+                      // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
 #include <syscall.h>  // _XTC new for me
 #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
 #include <stdio.h>    // printf
@@ -45,14 +45,18 @@
 #include "my_numbers.h"
 #include "my_random.h"
 
-#endif // include ==========
+#endif // include
 
-#define KNOCK_COME_VERSION_STR "0.945" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.946" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 #if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
+09Aug2026 0.946
+Layout and VS Code explicit "folding". Test with "command K 0" and "command K J"
+Also removed conditional compilation in random_get_random_number_special (will do more of the sort)
+
 08Aug2026 0.945
 Same code but moved parts around. Now enum, struct, functions etc. grouped and "folding" added "region" and 
 "endregion". See def of ALWAYS
@@ -162,7 +166,7 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 
 */
 
-#endif // VERSIONS AND COMMITS ==========
+#endif // VERSIONS AND COMMITS
 
 #if ALWAYS // ========== DO_KNOCK_COME #defines ==========
 
@@ -476,7 +480,6 @@ void reset_debug_cnts (cnts_t &cnts)
     cnts.num_ticks     = 0;
 } // reset_debug_cnts
 
-
 void reset_debug_cnts_arr (cnts_t &cnts)
 {
     cnts.iof_arr = 0;
@@ -484,7 +487,6 @@ void reset_debug_cnts_arr (cnts_t &cnts)
         cnts.arr_delta_print_10ms [ix] = 0;
     }
 } // init_debug_cnts
-
 
 void init_debug_cnts (cnts_t &cnts)
 {
@@ -692,7 +694,8 @@ void task_master (
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {       
-                const random_unsigned32_t random_number = random_get_random_number_special (randoms);
+                const random_unsigned32_t random_number = 
+                    random_get_random_number_special (randoms, USE_RANDOM_TYPE);
                 time32_t delta_ticks = get_until_next_timeout_ticks (random_number);
                 time_ticks          += delta_ticks;
 
@@ -799,7 +802,8 @@ void task_slave (
             } break;
 
             case tmr when timerafter (time_ticks) :> void: {
-                time_ticks += get_until_next_timeout_ticks (random_get_random_number_special (randoms));
+                time_ticks += 
+                    get_until_next_timeout_ticks (random_get_random_number_special (randoms, USE_RANDOM_TYPE));
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words

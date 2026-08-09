@@ -296,16 +296,19 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
 
 // Different methods of random_get_random_number_special needed during development phase
 //
-random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
-    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
+random_unsigned32_t random_get_random_number_special (
+    randoms_t      &randoms,
+    const unsigned use_random_type) {
+
+    #if (use_random_type == LIB_RANDOM_SW_SEED)
         random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
+    #elif (use_random_type == LIB_RANDOM_HW_SEED)
         random_get_random_number (randoms.random_ssgn); 
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
+    #elif (use_random_type == LIB_RANDOM_SW_SEED_SYMMETRIC)
         next_symmetric_random_get_random_number (randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
-    #elif (USE_RANDOM_TYPE == XORSHIFT32)
+    #elif (use_random_type == XORSHIFT32)
         xorshift32 (randoms); // // Updates randoms.random_ssgn only
-    #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
+    #elif (use_random_type == XORSHIFT32_SYMMETRIC)
         next_symmetric_random_get_random_number (randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
     #else
         #error
