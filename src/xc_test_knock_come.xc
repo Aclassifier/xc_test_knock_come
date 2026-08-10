@@ -47,13 +47,18 @@
 
 #endif // include
 
-#define KNOCK_COME_VERSION_STR "0.946" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.947" // x.yzz
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 #if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
-10AUg2026 0.946 Comments
+10AUg2026 0.947 
+_log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX 
+DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
+10AUg2026 0.946 
+Comments
+
 09Aug2026 0.946
 Layout and VS Code explicit "folding". Test with "command K 0" and "command K J"
 Also removed conditional compilation in random_get_random_number_special (will do more of the sort)
@@ -174,9 +179,9 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define DO_KNOCK_COME               0
 #define DO_LIB_RANDOM_EXAMPLE       1
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
-#define DO_FIND_32BITS_DROP_CNT_MAX 3
+#define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
-#define DO_COMPILE_RUN DO_KNOCK_COME // Observe VS Code colour coding shades non-used code
+#define DO_COMPILE_RUN DO_FIND_32BITS_DROP_CNT_MAX // Observe VS Code colour coding shades non-used code
 
 #endif // DO_KNOCK_COME #defines
 

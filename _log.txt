@@ -69,3 +69,83 @@ MASTER: SYMCNT(P 1 N 10/11)     RX 992  TX 1000 ACC(RX 8958     TX 9000)        
 MASTER: SYMCNT(P 1 N 7/11)      RX 1005 TX 1000 ACC(RX 9963     TX 10000)       TIME (5033)=50.33s sum, RND CLK (50445)=50.445ms mean
 MASTER: SYMCNT(P 1 N 10/11)     RX 986  TX 1000 ACC(RX 10949    TX 11000)       TIME (4943)=49.43s sum, RND CLK (49527)=49.527ms mean
 MASTER: SYMCNT(P 1 N 11/11)     RX 988  TX 1000 ACC(RX 11937    TX 12000)       TIME (4962)=49.62s sum, RND CLK (49730)=49.730ms mean
+
+===== 
+
+Running xc_test_knock_come.xe
+Starting full state-space simulation with seed 1 in code at 16:22:07 Aug  5 2026. Please wait some 25 hours...
+hours:
+
+1..36 (131028 seconds = 36,39666667 hours)
+
+=== Simulation Complete ===
+After 131028 seconds, total numbers checked:  4294967295 (2^32 - 1)
+Max consecutive negatives found:
+[0]=    32      into    32      at      570083945
+[1]=    32      into    32      at      1827454906
+[2]=    32      into    32      at      1665547751
+[3]=    32      into    32      at      1436339208
+[4]=    32      into    32      at      4277065801
+[5]=    32      into    32      at      229497610
+[6]=    32      into    32      at      4207409591
+[7]=    32      into    32      at      4206662089
+[8]=    32      into    32      at      665196542
+[9]=    32      into    32      at      1965317362
+[10]=   32      into    32      at      3950232966
+[11]=   32      into    32      at      3632521665
+[12]=   32      into    32      at      2696019181
+[13]=   32      into    32      at      3030703402
+[14]=   32      into    32      at      917200618
+[15]=   32      into    32      at      4177502203
+[16]=   32      into    32      at      921328759
+[17]=   32      into    32      at      3150364078
+[18]=   32      into    32      at      79871304
+[19]=   32      into    32      at      67059875
+[20]=   32      into    32      at      2945898530
+[21]=   32      into    32      at      1182526841
+[22]=   32      into    32      at      2695346524
+[23]=   32      into    32      at      3693418465
+[24]=   32      into    32      at      3700734019
+[25]=   32      into    32      at      1136896000
+[26]=   32      into    32      at      329338273
+[27]=   32      into    32      at      3345244218
+[28]=   32      into    32      at      2686348475
+[29]=   32      into    32      at      926908272
+[30]=   32      into    32      at      2311618314
+[31]=   32      into    32      at      91727762
+
+
+Sorted increasing in "time" and with hex values
+
+[19] = 32 into 32 at   67059875	(0x03FF40A3)
+[18] = 32 into 32 at   79871304	(0x04C2BD48)
+[31] = 32 into 32 at   91727762	(0x0577A792)
+ [5] = 32 into 32 at  229497610	(0x0DADDB0A)
+[26] = 32 into 32 at  329338273	(0x13A14DA1)
+ [0] = 32 into 32 at  570083945	(0x21FACA69)
+ [8] = 32 into 32 at  665196542	(0x27A617FE)
+[14] = 32 into 32 at  917200618	(0x36AB5EEA)
+[16] = 32 into 32 at  921328759	(0x36EA5C77)
+[29] = 32 into 32 at  926908272	(0x373F7F70)
+[25] = 32 into 32 at 1136896000	(0x43C3A800)
+[21] = 32 into 32 at 1182526841	(0x467BED79)
+ [3] = 32 into 32 at 1436339208	(0x559CCC08)
+ [2] = 32 into 32 at 1665547751	(0x63463DE7)
+ [1] = 32 into 32 at 1827454906	(0x6CECBFBA)
+ [9] = 32 into 32 at 1965317362	(0x75245CF2)
+[30] = 32 into 32 at 2311618314	(0x89C87F0A)
+[28] = 32 into 32 at 2686348475	(0xA01E6CBB)
+[22] = 32 into 32 at 2695346524	(0xA0A7B95C)
+[12] = 32 into 32 at 2696019181	(0xA0B1FCED)
+[20] = 32 into 32 at 2945898530	(0xAF96D822)
+[13] = 32 into 32 at 3030703402	(0xB4A4DD2A)
+[17] = 32 into 32 at 3150364078	(0xBBC6BDAE)
+[27] = 32 into 32 at 3345244218	(0xC764603A)
+[11] = 32 into 32 at 3632521665	(0xD883E1C1)
+[23] = 32 into 32 at 3693418465	(0xDC2517E1)
+[24] = 32 into 32 at 3700734019	(0xDC94B843)
+[10] = 32 into 32 at 3950232966	(0xEB73C586)
+[15] = 32 into 32 at 4177502203	(0xF8FF9FFB)
+ [7] = 32 into 32 at 4206662089	(0xFABC91C9)
+ [6] = 32 into 32 at 4207409591	(0xFAC7F9B7)
+ [4] = 32 into 32 at 4277065801	(0xFEEED849)

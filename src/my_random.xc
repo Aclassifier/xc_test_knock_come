@@ -60,10 +60,10 @@ random_unsigned32_t xorshift32 (randoms_t &randoms) {
 // =====================================================================================================
 
  typedef struct { // _con = consecutive
-    uint32_t state; // number, value or seed, any name goes
-    uint32_t bit_con_seq_cnt_max;  
-    uint32_t bit_con_seq_cnt;
-    uint32_t bit_round_cnt;
+    uint32_t state;               // number, value or seed, any name goes
+    uint32_t bit_con_seq_cnt_max; // DO_FIND_32BITS_ONES_CNT: number of 1s. DO_FIND_32BITS_ZEROS_CNT number of 0s
+    uint32_t bit_con_seq_cnt;     // --''--
+    uint32_t bit_round_cnt;       // counts all in 2ˆ32 up to 4294967296-1
  } stats_t;
 
 void init_stats (stats_t &stats, const uint32_t initial_seed) {
@@ -77,7 +77,13 @@ void init_stats (stats_t &stats, const uint32_t initial_seed) {
 // find_max_consecutive_bit31_xorshift32 and 
 // find_max_consecutive_allbits_xorshift32
 //
-void do_xorshift32_etc (stats_t &stats, const uint32_t bitmask) {
+
+#define DO_FIND_32BITS_ONES_CNT  1 // Standard up to 0.947
+#define DO_FIND_32BITS_ZEROS_CNT 2
+//
+#define DO_CNT DO_FIND_32BITS_ZEROS_CNT
+
+void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
     
     // Standard xorshift32 algorithm (Marsaglia triples: 13, 17, 5)
     stats.state ^= stats.state << 13;
@@ -85,16 +91,24 @@ void do_xorshift32_etc (stats_t &stats, const uint32_t bitmask) {
     stats.state ^= stats.state << 5;
     
     // In 2's complement, a number is negative if its MSB is 1
-    if (stats.state & bitmask) { 
+    
+    #if (DO_CNT == DO_FIND_32BITS_ONES_CNT)
+    if ((stats.state bitand bitmask) != 0) {
+        // True if bit is 1 
+    #elif (DO_CNT == DO_FIND_32BITS_ZEROS_CNT)
+    if ((stats.state bitand bitmask) == 0) { 
+        // True if bit is 0
+    #endif
+        // For all bits, the number of consecutive 1's are counted
         stats.bit_con_seq_cnt++;
-        if (stats.bit_con_seq_cnt > stats.bit_con_seq_cnt_max) { // This Google AI placed when positive and finally, I place it here
-            stats.bit_con_seq_cnt_max = stats.bit_con_seq_cnt;
-        }
+        if (stats.bit_con_seq_cnt > stats.bit_con_seq_cnt_max) { 
+            stats.bit_con_seq_cnt_max = stats.bit_con_seq_cnt; // postive bits all go to 32 here!
+        } else {}
     } else { // Positive
         stats.bit_con_seq_cnt = 0;
     }           
     stats.bit_round_cnt++; 
-} // do_xorshift32_etc
+} // do_xorshift32_and_stats
 
 // Soleley to find by brute force the value I need for DROP_BIT_CNT_MAX as needed in next_symmetric_random_get_random_number
 //
@@ -117,7 +131,7 @@ uint32_t find_max_consecutive_bit31_xorshift32
 
     tmr :> time_ticks;
     p1_out_blue <: p1_val;
-    do_xorshift32_etc (stats, INT_MIN); // Now while-cond does not hit after 1 round
+    do_xorshift32_and_stats (stats, INT_MIN); // Now while-cond does not hit after 1 round
 
     do {
         [[ordered]] 
@@ -132,7 +146,7 @@ uint32_t find_max_consecutive_bit31_xorshift32
             default: {               
                 p1_out_blue <: p1_val; // Every (1.43 us / 2) * 4294967296 (32 bits full range) = 3064 secs = 51.07 mins
                 p1_val = not p1_val;
-                do_xorshift32_etc (stats, INT_MIN); // INT_MIN is 0x80000000 is bit31
+                do_xorshift32_and_stats (stats, INT_MIN); // INT_MIN is 0x80000000 is bit31
             } break;
         }          
     } while (stats.state != initial_seed); // Terminates when we complete the full cycle
@@ -158,26 +172,54 @@ void init_con_sec_log (con_sec_log_t &con_sec_log) {
 // Find by brute force the values for "DROP_BIT_CNT_MAX" for all 32 bits. Those for bit0..bit30 are not really needed, this is just for fun.
 // That one for bit31 is DROP_BIT_CNT_MAX, but it's already found in find_max_consecutive_bit31_xorshift32.
 //
-// ALL BIT'S MAXRUN SEQUENCES ARE 32 LONG:
-//
-// Pretty-printed (by Google AI) log, as of 02Aug2026 v0.936
-// Simulation hours
-// Row 1: 1-16, Row 2: 17-24
-// 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-// 17, 18, 19, 20, 21, 22, 23, 24
+// Loops every (30.51 us) as of _log.txt commited at 10AUg2026 0.946  since 4294967296 (2ˆ32 range) / 131028 secs
+// However, pasted this log also here, so it wont't get lost in futire deleted commits:
+// 
+/* With DO_FIND_32BITS_ONES_CNT (standard up to then)
+Starting full state-space simulation with seed 1 in code at 16:22:07 Aug  5 2026. Please wait some 25 hours...
+Counting ones (would have been the printput if 0.947)
+hours:
+1..36 (131028 seconds = 36,39666667 hours, not 25 hours which was from a simpler version)
+=== Simulation Complete ===
+After 131028 seconds, total numbers checked:  4294967295 (2^32 - 1)
+Max consecutive negatives found:
+Sorted increasing in "time" and with hex values. 
 
-// Max consecutive bit sequences found
-// Row 1: Indices 0-15, Row 2: Indices 16-31
-// 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-// 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
-
-// Simulation metadata:
-// Start: 10:11:16 Aug 1 2026
-// Duration: 89170 seconds
-// Total checked: 4294967295 (2^32 - 1)
-//
+[19] = 32 into 32 at   67059875	(0x03FF40A3)
+[18] = 32 into 32 at   79871304	(0x04C2BD48)
+[31] = 32 into 32 at   91727762	(0x0577A792)
+ [5] = 32 into 32 at  229497610	(0x0DADDB0A)
+[26] = 32 into 32 at  329338273	(0x13A14DA1)
+ [0] = 32 into 32 at  570083945	(0x21FACA69)
+ [8] = 32 into 32 at  665196542	(0x27A617FE)
+[14] = 32 into 32 at  917200618	(0x36AB5EEA)
+[16] = 32 into 32 at  921328759	(0x36EA5C77)
+[29] = 32 into 32 at  926908272	(0x373F7F70)
+[25] = 32 into 32 at 1136896000	(0x43C3A800)
+[21] = 32 into 32 at 1182526841	(0x467BED79)
+ [3] = 32 into 32 at 1436339208	(0x559CCC08)
+ [2] = 32 into 32 at 1665547751	(0x63463DE7)
+ [1] = 32 into 32 at 1827454906	(0x6CECBFBA)
+ [9] = 32 into 32 at 1965317362	(0x75245CF2)
+[30] = 32 into 32 at 2311618314	(0x89C87F0A)
+[28] = 32 into 32 at 2686348475	(0xA01E6CBB)
+[22] = 32 into 32 at 2695346524	(0xA0A7B95C)
+[12] = 32 into 32 at 2696019181	(0xA0B1FCED)
+[20] = 32 into 32 at 2945898530	(0xAF96D822)
+[13] = 32 into 32 at 3030703402	(0xB4A4DD2A)
+[17] = 32 into 32 at 3150364078	(0xBBC6BDAE)
+[27] = 32 into 32 at 3345244218	(0xC764603A)
+[11] = 32 into 32 at 3632521665	(0xD883E1C1)
+[23] = 32 into 32 at 3693418465	(0xDC2517E1)
+[24] = 32 into 32 at 3700734019	(0xDC94B843)
+[10] = 32 into 32 at 3950232966	(0xEB73C586)
+[15] = 32 into 32 at 4177502203	(0xF8FF9FFB)
+ [7] = 32 into 32 at 4206662089	(0xFABC91C9)
+ [6] = 32 into 32 at 4207409591	(0xFAC7F9B7)
+ [4] = 32 into 32 at 4277065801	(0xFEEED849)
+*/
 uint32_t find_max_consecutive_allbits_xorshift32 
-    (const uint32_t initial_seed,
+    (const uint32_t initial_seed, // is 1
     port out        p1_out_blue) {
    
     timer    tmr;
@@ -185,7 +227,11 @@ uint32_t find_max_consecutive_allbits_xorshift32
     unsigned num_seconds = 0;
     bool     p1_val = false;
 
-    printf("Starting full state-space simulation with seed %u in code at %s %s. Please wait some 25 hours...\nhours:\n\n", initial_seed, __TIME__, __DATE__);
+    printf("Starting full state-space simulation with seed %u in code at %s %s.\nCounting %s\nPlease wait some 36 hours...\nhours:\n\n", 
+        initial_seed, __TIME__, __DATE__,
+        (DO_CNT == DO_FIND_32BITS_ONES_CNT)  ? "ones"  :
+        (DO_CNT == DO_FIND_32BITS_ZEROS_CNT) ? "zeros" : "?");
+
     stats_t       stats       [BITSNUM32];
     con_sec_log_t con_sec_log [BITSNUM32];
 
@@ -198,7 +244,7 @@ uint32_t find_max_consecutive_allbits_xorshift32
     p1_out_blue <: p1_val;
 
     for (unsigned ix=0; ix<BITSNUM32; ix++){
-       do_xorshift32_etc (stats[ix], 1<<ix);
+       do_xorshift32_and_stats (stats[ix], 1<<ix);
     }
     // Now while-cond does not hit after 1 round
     do {
@@ -212,13 +258,13 @@ uint32_t find_max_consecutive_allbits_xorshift32
                 }
             } break;
             default: {               
-                p1_out_blue <: p1_val; // Every (21 us) * 4294967296 (32 bits full range) = 89170 secs = 24.77 hours (as printed out, see above)
+                p1_out_blue <: p1_val; // See loop time above
                 p1_val = not p1_val;
                 for (unsigned ix=0; ix<BITSNUM32; ix++){
                     uint32_t bit_con_seq_cnt_max_pre = stats[ix].bit_con_seq_cnt_max;
                     uint32_t bit_round_cnt_pre       = stats[ix].bit_round_cnt;
                     
-                    do_xorshift32_etc (stats[ix], 1<<ix);
+                    do_xorshift32_and_stats (stats[ix], 1<<ix);
                     
                     if (stats[ix].bit_con_seq_cnt_max > bit_con_seq_cnt_max_pre) {
                         con_sec_log[ix].bit_con_seq_cnt_max = stats[ix].bit_con_seq_cnt_max; // New
