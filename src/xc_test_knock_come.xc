@@ -58,6 +58,7 @@
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
 10Aug2026 0.948
+* commits.h -> _commit_texts 
 * File "commits.h" made for older commit version texts, plus NOT_CODE_FOLD new
 * ALWAYS now is TEXT_FOLD etc. 
 * get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
@@ -69,7 +70,7 @@ DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
 10AUg2026 0.946 
 Comments
 
-#include "commits.h" // Older versions (not compiled, include as such not needed)
+#include "_commit_texts.h" // Older versions (not compiled, include as such not needed)
 
 21May2026 0.0.900 Initial version
 */
