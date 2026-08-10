@@ -54,7 +54,8 @@
 #if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
 10AUg2026 0.947 
-_log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX 
+* Comment
+* _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX 
 DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
 10AUg2026 0.946 
 Comments

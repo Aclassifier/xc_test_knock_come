@@ -99,7 +99,7 @@ void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
     if ((stats.state bitand bitmask) == 0) { 
         // True if bit is 0
     #endif
-        // For all bits, the number of consecutive 1's are counted
+        // Count consecutive bits that match the criteria
         stats.bit_con_seq_cnt++;
         if (stats.bit_con_seq_cnt > stats.bit_con_seq_cnt_max) { 
             stats.bit_con_seq_cnt_max = stats.bit_con_seq_cnt; // postive bits all go to 32 here!
