@@ -1,3 +1,6 @@
+#define TEXT_FOLD 1 // Always 1, for VS Code "folding"
+
+#if TEXT_FOLD // ========== ABOUT ==========
 /*
  * xc_test_knock_come.xc
  *
@@ -27,10 +30,9 @@
  * 
  * See the full description of the algorithm in the above referenced blog note.
  */
+#endif // TEXT_FOLD ABOUT
 
-#define ALWAYS 1 // Always 1, for VS Code "folding"
-
-#if ALWAYS // ========== include ==========
+#if TEXT_FOLD // ========== include ==========
 
 #include <xs1.h>
 #include <platform.h> // slice. For _XTC #include _PLATFORM_INCLUDE_FILE
@@ -44,17 +46,20 @@
 #include "my_numbers.h"
 #include "my_random.h"
 
-#endif // ALWAYS include
+#endif // TEXT_FOLD include
 
-#define KNOCK_COME_VERSION_STR "0.948" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
-#define KNOCK_COME_TIME __TIME__
-#define KNOCK_COME_DATE __DATE__
+#if TEXT_FOLD // ========== VERSION_STR ==========
+//
+#define VERSION_STR "0.948" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+//
+#endif // TEXT_FOLD VERSION_STR
 
-#if ALWAYS // ========== VERSIONS AND COMMITS ==========
+#if TEXT_FOLD // ========== COMMITS ==========
 /*
-10Aug2026 0.948 
-get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
-See _log.txt, stil I think that "mean" should be around 50 ms, not 41 ms.
+10Aug2026 0.948
+* ALWAYS now is TEXT_FOLD etc. 
+* get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
+  See _log.txt, stil I think that "mean" should be around 50 ms, not 41 ms.
 10AUg2026 0.947 
 * Comment
 * _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX 
@@ -68,7 +73,7 @@ Also removed conditional compilation in random_get_random_number_special (will d
 
 08Aug2026 0.945
 Same code but moved parts around. Now enum, struct, functions etc. grouped and "folding" added "region" and 
-"endregion". See def of ALWAYS
+"endregion". See def of TEXT_FOLD
 05Aug2026 0.944
 * Detail in find_max_consecutive_allbits_xorshift32
 * DO_FIND_32BITS_DROP_CNT_MAX added index as where changes happen, con_sec_log_t new in my_random.xc
@@ -175,18 +180,18 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 
 */
 
-#endif // ALWAYS VERSIONS..
+#endif // TEXT_FOLD COMMITS
 
-#if ALWAYS // ========== WHICH main TO RUN ==========
-#define DO_KNOCK_COME               0 // KNOCK_COME_VERSION_STR makes sense
+#if TEXT_FOLD // ========== WHICH main TO RUN ==========
+#define DO_KNOCK_COME               0 // VERSION_STR makes sense
 #define DO_LIB_RANDOM_EXAMPLE       1 // --''--
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
 #define DO_COMPILE_RUN_MAIN DO_KNOCK_COME // Observe VS Code colour coding shades non-used code
-#endif // ALWAYS WHICH..
+#endif // TEXT_FOLD WHICH..
 
-#if ALWAYS // ========== #defines ==========
+#if TEXT_FOLD // ========== #defines ==========
 //                                     LEDS COUNT ABOUT THE SAME RATE FOR BOTH
 #define SPEED_SLOW_AND_PRINT      0 // Scope possible: use ROLL scope
 #define SPEED_SLOW_AND_PRINT_LESS 1 // Scope possible: use ROLL scope
@@ -320,9 +325,9 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
 #define RANDOM_SEED_MASTER 8765 // --''--
 
-#endif // ALWAYS #defines
+#endif // TEXT_FOLD #defines
 
-#if ALWAYS // ========== enums ==========
+#if TEXT_FOLD // ========== enums ==========
 
 typedef enum {        // NEEDS
     KC_TYP_NONE_DATA, // Master sends spontaneous data to Slave, not part of knock-come scheme
@@ -353,9 +358,9 @@ typedef enum {
     task_b
 } ab_src_e;
 
-#endif // ALWAYS enums
+#endif // TEXT_FOLD enums
 
-#if ALWAYS // ========== structs ==========
+#if TEXT_FOLD // ========== structs ==========
 
 typedef struct {
     unsigned sent_cnt;
@@ -389,9 +394,9 @@ typedef struct {
     } data;
 } ch_come_or_sdata_t;
 
-#endif // ALWAYS structs
+#endif // TEXT_FOLD structs
 
-#if ALWAYS // ========== Knock-Come state change ==========
+#if TEXT_FOLD // ========== Knock-Come state change ==========
 
 KnockCome_State_e
 Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS data
@@ -464,9 +469,9 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 } // Master_Set_KnockCome_State
 
-#endif // ALWAYS Knock-Come..
+#endif // TEXT_FOLD Knock-Come..
 
-#if ALWAYS // ========== print and debug functions ==========
+#if TEXT_FOLD // ========== print and debug functions ==========
 
 void reset_debug_cnts (cnts_t &cnts)
 {
@@ -550,8 +555,8 @@ void print_welcome_banner()
 {
     printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
-            KNOCK_COME_VERSION_STR,
-            KNOCK_COME_DATE, KNOCK_COME_TIME,
+            VERSION_STR,
+            __DATE__, __TIME__,
             RANDOM_VAL_MAX_US, 
             SPEED_SLOW_AND_PRINT_12 ? "" : "(", // (..) if SPEED_FAST_AND_SCOPE
             MAX_SUM_CNT,
@@ -577,9 +582,9 @@ void print_ordered_banner()
             "But watch out for stopped log\n");
 } // print_ordered_banner
 
-#endif // ALWAYS print..
+#endif // TEXT_FOLD print..
 
-#if ALWAYS // ========== functions local ==========
+#if TEXT_FOLD // ========== functions local ==========
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
 //
@@ -664,9 +669,9 @@ time32_t get_until_next_timeout_ticks_not_correct (const random_unsigned32_t ran
     return next_timeout_ticks;
 } // get_until_next_timeout_ticks_not_correct
 
-#endif // ALWAYS functions..
+#endif // TEXT_FOLD functions..
 
-#if ALWAYS // ========== task_master ==========
+#if TEXT_FOLD // ========== task_master ==========
 // ===================================================================================================================
 // task_master can send its DATA to task_slave any time, 
 // but if KNOCK is received it must respond with atomic send COME to task_slave and wait for DATA from task_slave.
@@ -777,9 +782,9 @@ void task_master (
         }
     }
 } // task_master
-#endif // ALWAYS task_master
+#endif // TEXT_FOLD task_master
 
-#if ALWAYS // ========== task_slave ==========
+#if TEXT_FOLD // ========== task_slave ==========
 // ===================================================================================================================
 // Can only KNOCK to task_master and then wait for COME from task_master and then atomic send its DATA to task_master.
 // Must be able to accept DATA from task_master any time.
@@ -860,9 +865,9 @@ void task_slave (
         }
     }
 } // task_slave 
-#endif // ALWAYS task_slave
+#endif // TEXT_FOLD task_slave
 
-#if ALWAYS // ========== ports ==========
+#if TEXT_FOLD // ========== ports ==========
 
 // See different port syntax forms at https://www.teigfam.net/oyvind/home/technology/141-xc-is-c-plus-x/#port_construct_of_xc
 //
@@ -897,9 +902,9 @@ port out p1_out_purple_master  = on tile[0]: XS1_PORT_1D; // [X0D11]            
 // GND              13   X0D21  P4C3(LED3) 14
 // X0D11  P1D       15   GND               16
 
-#endif // ALWAYS ports
+#endif // TEXT_FOLD ports
 
-#if ALWAYS // ========== DO_KNOCK_COME main ==========
+#if TEXT_FOLD // ========== DO_KNOCK_COME main ==========
 #if (DO_COMPILE_RUN_MAIN == DO_KNOCK_COME)
 int main()
 {
@@ -924,7 +929,7 @@ int main()
 #endif // (DO_COMPILE_RUN_MAIN == DO_KNOCK_COME)
 #endif // DO_KNOCK_COME..
 
-#if ALWAYS // ========== DO_LIB_RANDOM_EXAMPLE main ==========
+#if TEXT_FOLD // ========== DO_LIB_RANDOM_EXAMPLE main ==========
 #if (DO_COMPILE_RUN_MAIN == DO_LIB_RANDOM_EXAMPLE)
 
 int main()
@@ -933,9 +938,9 @@ int main()
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_LIB_RANDOM_EXAMPLE)
-#endif // ALWAYS DO_LIB_RANDOM_EXAMPLE..
+#endif // TEXT_FOLD DO_LIB_RANDOM_EXAMPLE..
 
-#if ALWAYS // ========== DO_FIND_BIT31_DROP_CNT_MAX main ==========
+#if TEXT_FOLD // ========== DO_FIND_BIT31_DROP_CNT_MAX main ==========
 #if (DO_COMPILE_RUN_MAIN == DO_FIND_BIT31_DROP_CNT_MAX)
   
 int main()
@@ -944,9 +949,9 @@ int main()
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_FIND_BIT31_DROP_CNT_MAX)
-#endif // ALWAYS DO_FIND_BIT31_DROP_CNT_MAX..
+#endif // TEXT_FOLD DO_FIND_BIT31_DROP_CNT_MAX..
 
-#if ALWAYS // ========== DO_FIND_32BITS_DROP_CNT_MAX main ==========
+#if TEXT_FOLD // ========== DO_FIND_32BITS_DROP_CNT_MAX main ==========
 #if (DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX)
 
 int main()
@@ -955,4 +960,4 @@ int main()
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX)
-#endif // ALWAYS DO_FIND_32BITS_DROP_CNT_MAX..
+#endif // TEXT_FOLD DO_FIND_32BITS_DROP_CNT_MAX..
