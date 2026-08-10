@@ -1,3 +1,5 @@
+// The contents of this file is older commit text versions from xc_test_knock_come.xc
+
 #pragma once
 #ifndef NOT_CODE_FOLD
 #define NOT_CODE_FOLD 0 // Always 0, for VS Code "folding", not to compile
