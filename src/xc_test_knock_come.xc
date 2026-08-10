@@ -53,6 +53,7 @@
 
 #if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
+10AUg2026 0.946 Comments
 09Aug2026 0.946
 Layout and VS Code explicit "folding". Test with "command K 0" and "command K J"
 Also removed conditional compilation in random_get_random_number_special (will do more of the sort)
@@ -595,8 +596,12 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
 // ===============================================================================================================================
 // get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
 //
-time32_t get_until_next_timeout_ticks (const random_unsigned32_t random_number) {
-    
+time32_t get_until_next_timeout_ticks (
+    const random_unsigned32_t random_number) // From used generators here, all values except 0, 
+    // so there is "one less" random_number % RANDOM_VAL_MAX_US = 0 than the others [1..99]. This 
+    // same problem also exist on from (2ˆ32)-1 100 upper values (96,97,98,99 are missing) since
+    // (2ˆ32)-1 = 4294967295                                   
+{ 
     time32_t next_timeout_ticks;
     const random_unsigned32_t random_unsigned32_in_range_us = random_number % RANDOM_VAL_MAX_US; // "[0..99]" Say "76" or "24".
     #define HALF_RANGE_US (RANDOM_VAL_MAX_US / 2)
