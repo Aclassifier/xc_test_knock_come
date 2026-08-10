@@ -51,12 +51,14 @@
 
 #if TEXT_FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.948" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.949" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 //
 #endif // TEXT_FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+10Aug2026 0.949
+Lots of changes, see _log.txt. Now the mean is around RND CLK 50.00 ms. Better get_until_next_timeout_ticks
 10Aug2026 0.948
 * commits.h -> _commit_texts 
 * File "commits.h" made for older commit version texts, plus NOT_CODE_FOLD new
@@ -496,7 +498,7 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
 // ===============================================================================================================================
 // get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
 //
-time32_t get_until_next_timeout_ticks (
+time32_t get_until_next_timeout_ticks_input_to_ai (
     const random_unsigned32_t random_number) // From used generators here, all values except 0, 
     // so there is "one less" random_number % RANDOM_VAL_MAX_US = 0 than the others [1..99]. This 
     // same problem also exist on from (2ˆ32)-1 100 upper values (96,97,98,99 are missing) since
@@ -536,33 +538,122 @@ time32_t get_until_next_timeout_ticks (
     xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range
 
     return next_timeout_ticks;
-} // get_until_next_timeout_ticks
+} // get_until_next_timeout_ticks_input_to_ai
 
-time32_t get_until_next_timeout_ticks_not_correct (const random_unsigned32_t random_number) {
+
+// ===============================================================================================================================
+// get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
+//
+time32_t get_until_next_timeout_ticks_ai ( // Based on wrong Python mod div, not C99/XC which allows -999 % 10 = -99
+    const random_unsigned32_t random_number) 
+{ 
+    time32_t next_timeout_ticks;                        
     
-    time32_t next_timeout_ticks;
-    const random_unsigned32_t random_unsigned32_in_range_us = random_number % RANDOM_VAL_MAX_US; // "[0..99]" Say "76" or "24".
-    #define HALF_RANGE_US (RANDOM_VAL_MAX_US / 2)
+    #if (USE_SYMMETRIC)
+        // Since the custom PRG delivers pairs of X and (2^32 - X):
+        // We check the MSB (sign bit) to separate into two equal statistical halves.
+        if ((random_number bitand INT_MIN) == 0) { 
+            // 1. Positive half (MSB = 0): Map X uniformly to [0 ... RANDOM_VAL_MAX_US]
+            // Using (MAX + 1) ensures 0 is included when the modulo matches.
+            const unsigned int range_us = random_number % (RANDOM_VAL_MAX_US + 1);
+            
+            // Map to the UPPER half of the time range: [(MAX / 2) ... MAX]
+            // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 preserves full microsecond precision.
+            next_timeout_ticks = (time32_t) (((RANDOM_VAL_MAX_US + range_us) * XS1_TIMER_MHZ) / 2);
+        } else { 
+            // 2. Negative half (MSB = 1): Handles the two's complement partner (2^32 - X).
+            // To prevent modulo bias caused by 2^32 % MAX, we reconstruct the original positive 
+            // value X by applying two's complement negation back (-random_number).
+            const random_unsigned32_t original_positive = (random_unsigned32_t) -random_number;
+            const unsigned int range_us = original_positive % (RANDOM_VAL_MAX_US + 1);
+            
+            // Map to the LOWER half of the time range: [0 ... (MAX / 2)]
+            // Counting upwards instead of mirroring ensures perfectly symmetrical distribution weight.
+            // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 eliminates integer truncation errors.
+            next_timeout_ticks = (time32_t) ((range_us * XS1_TIMER_MHZ) / 2);
+        }
+    #else
+        // Non-symmetric mode: Standard uniform mapping across the full range
+        const unsigned int range_us = random_number % (RANDOM_VAL_MAX_US + 1);
+        next_timeout_ticks = (time32_t) range_us * XS1_TIMER_MHZ;
+    #endif
+
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta must be positive, ie. within half the time32_t range
+
+    return next_timeout_ticks;
+} // get_until_next_timeout_ticks_ai
+
+
+// ===============================================================================================================================
+// get_until_next_timeout_ticks to convert from random value as seen as signed to upper and lower half of next_timeout_ticks range
+// 
+// Key Observations from the 21k Iteration Log (Summary done by Google AI)
+// XCC 1503.1 KNOCK-COME v0.949 on date Aug 10 2026 21:12:42:
+// 
+// * Symmetry Validation: 
+//   The custom PRG effectively balances the distribution, bringing the total `RND CLK` 
+//   mean to 50.151 ms (target: 50.00 ms) over a complete 21,000 transaction cycle.
+// 
+// * Precision Fix Impact: 
+//   Shifting the `XS1_TIMER_MHZ` multiplication ahead of the `/ 2` division successfully 
+//   preserved the LSB, recovering a lost 1 us per cycle caused by integer truncation.
+// 
+// * Time Divergence Solved: 
+//   The minor variations in the `TIME` column are mathematically verified as a rounding 
+//   byproduct of its 10 ms polling interval, while `RND CLK` represents the absolute 
+//   64-bit hardware tick truth.
+
+//
+time32_t get_until_next_timeout_ticks (
+    const random_unsigned32_t random_number) // From used generators here, all values except 0, 
+    // so there is "one less" random_number % RANDOM_VAL_MAX_US = 0 than the others [1..99]. This 
+    // same problem also exist on from (2ˆ32)-1 100 upper values (96,97,98,99 are missing) since
+    // (2ˆ32)-1 = 4294967295 
+    // Examples with RANDOM_VAL_MAX_US 100000 us (100 ms) or 10 us (no overflow problem for any)                                    
+{ 
+    time32_t next_timeout_ticks;                        
+
+    const random_unsigned32_t random_unsigned32_in_range_us = //                                            1 since never 0 since random_number > 0
+        (random_number % (RANDOM_VAL_MAX_US + TIMER_FACTOR_KNOCKCOME_US)) - TIMER_FACTOR_KNOCKCOME_US; // "[1..(99999+1)]-1 = [0 - 99999]"
+                                                                                                       // "[1..(9+1)]-1 = [0 - 9]"
     
     #if (USE_SYMMETRIC)
         // "50" is zero point 
-        if ((random_number bitand INT_MIN) == 0) { // "Positive half"                ">= 50"
-            //                             "100 + 99                               / 2 = 99.5"
-            //                             "100 + 76                               / 2 = 88"
-            next_timeout_ticks = (HALF_RANGE_US + ((random_unsigned32_in_range_us) / 2)) * XS1_TIMER_MHZ; // Above half
-        } else { //                                                                   "< 50"
-            //                             "100 - 24                               / 2 = 38"
-            //                             "100 - 0                                / 2 = 0"
-            next_timeout_ticks = (HALF_RANGE_US - ((random_unsigned32_in_range_us) / 2)) * XS1_TIMER_MHZ; // Below half
+        if ((random_number bitand INT_MIN) == 0) { 
+            //                                          "100000 + 99999                            / 2 = 99999 (99999.5)"
+            //                                          "100000 + 76000                            / 2 = 88000"
+            //                                          "100000 + 0                                / 2 = 50000"
+            //                                                                    "Positive half" is ">= 50000"
+            //                                              "10 + 9                                / 2 = 9 (9.5)"
+            //                                              "10 + 7                                / 2 = 8 (8.5)"
+            //                                              "10 + 0                                / 2 = 5"
+            //                                                                    "Positive half" is ">= 5"
+            
+            // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 to prevent any integer truncation error (seen by Google AI)
+            next_timeout_ticks    = (time32_t) (((RANDOM_VAL_MAX_US + random_unsigned32_in_range_us) * XS1_TIMER_MHZ) / 2); // Above half
+            // was:
+            // next_timeout_ticks = (time32_t) ((RANDOM_VAL_MAX_US + random_unsigned32_in_range_us) / 2) * XS1_TIMER_MHZ; // Above half
+        } else { //                                                               "Negative half" is " < 50000"
+            //                                          "100000 - 24000                            / 2 = 38000"
+            //                                          "100000 - 99999                            / 2 =     0 (0.5)"
+            //                                                                    "Negative half" is " < 5"
+            //                                              "10 - 2                                / 2 = 4"
+            //                                              "10 - 9                                / 2 = 0 (0.5)"
+            
+            // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 to prevent any integer truncation error (seen by Google AI)
+            next_timeout_ticks    = (time32_t) (((RANDOM_VAL_MAX_US - random_unsigned32_in_range_us) * XS1_TIMER_MHZ) / 2); // Below half
+            // was:
+            // next_timeout_ticks = (time32_t) ((RANDOM_VAL_MAX_US - random_unsigned32_in_range_us) / 2) * XS1_TIMER_MHZ; // Below half
         }
     #else
-       next_timeout_ticks = random_unsigned32_in_range_us * XS1_TIMER_MHZ;
+       next_timeout_ticks = (time32_t) random_unsigned32_in_range_us * XS1_TIMER_MHZ;
     #endif
 
-    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range. Overflow or underflow not possible
 
     return next_timeout_ticks;
-} // get_until_next_timeout_ticks_not_correct
+} // get_until_next_timeout_ticks
+
 
 #endif // TEXT_FOLD functions..
 
@@ -639,7 +730,7 @@ void task_master (
 
             case tmr when timerafter (time_ticks) :> void : {       
                 const random_unsigned32_t random_number = 
-                    random_get_random_number_special (randoms, USE_RANDOM_TYPE);
+                    random_get_random_number_special (randoms);
                 time32_t delta_ticks = get_until_next_timeout_ticks (random_number);
                 time_ticks          += delta_ticks;
 
@@ -747,7 +838,7 @@ void task_slave (
 
             case tmr when timerafter (time_ticks) :> void: {
                 time_ticks += 
-                    get_until_next_timeout_ticks (random_get_random_number_special (randoms, USE_RANDOM_TYPE));
+                    get_until_next_timeout_ticks (random_get_random_number_special (randoms));
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words

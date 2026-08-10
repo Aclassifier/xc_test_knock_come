@@ -1,21 +1,52 @@
 Newest on top 
 
-Running xc_test_knock_come.xe
-XCC 1503.1 KNOCK-COME v0.948 on date Aug 10 2026 15:37:41
+// Key Observations from the 21k Iteration Log (Summary done by Google AI)
+// XCC 1503.1 KNOCK-COME v0.949 on date Aug 10 2026 21:12:42:
+// 
+// * Symmetry Validation: 
+//   The custom PRG effectively balances the distribution, bringing the total `RND CLK` 
+//   mean to 50.151 ms (target: 50.00 ms) over a complete 21,000 transaction cycle.
+// 
+// * Precision Fix Impact: 
+//   Shifting the `XS1_TIMER_MHZ` multiplication ahead of the `/ 2` division successfully 
+//   preserved the LSB, recovering a lost 1 us per cycle caused by integer truncation.
+// 
+// * Time Divergence Solved: 
+//   The minor variations in the `TIME` column are mathematically verified as a rounding 
+//   byproduct of its 10 ms polling interval, while `RND CLK` represents the absolute 
+//   64-bit hardware tick truth.
+
+
+XCC 1503.1 KNOCK-COME v0.949 on date Aug 10 2026 21:12:42
 Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
 Deadlock if LEDS stop to count (Teig)
 DO_COMPILE_RUN_MAIN 0 USE_RANDOM_TYPE 4
 
 tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
-tm: SYM(P 0 N 0/0)      RX 879  TX 1000 ACC(RX 879      TX 1000)        TIME 41.53s sum, RND CLK 41.622ms mean
-tm: SYM(P 0 N 0/0)      RX 878  TX 1000 ACC(RX 1757     TX 2000)        TIME 41.60s sum, RND CLK 41.663ms mean
-tm: SYM(P 0 N 0/0)      RX 880  TX 1000 ACC(RX 2637     TX 3000)        TIME 41.65s sum, RND CLK 41.718ms mean
-tm: SYM(P 0 N 0/0)      RX 877  TX 1000 ACC(RX 3514     TX 4000)        TIME 41.42s sum, RND CLK 41.542ms mean
-tm: SYM(P 0 N 0/0)      RX 877  TX 1000 ACC(RX 4391     TX 5000)        TIME 41.64s sum, RND CLK 41.678ms mean
-tm: SYM(P 0 N 0/0)      RX 878  TX 1000 ACC(RX 5269     TX 6000)        TIME 41.59s sum, RND CLK 41.683ms mean
-tm: SYM(P 0 N 0/0)      RX 874  TX 1000 ACC(RX 6143     TX 7000)        TIME 41.40s sum, RND CLK 41.597ms mean
-===== 
+tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
+tm: SYM(P 1 N 9/9)      RX 1000 TX 1000 ACC(RX 1000     TX 1000)        TIME 50.06s sum, RND CLK 50.149ms mean
+tm: SYM(P 1 N 10/10)    RX 998  TX 1000 ACC(RX 1998     TX 2000)        TIME 49.98s sum, RND CLK 50.081ms mean
+tm: SYM(P 1 N 10/10)    RX 1008 TX 1000 ACC(RX 3006     TX 3000)        TIME 50.44s sum, RND CLK 50.533ms mean
+tm: SYM(P 1 N 9/10)     RX 1000 TX 1000 ACC(RX 4006     TX 4000)        TIME 50.09s sum, RND CLK 50.199ms mean
+tm: SYM(P 1 N 10/10)    RX 1015 TX 1000 ACC(RX 5021     TX 5000)        TIME 50.00s sum, RND CLK 50.108ms mean
+tm: SYM(P 1 N 10/10)    RX 985  TX 1000 ACC(RX 6006     TX 6000)        TIME 49.71s sum, RND CLK 49.828ms mean
+tm: SYM(P 1 N 11/11)    RX 1017 TX 1000 ACC(RX 7023     TX 7000)        TIME 50.43s sum, RND CLK 50.501ms mean
+tm: SYM(P 1 N 10/11)    RX 1003 TX 1000 ACC(RX 8026     TX 8000)        TIME 49.89s sum, RND CLK 50.049ms mean
+tm: SYM(P 1 N 10/11)    RX 997  TX 1000 ACC(RX 9023     TX 9000)        TIME 49.91s sum, RND CLK 50.017ms mean
+tm: SYM(P 1 N 7/11)     RX 977  TX 1000 ACC(RX 10000    TX 10000)       TIME 49.32s sum, RND CLK 49.413ms mean
+tm: SYM(P 1 N 10/11)    RX 988  TX 1000 ACC(RX 10988    TX 11000)       TIME 49.59s sum, RND CLK 49.694ms mean
+tm: SYM(P 1 N 11/11)    RX 991  TX 1000 ACC(RX 11979    TX 12000)       TIME 49.46s sum, RND CLK 49.584ms mean
+tm: SYM(P 1 N 10/11)    RX 1007 TX 1000 ACC(RX 12986    TX 13000)       TIME 50.52s sum, RND CLK 50.620ms mean
+tm: SYM(P 1 N 5/11)     RX 997  TX 1000 ACC(RX 13983    TX 14000)       TIME 50.13s sum, RND CLK 50.279ms mean
+tm: SYM(P 1 N 15/15)    RX 998  TX 1000 ACC(RX 14981    TX 15000)       TIME 49.72s sum, RND CLK 49.801ms mean
+tm: SYM(P 1 N 9/15)     RX 999  TX 1000 ACC(RX 15980    TX 16000)       TIME 50.17s sum, RND CLK 50.308ms mean
+tm: SYM(P 1 N 9/15)     RX 1015 TX 1000 ACC(RX 16995    TX 17000)       TIME 49.74s sum, RND CLK 49.845ms mean
+tm: SYM(P 1 N 8/15)     RX 1023 TX 1000 ACC(RX 18018    TX 18000)       TIME 50.75s sum, RND CLK 50.885ms mean
+tm: SYM(P 1 N 7/15)     RX 999  TX 1000 ACC(RX 19017    TX 19000)       TIME 50.15s sum, RND CLK 50.221ms mean
+tm: SYM(P 1 N 12/15)    RX 1005 TX 1000 ACC(RX 20022    TX 20000)       TIME 50.75s sum, RND CLK 50.885ms mean
+tm: SYM(P 1 N 7/15)     RX 999  TX 1000 ACC(RX 21021    TX 21000)       TIME 50.08s sum, RND CLK 50.172ms mean
+===
 
 Running xc_test_knock_come.xe
 Starting full state-space simulation with seed 1 in code at 16:22:07 Aug  5 2026. Please wait some 25 hours...

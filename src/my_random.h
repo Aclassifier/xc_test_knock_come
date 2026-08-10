@@ -16,9 +16,9 @@
 #define XORSHIFT32                   3 // Creates unique values with xorshift32
 #define XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
 
-#define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
-//
 #define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC // Observe VS Code colour coding shades non-used code
+
+#define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
 
 typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
 typedef int32_t  random_signed32_t;
@@ -86,9 +86,7 @@ random_unsigned32_t xorshift32 (randoms_t &randoms);
 
 random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed);
 
-random_unsigned32_t random_get_random_number_special (
-    randoms_t      &randoms,
-    const unsigned use_random_type);
+random_unsigned32_t random_get_random_number_special (randoms_t &randoms);
 
 void init_randoms (
     randoms_t                 &randoms,
