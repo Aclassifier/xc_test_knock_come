@@ -33,8 +33,7 @@
 #if ALWAYS // ========== include ==========
 
 #include <xs1.h>
-#include <platform.h> // slice
-                      // For _XTC #include _PLATFORM_INCLUDE_FILE (-> xc_test_knock_come/build/autogen_headers/tgt_xc_test_knock_come/platform.h)
+#include <platform.h> // slice. For _XTC #include _PLATFORM_INCLUDE_FILE
 #include <syscall.h>  // _XTC new for me
 #include <timer.h>    // delay_milliseconds(200), XS1_TIMER_HZ etc
 #include <stdio.h>    // printf
@@ -45,17 +44,20 @@
 #include "my_numbers.h"
 #include "my_random.h"
 
-#endif // include
+#endif // ALWAYS include
 
-#define KNOCK_COME_VERSION_STR "0.947" // x.yzz
+#define KNOCK_COME_VERSION_STR "0.948" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 #define KNOCK_COME_TIME __TIME__
 #define KNOCK_COME_DATE __DATE__
 
 #if ALWAYS // ========== VERSIONS AND COMMITS ==========
 /*
+10Aug2026 0.948 
+get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
+See _log.txt, stil I think that "mean" should be around 50 ms, not 41 ms.
 10AUg2026 0.947 
 * Comment
-* _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX 
+* _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX 
 DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
 10AUg2026 0.946 
 Comments
@@ -173,26 +175,18 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 
 */
 
-#endif // VERSIONS AND COMMITS
+#endif // ALWAYS VERSIONS..
 
-#if ALWAYS // ========== DO_KNOCK_COME #defines ==========
-
-#define DO_KNOCK_COME               0
-#define DO_LIB_RANDOM_EXAMPLE       1
+#if ALWAYS // ========== WHICH main TO RUN ==========
+#define DO_KNOCK_COME               0 // KNOCK_COME_VERSION_STR makes sense
+#define DO_LIB_RANDOM_EXAMPLE       1 // --''--
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
-#define DO_COMPILE_RUN DO_FIND_32BITS_DROP_CNT_MAX // Observe VS Code colour coding shades non-used code
-
-#endif // DO_KNOCK_COME #defines
-
-#if (DO_COMPILE_RUN == DO_KNOCK_COME)
+#define DO_COMPILE_RUN_MAIN DO_KNOCK_COME // Observe VS Code colour coding shades non-used code
+#endif // ALWAYS WHICH..
 
 #if ALWAYS // ========== #defines ==========
-
-#define _XTC           (XCC_VERSION_MAJOR >= 1503)
-#define _XTIMECOMPOSER (XCC_VERSION_MAJOR <  1500) // 1404 is last
-
 //                                     LEDS COUNT ABOUT THE SAME RATE FOR BOTH
 #define SPEED_SLOW_AND_PRINT      0 // Scope possible: use ROLL scope
 #define SPEED_SLOW_AND_PRINT_LESS 1 // Scope possible: use ROLL scope
@@ -282,11 +276,11 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define PRINT_TIMEOUT_TICKS         (PRINT_TIMEOUT_RESOLUTION_MS * XS1_TIMER_KHZ) // Every 10 ms
 
 #if (SPEED_SLOW_AND_PRINT_12)
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // 100-1=99 ms -> [0..99] ms sum (99*100)/2=4950 average 4950/100=49.5 ms (basically for printing)
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 100000) // [0..99] ms 
     #define MEAN_LEDS_BLINKING_DIVISOR 10 // (*)
     #define ARR_DELTA_PRINT_DIM        20
 #else // SPEED_FAST_AND_SCOPE
-    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // 10-1=9 us -> [0..9] us sum (9*10)/2=45 average 45/10=4.5 us (basically for scope)
+    #define RANDOM_VAL_MAX_US          (TIMER_FACTOR_KNOCKCOME_US * 10) // [0..9] us (basically for scope)
     #define MEAN_LEDS_BLINKING_DIVISOR 100000 // (*)
     #define ARR_DELTA_PRINT_DIM        1
 #endif
@@ -326,9 +320,9 @@ TEST_DEADLOCK_NO_STREAMING_CHAN is new
 #define RANDOM_SEED_SLAVE  5678 // Any value, but not 0 since primitive polynom, but only for random_create_generator_from_seed
 #define RANDOM_SEED_MASTER 8765 // --''--
 
-#endif // endegion #defines
+#endif // ALWAYS #defines
 
-#if ALWAYS // ========== typedef enum ==========
+#if ALWAYS // ========== enums ==========
 
 typedef enum {        // NEEDS
     KC_TYP_NONE_DATA, // Master sends spontaneous data to Slave, not part of knock-come scheme
@@ -359,9 +353,9 @@ typedef enum {
     task_b
 } ab_src_e;
 
-#endif // typedef enum
+#endif // ALWAYS enums
 
-#if ALWAYS // ========== typedef struct ==========
+#if ALWAYS // ========== structs ==========
 
 typedef struct {
     unsigned sent_cnt;
@@ -395,7 +389,7 @@ typedef struct {
     } data;
 } ch_come_or_sdata_t;
 
-#endif // typedef struct
+#endif // ALWAYS structs
 
 #if ALWAYS // ========== Knock-Come state change ==========
 
@@ -470,7 +464,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
     return NextState;
 } // Master_Set_KnockCome_State
 
-#endif // Knock-Come state change
+#endif // ALWAYS Knock-Come..
 
 #if ALWAYS // ========== print and debug functions ==========
 
@@ -566,7 +560,7 @@ void print_welcome_banner()
             USE_ORDERED_PRI_SELECT_SLAVE,
             PRINT_OR_SCOPE);
 
-    printf ("DO_COMPILE_RUN %u USE_RANDOM_TYPE %u\n\n", DO_COMPILE_RUN, USE_RANDOM_TYPE);
+    printf ("DO_COMPILE_RUN_MAIN %u USE_RANDOM_TYPE %u\n\n", DO_COMPILE_RUN_MAIN, USE_RANDOM_TYPE);
 } // print_welcome_banner
 
 
@@ -583,9 +577,9 @@ void print_ordered_banner()
             "But watch out for stopped log\n");
 } // print_ordered_banner
 
-#endif // print and debug functions
+#endif // ALWAYS print..
 
-#if ALWAYS // ========== local functions ==========
+#if ALWAYS // ========== functions local ==========
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
 //
@@ -606,8 +600,46 @@ time32_t get_until_next_timeout_ticks (
     const random_unsigned32_t random_number) // From used generators here, all values except 0, 
     // so there is "one less" random_number % RANDOM_VAL_MAX_US = 0 than the others [1..99]. This 
     // same problem also exist on from (2ˆ32)-1 100 upper values (96,97,98,99 are missing) since
-    // (2ˆ32)-1 = 4294967295                                   
+    // (2ˆ32)-1 = 4294967295 
+    // Examples with RANDOM_VAL_MAX_US 100000 us (100 ms) or 10 us (no overflow problem for any)                                    
 { 
+    time32_t next_timeout_ticks;                        
+
+    const random_unsigned32_t random_unsigned32_in_range_us = //                                            1 since never 0 since random_number > 0
+        (random_number % (RANDOM_VAL_MAX_US + TIMER_FACTOR_KNOCKCOME_US)) - TIMER_FACTOR_KNOCKCOME_US; // "[1..(99999+1)]-1 = [0 - 99999]"
+                                                                                                       // "[1..(9+1)]-1 = [0 - 9]"
+    
+    #if (USE_SYMMETRIC)
+        // "50" is zero point 
+        if ((random_number bitand INT_MIN) == 0) { 
+            //                                          "100000 + 99999                            / 2 = 99999 (99999.5)"
+            //                                          "100000 + 76000                            / 2 = 88000"
+            //                                          "100000 + 0                                / 2 = 50000"
+            //                                                                    "Positive half" is ">= 50000"
+            //                                              "10 + 9                                / 2 = 9 (9.5)"
+            //                                              "10 + 7                                / 2 = 8 (8.5)"
+            //                                              "10 + 0                                / 2 = 5"
+            //                                                                    "Positive half" is ">= 5"
+            next_timeout_ticks = (time32_t) ((RANDOM_VAL_MAX_US + random_unsigned32_in_range_us) / 2) * XS1_TIMER_MHZ; // Above half
+        } else { //                                                               "Negative half" is " < 50000"
+            //                                          "100000 - 24000                            / 2 = 38000"
+            //                                          "100000 - 99999                            / 2 =     0 (0.5)"
+            //                                                                    "Negative half" is " < 5"
+            //                                              "10 - 2                                / 2 = 4"
+            //                                              "10 - 9                                / 2 = 0 (0.5)"
+            next_timeout_ticks = (time32_t) ((RANDOM_VAL_MAX_US - random_unsigned32_in_range_us) / 2) * XS1_TIMER_MHZ; // Below half
+        }
+    #else
+       next_timeout_ticks = (time32_t) random_unsigned32_in_range_us * XS1_TIMER_MHZ;
+    #endif
+
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range
+
+    return next_timeout_ticks;
+} // get_until_next_timeout_ticks
+
+time32_t get_until_next_timeout_ticks_not_correct (const random_unsigned32_t random_number) {
+    
     time32_t next_timeout_ticks;
     const random_unsigned32_t random_unsigned32_in_range_us = random_number % RANDOM_VAL_MAX_US; // "[0..99]" Say "76" or "24".
     #define HALF_RANGE_US (RANDOM_VAL_MAX_US / 2)
@@ -630,8 +662,9 @@ time32_t get_until_next_timeout_ticks (
     xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range
 
     return next_timeout_ticks;
-} // get_until_next_timeout_ticks
-#endif // local functions
+} // get_until_next_timeout_ticks_not_correct
+
+#endif // ALWAYS functions..
 
 #if ALWAYS // ========== task_master ==========
 // ===================================================================================================================
@@ -744,7 +777,7 @@ void task_master (
         }
     }
 } // task_master
-#endif // task_master
+#endif // ALWAYS task_master
 
 #if ALWAYS // ========== task_slave ==========
 // ===================================================================================================================
@@ -827,9 +860,9 @@ void task_slave (
         }
     }
 } // task_slave 
-#endif // task_slave
+#endif // ALWAYS task_slave
 
-#if ALWAYS // ========== port ==========
+#if ALWAYS // ========== ports ==========
 
 // See different port syntax forms at https://www.teigfam.net/oyvind/home/technology/141-xc-is-c-plus-x/#port_construct_of_xc
 //
@@ -864,10 +897,10 @@ port out p1_out_purple_master  = on tile[0]: XS1_PORT_1D; // [X0D11]            
 // GND              13   X0D21  P4C3(LED3) 14
 // X0D11  P1D       15   GND               16
 
-#endif // port
+#endif // ALWAYS ports
 
-#if ALWAYS // ========== main (DO_COMPILE_RUN == DO_KNOCK_COME) ==========
-
+#if ALWAYS // ========== DO_KNOCK_COME main ==========
+#if (DO_COMPILE_RUN_MAIN == DO_KNOCK_COME)
 int main()
 {
     STREAMING chan ch_knock ; // ch_knock_t
@@ -888,34 +921,38 @@ int main()
     }
     return 0;
 } // main
-#endif // main (DO_COMPILE_RUN == DO_KNOCK_COME) ==========
+#endif // (DO_COMPILE_RUN_MAIN == DO_KNOCK_COME)
+#endif // DO_KNOCK_COME..
 
-#elif (DO_COMPILE_RUN == DO_LIB_RANDOM_EXAMPLE)
+#if ALWAYS // ========== DO_LIB_RANDOM_EXAMPLE main ==========
+#if (DO_COMPILE_RUN_MAIN == DO_LIB_RANDOM_EXAMPLE)
 
 int main()
 {
     lib_random_example();
     return 0;
 } // main
+#endif // (DO_COMPILE_RUN_MAIN == DO_LIB_RANDOM_EXAMPLE)
+#endif // ALWAYS DO_LIB_RANDOM_EXAMPLE..
 
-#elif (DO_COMPILE_RUN == DO_FIND_BIT31_DROP_CNT_MAX)
-
-port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
+#if ALWAYS // ========== DO_FIND_BIT31_DROP_CNT_MAX main ==========
+#if (DO_COMPILE_RUN_MAIN == DO_FIND_BIT31_DROP_CNT_MAX)
+  
 int main()
 {
-    find_max_consecutive_bit31_xorshift32 (1, p1_out_blue);
+    find_max_consecutive_bit31_xorshift32 (1, p1_out_blue_slave);
     return 0;
 } // main
+#endif // (DO_COMPILE_RUN_MAIN == DO_FIND_BIT31_DROP_CNT_MAX)
+#endif // ALWAYS DO_FIND_BIT31_DROP_CNT_MAX..
 
-#elif (DO_COMPILE_RUN == DO_FIND_32BITS_DROP_CNT_MAX)
+#if ALWAYS // ========== DO_FIND_32BITS_DROP_CNT_MAX main ==========
+#if (DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX)
 
-port out p1_out_blue = on tile[0]: XS1_PORT_1A; // [X0D00] J14 pin  2 (bit0)   
 int main()
 {
-    find_max_consecutive_allbits_xorshift32 (1, p1_out_blue);
+    find_max_consecutive_allbits_xorshift32 (1, p1_out_blue_slave);
     return 0;
 } // main
-
-#else
-    #error NO CODE!
-#endif
+#endif // (DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX)
+#endif // ALWAYS DO_FIND_32BITS_DROP_CNT_MAX..

@@ -1,75 +1,20 @@
 Newest on top 
 
-XCC 1503.1 KNOCK-COME v0.943 on date Aug  5 2026 11:38:20
+Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.948 on date Aug 10 2026 15:37:41
 Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
 Deadlock if LEDS stop to count (Teig)
-DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+DO_COMPILE_RUN_MAIN 0 USE_RANDOM_TYPE 4
 
 tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
-tm: SYM(P 1 N 9/9)      RX 996  TX 1000 ACC(RX 996      TX 1000)        TIME 49.99s sum, RND CLK 50.079ms mean
-tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 1995     TX 2000)        TIME 49.77s sum, RND CLK 49.867ms mean
-tm: SYM(P 1 N 10/10)    RX 983  TX 1000 ACC(RX 2978     TX 3000)        TIME 49.59s sum, RND CLK 49.687ms mean
-tm: SYM(P 1 N 9/10)     RX 1007 TX 1000 ACC(RX 3985     TX 4000)        TIME 49.67s sum, RND CLK 49.771ms mean
-tm: SYM(P 1 N 10/10)    RX 997  TX 1000 ACC(RX 4982     TX 5000)        TIME 49.47s sum, RND CLK 49.574ms mean
-
-===       
-
-tm: SYM(P 1 N 8/17)     RX 1005 TX 1000 ACC(RX 522181   TX 525000)      TIME 50.17s sum, RND CLK 50.276ms mean
-tm: SYM(P 1 N 10/17)    RX 995  TX 1000 ACC(RX 523176   TX 526000)      TIME 49.54s sum, RND CLK 49.655ms mean
-//               19 REACHED  AFTER                         527         TIMES 50 secs = 8.8 hours    
-tm: SYM(P 1 N 19/19)    RX 1015 TX 1000 ACC(RX 524191   TX 527000)      TIME 50.54s sum, RND CLK 50.655ms mean
-tm: SYM(P 1 N 11/19)    RX 799  TX 1000 ACC(RX 524990   TX 528000)      TIME 40.02s sum, RND CLK 50.206ms mean
-tm: SYM(P 1 N 9/19)     RX 1028 TX 1000 ACC(RX 526018   TX 529000)      TIME 50.69s sum, RND CLK 50.806ms mean
-...
-tm: SYM(P 1 N 11/19)    RX 1001 TX 1000 ACC(RX 1391062  TX 1399000)     TIME 49.73s sum, RND CLK 49.809ms mean
-tm: SYM(P 1 N 11/19)    RX 1004 TX 1000 ACC(RX 1392066  TX 1400000)     TIME 49.81s sum, RND CLK 49.941ms mean
-//               21 REACHED  AFTER                         1401        TIMES 50 secs = 19.45 hours  
-tm: SYM(P 1 N 21/21)    RX 1002 TX 1000 ACC(RX 1393068  TX 1401000)     TIME 50.15s sum, RND CLK 50.282ms mean
-
-
-XCC 1503.1 KNOCK-COME v0.941 on date Aug  4 2026 11:02:49
-Time random max 100000 us cnt events at 1000
-Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
-Deadlock if LEDS stop to count (Teig)
-DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
-
-tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
-tm: SYM(P 1 N 9/9)      RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.99s sum, RND CLK 50.079ms mean
-tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 1996     TX 2000)        TIME 49.76s sum, RND CLK 49.867ms mean
-tm: SYM(P 1 N 10/10)    RX 983  TX 1000 ACC(RX 2979     TX 3000)        TIME 49.60s sum, RND CLK 49.687ms mean
-tm: SYM(P 1 N 9/10)     RX 1007 TX 1000 ACC(RX 3986     TX 4000)        TIME 49.67s sum, RND CLK 49.771ms mean
-tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 4985     TX 5000)        TIME 49.47s sum, RND CLK 49.574ms mean
-tm: SYM(P 1 N 10/10)    RX 1006 TX 1000 ACC(RX 5991     TX 6000)        TIME 49.94s sum, RND CLK 50.051ms mean
-tm: SYM(P 1 N 11/11)    RX 988  TX 1000 ACC(RX 6979     TX 7000)        TIME 49.60s sum, RND CLK 49.671ms mean
-tm: SYM(P 1 N 10/11)    RX 991  TX 1000 ACC(RX 7970     TX 8000)        TIME 49.74s sum, RND CLK 49.836ms mean
-tm: SYM(P 1 N 10/11)    RX 992  TX 1000 ACC(RX 8962     TX 9000)        TIME 49.89s sum, RND CLK 50.027ms mean
-tm: SYM(P 1 N 7/11)     RX 1005 TX 1000 ACC(RX 9967     TX 10000)       TIME 50.34s sum, RND CLK 50.445ms mean
-tm: SYM(P 1 N 10/11)    RX 986  TX 1000 ACC(RX 10953    TX 11000)       TIME 49.44s sum, RND CLK 49.527ms mean
-tm: SYM(P 1 N 11/11)    RX 988  TX 1000 ACC(RX 11941    TX 12000)       TIME 49.62s sum, RND CLK 49.730ms mean
-
-// OBSERVE THAT THE LAST VALUES ARE EQUAL ON EACH LOG, LIKE ABOVE AND HERE. SEED IS SW
-
-XCC 1503.1 KNOCK-COME v0.941 on date Aug  4 2026 10:47:40
-Time random max 100000 us cnt events at 1000
-Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
-Deadlock if LEDS stop to count (Teig)
-DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
-
-MASTER: SYMCNT(P 0 N 0/0)       RX 0    TX 0    ACC(RX 0        TX 0)   TIME (0)=0.00s sum, RND CLK (0)=0.000ms mean
-MASTER: SYMCNT(P 1 N 9/9)       RX 996  TX 1000 ACC(RX 996      TX 1000)        TIME (4999)=49.99s sum, RND CLK (50079)=50.079ms mean
-MASTER: SYMCNT(P 1 N 10/10)     RX 999  TX 1000 ACC(RX 1995     TX 2000)        TIME (4975)=49.75s sum, RND CLK (49867)=49.867ms mean
-MASTER: SYMCNT(P 1 N 10/10)     RX 983  TX 1000 ACC(RX 2978     TX 3000)        TIME (4959)=49.59s sum, RND CLK (49687)=49.687ms mean
-MASTER: SYMCNT(P 1 N 9/10)      RX 1007 TX 1000 ACC(RX 3985     TX 4000)        TIME (4966)=49.66s sum, RND CLK (49771)=49.771ms mean
-MASTER: SYMCNT(P 1 N 10/10)     RX 996  TX 1000 ACC(RX 4981     TX 5000)        TIME (4945)=49.45s sum, RND CLK (49574)=49.574ms mean
-MASTER: SYMCNT(P 1 N 10/10)     RX 1006 TX 1000 ACC(RX 5987     TX 6000)        TIME (4993)=49.93s sum, RND CLK (50051)=50.051ms mean
-MASTER: SYMCNT(P 1 N 11/11)     RX 988  TX 1000 ACC(RX 6975     TX 7000)        TIME (4960)=49.60s sum, RND CLK (49671)=49.671ms mean
-MASTER: SYMCNT(P 1 N 10/11)     RX 991  TX 1000 ACC(RX 7966     TX 8000)        TIME (4972)=49.72s sum, RND CLK (49836)=49.836ms mean
-MASTER: SYMCNT(P 1 N 10/11)     RX 992  TX 1000 ACC(RX 8958     TX 9000)        TIME (4988)=49.88s sum, RND CLK (50027)=50.027ms mean
-MASTER: SYMCNT(P 1 N 7/11)      RX 1005 TX 1000 ACC(RX 9963     TX 10000)       TIME (5033)=50.33s sum, RND CLK (50445)=50.445ms mean
-MASTER: SYMCNT(P 1 N 10/11)     RX 986  TX 1000 ACC(RX 10949    TX 11000)       TIME (4943)=49.43s sum, RND CLK (49527)=49.527ms mean
-MASTER: SYMCNT(P 1 N 11/11)     RX 988  TX 1000 ACC(RX 11937    TX 12000)       TIME (4962)=49.62s sum, RND CLK (49730)=49.730ms mean
-
+tm: SYM(P 0 N 0/0)      RX 879  TX 1000 ACC(RX 879      TX 1000)        TIME 41.53s sum, RND CLK 41.622ms mean
+tm: SYM(P 0 N 0/0)      RX 878  TX 1000 ACC(RX 1757     TX 2000)        TIME 41.60s sum, RND CLK 41.663ms mean
+tm: SYM(P 0 N 0/0)      RX 880  TX 1000 ACC(RX 2637     TX 3000)        TIME 41.65s sum, RND CLK 41.718ms mean
+tm: SYM(P 0 N 0/0)      RX 877  TX 1000 ACC(RX 3514     TX 4000)        TIME 41.42s sum, RND CLK 41.542ms mean
+tm: SYM(P 0 N 0/0)      RX 877  TX 1000 ACC(RX 4391     TX 5000)        TIME 41.64s sum, RND CLK 41.678ms mean
+tm: SYM(P 0 N 0/0)      RX 878  TX 1000 ACC(RX 5269     TX 6000)        TIME 41.59s sum, RND CLK 41.683ms mean
+tm: SYM(P 0 N 0/0)      RX 874  TX 1000 ACC(RX 6143     TX 7000)        TIME 41.40s sum, RND CLK 41.597ms mean
 ===== 
 
 Running xc_test_knock_come.xe
@@ -149,3 +94,75 @@ Sorted increasing in "time" and with hex values
  [7] = 32 into 32 at 4206662089	(0xFABC91C9)
  [6] = 32 into 32 at 4207409591	(0xFAC7F9B7)
  [4] = 32 into 32 at 4277065801	(0xFEEED849)
+
+ ===
+
+XCC 1503.1 KNOCK-COME v0.943 on date Aug  5 2026 11:38:20
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+
+tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
+tm: SYM(P 1 N 9/9)      RX 996  TX 1000 ACC(RX 996      TX 1000)        TIME 49.99s sum, RND CLK 50.079ms mean
+tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 1995     TX 2000)        TIME 49.77s sum, RND CLK 49.867ms mean
+tm: SYM(P 1 N 10/10)    RX 983  TX 1000 ACC(RX 2978     TX 3000)        TIME 49.59s sum, RND CLK 49.687ms mean
+tm: SYM(P 1 N 9/10)     RX 1007 TX 1000 ACC(RX 3985     TX 4000)        TIME 49.67s sum, RND CLK 49.771ms mean
+tm: SYM(P 1 N 10/10)    RX 997  TX 1000 ACC(RX 4982     TX 5000)        TIME 49.47s sum, RND CLK 49.574ms mean
+
+===       
+
+tm: SYM(P 1 N 8/17)     RX 1005 TX 1000 ACC(RX 522181   TX 525000)      TIME 50.17s sum, RND CLK 50.276ms mean
+tm: SYM(P 1 N 10/17)    RX 995  TX 1000 ACC(RX 523176   TX 526000)      TIME 49.54s sum, RND CLK 49.655ms mean
+//               19 REACHED  AFTER                         527         TIMES 50 secs = 8.8 hours    
+tm: SYM(P 1 N 19/19)    RX 1015 TX 1000 ACC(RX 524191   TX 527000)      TIME 50.54s sum, RND CLK 50.655ms mean
+tm: SYM(P 1 N 11/19)    RX 799  TX 1000 ACC(RX 524990   TX 528000)      TIME 40.02s sum, RND CLK 50.206ms mean
+tm: SYM(P 1 N 9/19)     RX 1028 TX 1000 ACC(RX 526018   TX 529000)      TIME 50.69s sum, RND CLK 50.806ms mean
+...
+tm: SYM(P 1 N 11/19)    RX 1001 TX 1000 ACC(RX 1391062  TX 1399000)     TIME 49.73s sum, RND CLK 49.809ms mean
+tm: SYM(P 1 N 11/19)    RX 1004 TX 1000 ACC(RX 1392066  TX 1400000)     TIME 49.81s sum, RND CLK 49.941ms mean
+//               21 REACHED  AFTER                         1401        TIMES 50 secs = 19.45 hours  
+tm: SYM(P 1 N 21/21)    RX 1002 TX 1000 ACC(RX 1393068  TX 1401000)     TIME 50.15s sum, RND CLK 50.282ms mean
+
+
+XCC 1503.1 KNOCK-COME v0.941 on date Aug  4 2026 11:02:49
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+
+tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
+tm: SYM(P 1 N 9/9)      RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.99s sum, RND CLK 50.079ms mean
+tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 1996     TX 2000)        TIME 49.76s sum, RND CLK 49.867ms mean
+tm: SYM(P 1 N 10/10)    RX 983  TX 1000 ACC(RX 2979     TX 3000)        TIME 49.60s sum, RND CLK 49.687ms mean
+tm: SYM(P 1 N 9/10)     RX 1007 TX 1000 ACC(RX 3986     TX 4000)        TIME 49.67s sum, RND CLK 49.771ms mean
+tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 4985     TX 5000)        TIME 49.47s sum, RND CLK 49.574ms mean
+tm: SYM(P 1 N 10/10)    RX 1006 TX 1000 ACC(RX 5991     TX 6000)        TIME 49.94s sum, RND CLK 50.051ms mean
+tm: SYM(P 1 N 11/11)    RX 988  TX 1000 ACC(RX 6979     TX 7000)        TIME 49.60s sum, RND CLK 49.671ms mean
+tm: SYM(P 1 N 10/11)    RX 991  TX 1000 ACC(RX 7970     TX 8000)        TIME 49.74s sum, RND CLK 49.836ms mean
+tm: SYM(P 1 N 10/11)    RX 992  TX 1000 ACC(RX 8962     TX 9000)        TIME 49.89s sum, RND CLK 50.027ms mean
+tm: SYM(P 1 N 7/11)     RX 1005 TX 1000 ACC(RX 9967     TX 10000)       TIME 50.34s sum, RND CLK 50.445ms mean
+tm: SYM(P 1 N 10/11)    RX 986  TX 1000 ACC(RX 10953    TX 11000)       TIME 49.44s sum, RND CLK 49.527ms mean
+tm: SYM(P 1 N 11/11)    RX 988  TX 1000 ACC(RX 11941    TX 12000)       TIME 49.62s sum, RND CLK 49.730ms mean
+
+// OBSERVE THAT THE LAST VALUES ARE EQUAL ON EACH LOG, LIKE ABOVE AND HERE. SEED IS SW
+
+XCC 1503.1 KNOCK-COME v0.941 on date Aug  4 2026 10:47:40
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN 0 USE_RANDOM_TYPE 4
+
+MASTER: SYMCNT(P 0 N 0/0)       RX 0    TX 0    ACC(RX 0        TX 0)   TIME (0)=0.00s sum, RND CLK (0)=0.000ms mean
+MASTER: SYMCNT(P 1 N 9/9)       RX 996  TX 1000 ACC(RX 996      TX 1000)        TIME (4999)=49.99s sum, RND CLK (50079)=50.079ms mean
+MASTER: SYMCNT(P 1 N 10/10)     RX 999  TX 1000 ACC(RX 1995     TX 2000)        TIME (4975)=49.75s sum, RND CLK (49867)=49.867ms mean
+MASTER: SYMCNT(P 1 N 10/10)     RX 983  TX 1000 ACC(RX 2978     TX 3000)        TIME (4959)=49.59s sum, RND CLK (49687)=49.687ms mean
+MASTER: SYMCNT(P 1 N 9/10)      RX 1007 TX 1000 ACC(RX 3985     TX 4000)        TIME (4966)=49.66s sum, RND CLK (49771)=49.771ms mean
+MASTER: SYMCNT(P 1 N 10/10)     RX 996  TX 1000 ACC(RX 4981     TX 5000)        TIME (4945)=49.45s sum, RND CLK (49574)=49.574ms mean
+MASTER: SYMCNT(P 1 N 10/10)     RX 1006 TX 1000 ACC(RX 5987     TX 6000)        TIME (4993)=49.93s sum, RND CLK (50051)=50.051ms mean
+MASTER: SYMCNT(P 1 N 11/11)     RX 988  TX 1000 ACC(RX 6975     TX 7000)        TIME (4960)=49.60s sum, RND CLK (49671)=49.671ms mean
+MASTER: SYMCNT(P 1 N 10/11)     RX 991  TX 1000 ACC(RX 7966     TX 8000)        TIME (4972)=49.72s sum, RND CLK (49836)=49.836ms mean
+MASTER: SYMCNT(P 1 N 10/11)     RX 992  TX 1000 ACC(RX 8958     TX 9000)        TIME (4988)=49.88s sum, RND CLK (50027)=50.027ms mean
+MASTER: SYMCNT(P 1 N 7/11)      RX 1005 TX 1000 ACC(RX 9963     TX 10000)       TIME (5033)=50.33s sum, RND CLK (50445)=50.445ms mean
+MASTER: SYMCNT(P 1 N 10/11)     RX 986  TX 1000 ACC(RX 10949    TX 11000)       TIME (4943)=49.43s sum, RND CLK (49527)=49.527ms mean
+MASTER: SYMCNT(P 1 N 11/11)     RX 988  TX 1000 ACC(RX 11937    TX 12000)       TIME (4962)=49.62s sum, RND CLK (49730)=49.730ms mean
