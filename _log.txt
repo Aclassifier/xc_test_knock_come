@@ -1,5 +1,31 @@
 Newest on top 
 
+ *  Running xc_test_knock_come.xe
+XCC 1503.1 KNOCK-COME v0.950 on date Aug 11 2026 10:26:05
+Time random max 100000 us cnt events at 1000
+Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0
+Deadlock if LEDS stop to count (Teig)
+DO_COMPILE_RUN_MAIN 0 USE_RANDOM_TYPE 4
+
+tm: SYM(P 0 N 0/0)      RX 0    TX 0    ACC(RX 0        TX 0)   TIME 0.00s sum, RND CLK 0.000ms mean
+tm: SYM(P 1 N 10/10)    RX 999  TX 1000 ACC(RX 999      TX 1000)        TIME 50.00s sum, RND CLK 50.063ms mean
+tm: SYM(P 1 N 7/10)     RX 1000 TX 1000 ACC(RX 1999     TX 2000)        TIME 50.09s sum, RND CLK 50.204ms mean
+tm: SYM(P 1 N 12/12)    RX 998  TX 1000 ACC(RX 2997     TX 3000)        TIME 50.02s sum, RND CLK 50.115ms mean
+tm: SYM(P 1 N 10/12)    RX 1003 TX 1000 ACC(RX 4000     TX 4000)        TIME 50.26s sum, RND CLK 50.325ms mean
+tm: SYM(P 1 N 9/12)     RX 994  TX 1000 ACC(RX 4994     TX 5000)        TIME 48.92s sum, RND CLK 49.071ms mean
+tm: SYM(P 1 N 8/12)     RX 999  TX 1000 ACC(RX 5993     TX 6000)        TIME 50.41s sum, RND CLK 50.511ms mean
+tm: SYM(P 1 N 12/12)    RX 999  TX 1000 ACC(RX 6992     TX 7000)        TIME 49.46s sum, RND CLK 49.534ms mean
+tm: SYM(P 1 N 11/12)    RX 1002 TX 1000 ACC(RX 7994     TX 8000)        TIME 49.92s sum, RND CLK 50.021ms mean
+tm: SYM(P 1 N 8/12)     RX 996  TX 1000 ACC(RX 8990     TX 9000)        TIME 49.90s sum, RND CLK 50.008ms mean
+tm: SYM(P 1 N 8/12)     RX 997  TX 1000 ACC(RX 9987     TX 10000)       TIME 50.34s sum, RND CLK 50.465ms mean
+tm: SYM(P 1 N 10/12)    RX 997  TX 1000 ACC(RX 10984    TX 11000)       TIME 50.12s sum, RND CLK 50.213ms mean
+tm: SYM(P 1 N 8/12)     RX 1000 TX 1000 ACC(RX 11984    TX 12000)       TIME 49.90s sum, RND CLK 50.023ms mean
+tm: SYM(P 1 N 11/12)    RX 1000 TX 1000 ACC(RX 12984    TX 13000)       TIME 50.12s sum, RND CLK 50.209ms mean
+tm: SYM(P 1 N 12/12)    RX 1000 TX 1000 ACC(RX 13984    TX 14000)       TIME 50.19s sum, RND CLK 50.321ms mean
+tm: SYM(P 1 N 8/12)     RX 999  TX 1000 ACC(RX 14983    TX 15000)       TIME 49.76s sum, RND CLK 49.857ms mean
+
+===
+
 // Key Observations from the 21k Iteration Log (Summary done by Google AI)
 // XCC 1503.1 KNOCK-COME v0.949 on date Aug 10 2026 21:12:42:
 // 

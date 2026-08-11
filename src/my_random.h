@@ -31,14 +31,20 @@ typedef struct {
     //         return (unsigned) *g;
     //     }
     // The value g aliases the return value. Therefore..
-    random_generator_t  random_ssgn;           // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
-    random_unsigned32_t random_ssgn_prev;      // When a negative is slided in between the next _to_ the generator must be the last _from_ it
-                                               // Used only for LIB_RANDOM_SW_SEED_SYMMETRIC and XORSHIFT32_SYMMETRIC
-    bool                use_random_negated;    // Only for LIB_RANDOM_SW_SEED_SYMMETRIC
-    unsigned            max_loop_pos_cnt;      // debug --''--
-    unsigned            max_loop_neg_cnt;      // debug --''--
-    unsigned            max_loop_neg_cnt_ever; // debug --''--
+    random_generator_t  random_ssgn;               // random (s)seed (s)state (g)generator (n)number. random_generator_t is unsigned in random.h
+    random_unsigned32_t random_ssgn_prev;          // When a negative is slided in between the next _to_ the generator must be the last _from_ it
+                                                   // Used only for LIB_RANDOM_SW_SEED_SYMMETRIC and XORSHIFT32_SYMMETRIC
+    bool                use_random_negated;        // Only for LIB_RANDOM_SW_SEED_SYMMETRIC
+    unsigned            max_loop_pos_cnt;          // debug --''--
+    unsigned            max_loop_neg_cnt;          // debug --''--
+    unsigned            max_loop_neg_cnt_ever;     // debug --''--
 } randoms_t;
+
+typedef struct {
+    random_unsigned32_t random_val_max_us;       
+    random_unsigned32_t timer_factor_knockcome_us; 
+} random_consts_t;
+
 //
 #define DROP_BIT_CNT_MAX 32 // 32 for all bits, really. See find_max_consecutive_bit31_xorshift32 or find_max_consecutive_allbits_xorshift32
 //
@@ -88,10 +94,23 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
 
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms);
 
+time32_t get_until_next_timeout_ticks_symmentric (
+    const random_unsigned32_t random_number,
+    const random_consts_t     random_consts);
+
+time32_t get_until_next_timeout_ticks_rng (
+    const random_unsigned32_t random_number,
+    const random_consts_t     random_consts);
+
 void init_randoms (
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed);
 
-void next_symmetric_random_get_random_number (randoms_t &randoms);
+void init_random_consts (
+    random_consts_t           &random_consts,
+    const random_unsigned32_t random_val_max_us,
+    const random_unsigned32_t timer_factor_knockcome_us);
+
+void next_random_number_symmetric(randoms_t &randoms);
 
 int lib_random_example();

@@ -23,6 +23,23 @@
     #include "my_random.h"
 #endif
 
+#define DO_FIND_32BITS_ONES_CNT  1 // Standard up to 0.947
+#define DO_FIND_32BITS_ZEROS_CNT 2
+//
+#define DO_CNT DO_FIND_32BITS_ZEROS_CNT
+
+typedef struct { // _con = consecutive
+    uint32_t state;               // number, value or seed, any name goes
+    uint32_t bit_con_seq_cnt_max; // DO_FIND_32BITS_ONES_CNT: number of 1s. DO_FIND_32BITS_ZEROS_CNT number of 0s
+    uint32_t bit_con_seq_cnt;     // --''--
+    uint32_t bit_round_cnt;       // counts all in 2ˆ32 up to 4294967296-1
+ } stats_t;
+
+ typedef struct {
+    uint32_t bit_con_seq_cnt_max;
+    uint32_t bit_round_cnt;
+} con_sec_log_t;
+
 // ===========================================================================================
 // xorshift32
 // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
@@ -59,12 +76,6 @@ random_unsigned32_t xorshift32 (randoms_t &randoms) {
 // math is possible since xorshift32 is Polynomial. I will come back to this.
 // =====================================================================================================
 
- typedef struct { // _con = consecutive
-    uint32_t state;               // number, value or seed, any name goes
-    uint32_t bit_con_seq_cnt_max; // DO_FIND_32BITS_ONES_CNT: number of 1s. DO_FIND_32BITS_ZEROS_CNT number of 0s
-    uint32_t bit_con_seq_cnt;     // --''--
-    uint32_t bit_round_cnt;       // counts all in 2ˆ32 up to 4294967296-1
- } stats_t;
 
 void init_stats (stats_t &stats, const uint32_t initial_seed) {
     stats.state               = initial_seed; // "state" is filled with "seed", math naming is rather confusing
@@ -76,12 +87,7 @@ void init_stats (stats_t &stats, const uint32_t initial_seed) {
 // Local function used in 
 // find_max_consecutive_bit31_xorshift32 and 
 // find_max_consecutive_allbits_xorshift32
-//
 
-#define DO_FIND_32BITS_ONES_CNT  1 // Standard up to 0.947
-#define DO_FIND_32BITS_ZEROS_CNT 2
-//
-#define DO_CNT DO_FIND_32BITS_ZEROS_CNT
 
 void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
     
@@ -109,6 +115,7 @@ void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
     }           
     stats.bit_round_cnt++; 
 } // do_xorshift32_and_stats
+
 
 // Soleley to find by brute force the value I need for DROP_BIT_CNT_MAX as needed in next_symmetric_random_get_random_number
 //
@@ -159,15 +166,12 @@ uint32_t find_max_consecutive_bit31_xorshift32
     return stats.bit_con_seq_cnt_max;
 } // find_max_consecutive_bit31_xorshift32
 
-typedef struct {
-    uint32_t bit_con_seq_cnt_max;
-    uint32_t bit_round_cnt;
-} con_sec_log_t;
 
 void init_con_sec_log (con_sec_log_t &con_sec_log) {
     con_sec_log.bit_con_seq_cnt_max = 0;
     con_sec_log.bit_round_cnt       = 0;
 }
+
 
 // Find by brute force the values for "DROP_BIT_CNT_MAX" for all 32 bits. Those for bit0..bit30 are not really needed, this is just for fun.
 // That one for bit31 is DROP_BIT_CNT_MAX, but it's already found in find_max_consecutive_bit31_xorshift32.
@@ -289,6 +293,7 @@ uint32_t find_max_consecutive_allbits_xorshift32
 
 } // find_max_consecutive_allbits_xorshift32
 
+
 // =========================================================================================================================
 // Functions used by xc_test_knock_come.xc
 //
@@ -312,7 +317,7 @@ uint32_t find_max_consecutive_allbits_xorshift32
 // outrules the ring oscillator solution.
 //
 // Since update_fairness_cnts is called in task_master the theoretical values of "DT xx.yys" in the log
-// is based on RANDOM_VAL_MAX_US as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
+// is based on random_consts. random_val_max_us as (49.5 ms * MAX_SUM_CNT ) / 2 = 49.5s / 2 = 24.75. However, see typical values below
 //
 // See https://www.xcore.com/viewtopic.php?t=9317 "Different average random values when hw or sw seed and use of LFSR" on XCore Exchange
 // =========================================================================================================================
@@ -340,6 +345,7 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
     return random_generator; // See random_ssgn
 } // random_create_generator
 
+
 // Different methods of random_get_random_number_special needed during development phase
 //
 random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
@@ -349,11 +355,11 @@ random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
         random_get_random_number (randoms.random_ssgn); 
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
-        next_symmetric_random_get_random_number (randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
+        next_random_number_symmetric(randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
     #elif (USE_RANDOM_TYPE == XORSHIFT32)
         xorshift32 (randoms); // // Updates randoms.random_ssgn only
     #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
-        next_symmetric_random_get_random_number (randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
+        next_random_number_symmetric(randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
     #else
         #error
     #endif
@@ -361,20 +367,32 @@ random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     return randoms.random_ssgn;
 } // random_get_random_number_special
 
+
 // Only called at startup of tasks
 //
 void init_randoms (
     randoms_t                 &randoms,
-    const random_unsigned32_t random_seed) {
-
+    const random_unsigned32_t random_seed)
+{
     randoms.random_ssgn = random_create_generator (random_seed); 
     
-    randoms.use_random_negated    = false; 
-    randoms.random_ssgn_prev      = randoms.random_ssgn;
-    randoms.max_loop_pos_cnt      = 0;
-    randoms.max_loop_neg_cnt      = 0;
-    randoms.max_loop_neg_cnt_ever = 0;
+    randoms.use_random_negated        = false; 
+    randoms.random_ssgn_prev          = randoms.random_ssgn;
+    randoms.max_loop_pos_cnt          = 0;
+    randoms.max_loop_neg_cnt          = 0;
+    randoms.max_loop_neg_cnt_ever     = 0;
 } // init_randoms
+
+
+void init_random_consts (
+    random_consts_t           &random_consts,
+    const random_unsigned32_t random_val_max_us,
+    const random_unsigned32_t timer_factor_knockcome_us) 
+{
+    random_consts.random_val_max_us         = random_val_max_us;
+    random_consts.timer_factor_knockcome_us = timer_factor_knockcome_us;
+}
+
 
 // ============================================================================
 // next_symmetric_random_get_random_number
@@ -394,9 +412,7 @@ void init_randoms (
 // xorshift32 does not pass the BigCrush test suite, as would not this function either, then.
 // But if like xorwow were used in next_symmetric_random_get_random_number, maybe?
 //
-// For use when USE_RANDOM_TYPE is LIB_RANDOM_SW_SEED_SYMMETRIC or XORSHIFT32_SYMMETRIC
-//
-void next_symmetric_random_get_random_number (randoms_t &randoms) {
+void next_random_number_symmetric (randoms_t &randoms) {
     if (randoms.use_random_negated) {
         // Use negative value of last positive
         // This makes it symmetric around zero, seen as signed, however..
@@ -457,6 +473,90 @@ void next_symmetric_random_get_random_number (randoms_t &randoms) {
 
     }
 } // next_symmetric_random_get_random_number
+
+
+// ================================================================================================
+// get_until_next_timeout_ticks_symmentric to convert from random value as seen as signed to upper 
+// and lower half of next_timeout_ticks range
+// ==========
+// Key Observations from the 73k Iteration Log (Summary done by Google AI)
+// XCC 1503.1 KNOCK-COME v0.949 on date Aug 10 2026 21:12:42:
+// 
+// * Symmetry Validation: 
+//   The custom PRG effectively balances the distribution, bringing the total `RND CLK` 
+//   mean to 50.036 ms (target: 50.00 ms) over a comprehensive 73,000 transaction cycle.
+// 
+// * Precision Fix Impact: 
+//   Shifting the `XS1_TIMER_MHZ` multiplication ahead of the `/ 2` division successfully 
+//   preserved the LSB, recovering a lost 1 us per cycle caused by integer truncation.
+// 
+// * Time Divergence Solved: 
+//   The minor variations in the `TIME` column are mathematically verified as a rounding 
+//   byproduct of its 10 ms polling interval, while `RND CLK` represents the absolute 
+//   64-bit hardware tick truth.
+//  ==========
+// Comment about the input param random_number
+//   From used generators here, all values except 0, so there is "one less"
+//   random_number % random_consts. random_val_max_us = 0 than the others [1..99]. This 
+//   same problem also exist on from (2ˆ32)-1 100 upper values (96,97,98,99 are missing) since
+//   (2ˆ32)-1 = 4294967295 
+//   Examples with random_consts. random_val_max_us 100000 us (100 ms) or 10 us (no overflow problem for any)
+//
+time32_t get_until_next_timeout_ticks_symmentric (
+    const random_unsigned32_t random_number,
+    const random_consts_t     random_consts)                            
+{ 
+    time32_t next_timeout_ticks;                        
+
+    const random_unsigned32_t random_unsigned32_in_range_us = // "[1..(99999+1)]-1 = [0 - 99999]" or "[1..(9+1)]-1 = [0 - 9]"
+        (random_number % (random_consts. random_val_max_us + random_consts. timer_factor_knockcome_us)) - 
+        random_consts. timer_factor_knockcome_us;  
+    
+    if ((random_number bitand INT_MIN) == 0) { //   "100000 + 99999                            / 2 = 99999 (99999.5)"
+        //                                          "100000 + 76000                            / 2 = 88000"
+        //                                          "100000 + 0                                / 2 = 50000"
+        //                                                                    "Positive half" is ">= 50000"
+        //                                              "10 + 9                                / 2 = 9 (9.5)"
+        //                                              "10 + 7                                / 2 = 8 (8.5)"
+        //                                              "10 + 0                                / 2 = 5"
+        //                                                                    "Positive half" is ">= 5"
+        
+        // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 to prevent any integer truncation error 
+        next_timeout_ticks = (time32_t) (((random_consts. random_val_max_us + random_unsigned32_in_range_us) * XS1_TIMER_MHZ) / 2); // Above half
+    } else { //                                                               "Negative half" is " < 50000"
+        //                                          "100000 - 24000                            / 2 = 38000"
+        //                                          "100000 - 99999                            / 2 =     0 (0.5)"
+        //                                                                    "Negative half" is " < 5"
+        //                                              "10 - 2                                / 2 = 4"
+        //                                              "10 - 9                                / 2 = 0 (0.5)"
+        
+        // Multiplying by XS1_TIMER_MHZ BEFORE dividing by 2 to prevent any integer truncation error 
+        next_timeout_ticks = (time32_t) (((random_consts. random_val_max_us - random_unsigned32_in_range_us) * XS1_TIMER_MHZ) / 2); // Below half
+    }
+
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range. Overflow or underflow not possible
+
+    return next_timeout_ticks;
+} // get_until_next_timeout_ticks_symmentric
+
+
+time32_t get_until_next_timeout_ticks_rng (
+    const random_unsigned32_t random_number,
+    const random_consts_t     random_consts)                                  
+{ 
+    time32_t next_timeout_ticks;                        
+
+    const random_unsigned32_t random_unsigned32_in_range_us = // "[1..(99999+1)]-1 = [0 - 99999]" or "[1..(9+1)]-1 = [0 - 9]"
+        (random_number % (random_consts. random_val_max_us + random_consts. timer_factor_knockcome_us)) - 
+        random_consts. timer_factor_knockcome_us;                                                                                                  
+
+    next_timeout_ticks = (time32_t) random_unsigned32_in_range_us * XS1_TIMER_MHZ;
+
+    xassert ((next_timeout_ticks bitand INT_MIN) == 0); // Delta is positive, ie. half time32_t range. Overflow or underflow not possible
+
+    return next_timeout_ticks;
+} // get_until_next_timeout_ticks_rng
+
 
 // Taken from  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/examples/app_random/src/main.c 
 // See XMOS Ticket 339260 "lib_random seems to give repeated pattern" by me 26Jul2026
