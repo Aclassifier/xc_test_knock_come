@@ -321,30 +321,6 @@ uint32_t find_max_consecutive_allbits_xorshift32
 // =========================================================================================================================
 
 // Different methods of random_create_generator needed during development phase
-//
-random_unsigned32_t random_create_generator_old (
-    const random_unsigned32_t random_seed) 
-{
-    xassert (random_seed != 0);
-    random_unsigned32_t random_generator = random_seed; // Some value when not used
-    
-    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
-        random_generator = random_create_generator_from_seed(random_seed);
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
-        random_generator = random_create_generator_from_hw_seed(random_seed); 
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
-        random_generator = random_seed;
-    #elif (USE_RANDOM_TYPE == XORSHIFT32)
-        random_generator = random_seed;  
-    #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
-        random_generator = random_seed; 
-    #else
-        #error
-    #endif
-
-    return random_generator; // See random_ssgn
-} // random_create_generator_old
-
 
 random_unsigned32_t random_create_generator (
     const use_random_type_e   use_random_type,
@@ -385,28 +361,6 @@ random_unsigned32_t random_create_generator (
 
 // Different methods of random_get_random_number_special needed during development phase
 //
-random_unsigned32_t random_get_random_number_special_old (
-    const use_random_type_e use_random_type,
-    randoms_t               &randoms)
-{
-    #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
-        random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
-        random_get_random_number (randoms.random_ssgn); 
-    #elif (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
-        next_random_number_symmetric(randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
-    #elif (USE_RANDOM_TYPE == XORSHIFT32)
-        xorshift32 (randoms); // // Updates randoms.random_ssgn only
-    #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
-        next_random_number_symmetric(randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
-    #else
-        #error
-    #endif
-
-    return randoms.random_ssgn;
-} // random_get_random_number_special_old
-
-
 random_unsigned32_t random_get_random_number_special (
     const use_random_type_e use_random_type,
     randoms_t               &randoms)
@@ -421,7 +375,7 @@ random_unsigned32_t random_get_random_number_special (
         } break;
             
         case use_lib_random_sw_seed_symmetric: {
-            next_random_number_symmetric(randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
+            next_random_number_symmetric (use_random_type, randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
         } break;
             
         case use_xorshift32: {
@@ -429,7 +383,7 @@ random_unsigned32_t random_get_random_number_special (
         } break;
             
         case use_xorshift32_symmetric: {
-            next_random_number_symmetric(randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
+            next_random_number_symmetric (use_random_type, randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
         } break;
             
         default: {
@@ -486,7 +440,11 @@ void init_random_consts (
 // xorshift32 does not pass the BigCrush test suite, as would not this function either, then.
 // But if like xorwow were used in next_symmetric_random_get_random_number, maybe?
 //
-void next_random_number_symmetric (randoms_t &randoms) {
+void next_random_number_symmetric (
+    const use_random_type_e use_random_type,
+    randoms_t               &randoms) 
+
+    {
     if (randoms.use_random_negated) {
         // Use negative value of last positive
         // This makes it symmetric around zero, seen as signed, however..
@@ -513,13 +471,13 @@ void next_random_number_symmetric (randoms_t &randoms) {
         
         while (randoms.use_random_negated == false) {  // Either it goes to true or the xassert
             
-            #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC)
+            if (use_random_type == use_lib_random_sw_seed_symmetric) {
                 random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
-            #elif (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC)
+            } else if (use_random_type == use_xorshift32_symmetric) {
                 xorshift32 (randoms); // Updates randoms.random_ssgn
-            #else
-                xassert (false); // One that's not _SYMMETRIC
-            #endif
+            } else {
+                xassert (false); // One that's not symmetric
+            }
             // Was < (UINT_MAX/2)) { which spelt out to < 0x7fffffff which should have been <=
             if ((randoms.random_ssgn bitand INT_MIN) != 0) { // INT_MIN = 0x80000000, ie bit32 set for negative numbers in 2's complement
                 // Use postive value, but next time, use the negative value of it

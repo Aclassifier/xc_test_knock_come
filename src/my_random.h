@@ -7,19 +7,6 @@
 
  #pragma once
 
-// typedef enum compiles but preprocessor always takes first #if, see
-// https://www.teigfam.net/oyvind/home/technology/165-xc-code-examples/#no_enum
-//
-#define LIB_RANDOM_SW_SEED           0 // see XMOS Ticket 339260
-#define LIB_RANDOM_HW_SEED           1 // --''--
-#define LIB_RANDOM_SW_SEED_SYMMETRIC 2 // --''-- Creates every other positive and negative value
-#define XORSHIFT32                   3 // Creates unique values with xorshift32
-#define XORSHIFT32_SYMMETRIC         4 // --''-- Creates every other positive and negative value with xorshift32
-
-#define USE_RANDOM_TYPE XORSHIFT32_SYMMETRIC // Observe VS Code colour coding shades non-used code
-
-#define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
-
 typedef enum {
     use_lib_random_sw_seed,
     use_lib_random_hw_seed, 
@@ -124,6 +111,8 @@ void init_random_consts (
     const random_unsigned32_t random_val_max_us,
     const random_unsigned32_t timer_factor_knockcome_us);
 
-void next_random_number_symmetric(randoms_t &randoms);
+void next_random_number_symmetric (
+    const use_random_type_e use_random_type,
+    randoms_t               &randoms);
 
 int lib_random_example();

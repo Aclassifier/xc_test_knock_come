@@ -51,13 +51,15 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.951" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.952" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
-11Aug2026 0.951
+11Aug2026 0.952
+All bad coupling from xc_test_knock_come.xc with conditional compilation in my_random.xc has been removed. (DO_CNT is internal)
+
 Another usage of USE_RANDOM_TYPE in my_random.xc removed, so new random_create_generator and random_get_random_number_special
 11Aug2026 0.950
 Moved RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US out of my_random.xc with random_consts_t.
@@ -85,13 +87,14 @@ Comments
 
 #endif // NOT_CODE_FOLD COMMITS
 
-#if _FOLD // ========== WHICH main TO RUN ==========
+#if _FOLD // ========== WHICH main AND random type TO RUN ==========
 #define DO_KNOCK_COME               0 // VERSION_STR makes sense
 #define DO_LIB_RANDOM_EXAMPLE       1 // --''--
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
-#define DO_COMPILE_RUN_MAIN DO_KNOCK_COME // Observe VS Code colour coding shades non-used code
+#define DO_COMPILE_RUN_MAIN DO_KNOCK_COME  
+#define USE_RANDOM_TYPE     use_xorshift32_symmetric 
 #endif // _FOLD WHICH..
 
 #if _FOLD // ========== #defines ==========
@@ -195,22 +198,20 @@ Comments
 //
 #define MAX_SUM_CNT 1000 // Must be an even number if USE_SYMMETRIC:
 
-#if (USE_SYMMETRIC)
-    #if (((MAX_SUM_CNT % 2) != 0) or ((RANDOM_VAL_MAX_US % 2) != 0))
-        #error Symmetric pseudorandom algorithm values must be even
-    #endif
+#if (((MAX_SUM_CNT % 2) != 0) or ((RANDOM_VAL_MAX_US % 2) != 0))
+    #error Symmetric pseudorandom algorithm values must be even
 #endif
 
 #define DATA_FIRST_AND_INC 1
 //
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
-#define PRINT_WELCOME_BANNER  print_welcome_banner() // Always print this
+#define PRINT_WELCOME_BANNER(use_random_type) print_welcome_banner(use_random_type) // Always print this
 
 #if (SPEED_SLOW_AND_PRINT_12)
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms) print_and_clear_debug_cnts(cnts,randoms) 
+    #define PRINT_AND_CLEAR_DEBUG_CNTS(use_random_type,cnts,randoms) print_and_clear_debug_cnts(use_random_type,cnts,randoms) 
 #else // SPEED_FAST_AND_SCOPE
-    #define PRINT_AND_CLEAR_CNTS(cnts,randoms)
+    #define PRINT_AND_CLEAR_DEBUG_CNTS(use_random_type,cnts,randoms)
 #endif
 
 #if (TEST_DEADLOCK_NO_STREAMING_CHAN==1)
@@ -407,7 +408,10 @@ void init_debug_cnts (cnts_t &cnts)
 } // init_debug_cnts
 
 
-void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
+void print_and_clear_debug_cnts (
+    const use_random_type_e use_random_type,
+    cnts_t                  &cnts, 
+    randoms_t               &randoms)
 {
     #if (PRINT_OR_SCOPE == SPEED_SLOW_AND_PRINT)
         unsigned medium_us = 0;
@@ -417,12 +421,14 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 
         char max_loop_drop_neg_cnt_str[25]; // SYM means symmetric random properties
         sprintf (max_loop_drop_neg_cnt_str,   "SYM(P %u N %u/%u)\t", randoms.max_loop_pos_cnt, randoms.max_loop_neg_cnt, randoms.max_loop_neg_cnt_ever);
+
+        const bool use_symmetric = ((use_random_type == use_lib_random_sw_seed_symmetric) or (use_random_type == use_xorshift32_symmetric));
        
         // From v0.941
         // M: SYMCNT(P 1 N 9/9)        RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.09s sum, RND CLK 50.079ms mean
         //       tm means task_master
         printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%0*us sum, RND CLK %u.%0*ums mean\n",
-            USE_SYMMETRIC ? max_loop_drop_neg_cnt_str : "",
+            use_symmetric ? max_loop_drop_neg_cnt_str : "",
             cnts.rec_cnt,
             cnts.sent_cnt,
             cnts.sum_rec_cnt,
@@ -454,7 +460,7 @@ void print_and_clear_debug_cnts (cnts_t &cnts, randoms_t &randoms)
 } // print_and_clear_debug_cnts
 
 
-void print_welcome_banner()
+void print_welcome_banner (const use_random_type_e use_random_type)
 {
     printf ("XCC %u.%u KNOCK-COME v%s on date %s %s\nTime random max %u us %scnt events at %u%s\nOrdered select Master %u Slave %u PRINT_OR_SCOPE %u\nDeadlock if LEDS stop to count (Teig)\n",
             XCC_VERSION_MAJOR, XCC_VERSION_MINOR,
@@ -468,7 +474,7 @@ void print_welcome_banner()
             USE_ORDERED_PRI_SELECT_SLAVE,
             PRINT_OR_SCOPE);
 
-    printf ("DO_COMPILE_RUN_MAIN %u USE_RANDOM_TYPE %u\n\n", DO_COMPILE_RUN_MAIN, USE_RANDOM_TYPE);
+    printf ("DO_COMPILE_RUN_MAIN %u USE_RANDOM_TYPE %u\n\n", DO_COMPILE_RUN_MAIN, use_random_type);
 } // print_welcome_banner
 
 
@@ -535,7 +541,7 @@ void task_master (
     cnts_t             cnts;
     randoms_t          randoms;
     random_consts_t    random_consts;
-    use_random_type_e  use_random_type = use_xorshift32_symmetric;
+    use_random_type_e  use_random_type = USE_RANDOM_TYPE;
 
     init_random_consts (random_consts, RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US); 
     init_randoms       (use_random_type, randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
@@ -545,10 +551,10 @@ void task_master (
     cnts.from_10ms_delta_print_10ms = 0;
     exercise_p1_out_purple_master (p1_out_purple_master);
 
-    PRINT_WELCOME_BANNER;
+    PRINT_WELCOME_BANNER (use_random_type);
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
-    PRINT_AND_CLEAR_CNTS (cnts, randoms);
+    PRINT_AND_CLEAR_DEBUG_CNTS (use_random_type, cnts, randoms);
 
     data_ch_ab_bidir.data.data_from_task_b_master = 0;
 
@@ -599,13 +605,13 @@ void task_master (
                 cnts.num_ticks++; // to 1 the first time, etc.
             
                 #if (PRINT_RANDOM_VALS_MASTER == 1) // Print (not in slave)
-                    #if (USE_SYMMETRIC)
+                    if ((use_random_type == use_lib_random_sw_seed_symmetric) or (use_random_type == use_xorshift32_symmetric)) {
                         printf ("%s%d\n", 
-                        ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
-                        (signed)random_number); 
-                    #else
+                            ((random_number bitand INT_MIN) == 0) ? " " : "", // space when positive, %d-sign when negative
+                            (signed)random_number); 
+                    } else {
                         printf ("%u\n", random_number);
-                    #endif
+                    }
                 #endif
 
                 data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
@@ -622,7 +628,7 @@ void task_master (
 
                 #if (SPEED_SLOW_AND_PRINT_12)
                     if (cnts.num_ticks == MAX_SUM_CNT) { 
-                        PRINT_AND_CLEAR_CNTS (cnts, randoms);
+                        PRINT_AND_CLEAR_DEBUG_CNTS (use_random_type, cnts, randoms);
                     } else {}
                 #endif
             } break;
@@ -650,7 +656,7 @@ void task_slave (
     unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t          randoms;
     random_consts_t    random_consts;
-    use_random_type_e  use_random_type = use_xorshift32_symmetric;
+    use_random_type_e  use_random_type = USE_RANDOM_TYPE;
 
     init_random_consts (random_consts, RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US); 
     init_randoms       (use_random_type, randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
