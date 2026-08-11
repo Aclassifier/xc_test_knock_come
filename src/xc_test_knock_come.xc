@@ -58,9 +58,8 @@
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
 11Aug2026 0.952
-All bad coupling from xc_test_knock_come.xc with conditional compilation in my_random.xc has been removed. (DO_CNT is internal)
-
-Another usage of USE_RANDOM_TYPE in my_random.xc removed, so new random_create_generator and random_get_random_number_special
+* All bad coupling from xc_test_knock_come.xc with conditional compilation in my_random.xc has been removed. (DO_CNT is internal)
+* Another usage of USE_RANDOM_TYPE in my_random.xc removed, so new random_create_generator and random_get_random_number_special
 11Aug2026 0.950
 Moved RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US out of my_random.xc with random_consts_t.
 Same for USE_SYMMETRIC usage in my_random.xc
