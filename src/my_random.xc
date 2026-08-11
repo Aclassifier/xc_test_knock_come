@@ -23,7 +23,7 @@
     #include "my_random.h"
 #endif
 
-#define XMOS_ISSUE_11AUG2026 1
+#define XMOS_ISSUE_11AUG2026 0
 
 #define DO_FIND_32BITS_ONES_CNT  1 // Standard up to 0.947
 #define DO_FIND_32BITS_ZEROS_CNT 2
@@ -405,10 +405,10 @@ void init_randoms (
     const random_unsigned32_t random_seed)
 {
     #if (XMOS_ISSUE_11AUG2026 == 1)
-        #warning XMOS_ISSUE_11AUG2026
+        #warning XMOS_ISSUE_11AUG2026 (Ticket # 341285 at XMOS)
         // Both compile:
-        randoms.random_ssgn = random_create_generator (use_random_type, random_seed);
-        randoms.random_ssgn = random_create_generator (random_seed, use_random_type); // Run-time crashes on xassert
+        randoms.random_ssgn = random_create_generator (use_random_type, random_seed); // Correct
+        randoms.random_ssgn = random_create_generator (random_seed, use_random_type); // Compiles and runs with run-time crash on xassert in random_create_generator
     #else
         randoms.random_ssgn = random_create_generator (use_random_type, random_seed); 
     #endif    

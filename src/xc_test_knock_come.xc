@@ -51,13 +51,14 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.953" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.954" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
-11Aug2026 0.953 XMOS_ISSUE_11AUG2026 is new and 1
+11Aug2026 0.954 XMOS_ISSUE_11AUG2026 is 0 (will be altogether removed in later commit)
+11Aug2026 0.953 XMOS_ISSUE_11AUG2026 is new and 1 (generated Ticket # 341285 at XMOS)
 11Aug2026 0.952
 * All bad coupling from xc_test_knock_come.xc with conditional compilation in my_random.xc has been removed. (DO_CNT is internal)
 * Another usage of USE_RANDOM_TYPE in my_random.xc removed, so new random_create_generator and random_get_random_number_special
