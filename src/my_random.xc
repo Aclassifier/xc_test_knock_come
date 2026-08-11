@@ -23,6 +23,8 @@
     #include "my_random.h"
 #endif
 
+#define XMOS_ISSUE_11AUG2026 1
+
 #define DO_FIND_32BITS_ONES_CNT  1 // Standard up to 0.947
 #define DO_FIND_32BITS_ZEROS_CNT 2
 //
@@ -351,7 +353,7 @@ random_unsigned32_t random_create_generator (
         } break;
             
         default: {
-            xassert(0); 
+            xassert(0); // XMOS_ISSUE_11AUG2026 crashes here with value 5678
         } break;
     }
 
@@ -402,8 +404,14 @@ void init_randoms (
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed)
 {
-    randoms.random_ssgn = random_create_generator (use_random_type, random_seed); // [TODO] XMOS 11Aug2026 0.950 I did not get compiler error when params were switched
-    
+    #if (XMOS_ISSUE_11AUG2026 == 1)
+        #warning XMOS_ISSUE_11AUG2026
+        // Both compile:
+        randoms.random_ssgn = random_create_generator (use_random_type, random_seed);
+        randoms.random_ssgn = random_create_generator (random_seed, use_random_type); // Run-time crashes on xassert
+    #else
+        randoms.random_ssgn = random_create_generator (use_random_type, random_seed); 
+    #endif    
     randoms.use_random_negated        = false; 
     randoms.random_ssgn_prev          = randoms.random_ssgn;
     randoms.max_loop_pos_cnt          = 0;
