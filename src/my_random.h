@@ -20,6 +20,14 @@
 
 #define USE_SYMMETRIC ((USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED_SYMMETRIC) or (USE_RANDOM_TYPE == XORSHIFT32_SYMMETRIC))
 
+typedef enum {
+    use_lib_random_sw_seed,
+    use_lib_random_hw_seed, 
+    use_lib_random_sw_seed_symmetric, 
+    use_xorshift32, 
+    use_xorshift32_symmetric
+} use_random_type_e;
+
 typedef uint32_t random_unsigned32_t; // uint32_t (random_get_random_number takes unsigned)
 typedef int32_t  random_signed32_t;
 
@@ -90,9 +98,13 @@ uint32_t find_max_consecutive_allbits_xorshift32
 
 random_unsigned32_t xorshift32 (randoms_t &randoms);
 
-random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed);
+random_unsigned32_t random_create_generator (
+    const use_random_type_e   use_random_type,
+    const random_unsigned32_t random_seed);
 
-random_unsigned32_t random_get_random_number_special (randoms_t &randoms);
+random_unsigned32_t random_get_random_number_special (
+    const use_random_type_e use_random_type,
+    randoms_t               &randoms);
 
 time32_t get_until_next_timeout_ticks_symmentric (
     const random_unsigned32_t random_number,
@@ -103,6 +115,7 @@ time32_t get_until_next_timeout_ticks_rng (
     const random_consts_t     random_consts);
 
 void init_randoms (
+    const use_random_type_e   use_random_type,   
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed);
 

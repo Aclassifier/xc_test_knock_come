@@ -51,12 +51,14 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.950" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.951" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+11Aug2026 0.951
+Another usage of USE_RANDOM_TYPE in my_random.xc removed, so new random_create_generator and random_get_random_number_special
 11Aug2026 0.950
 Moved RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US out of my_random.xc with random_consts_t.
 Same for USE_SYMMETRIC usage in my_random.xc
@@ -500,14 +502,15 @@ void exercise_p1_out_purple_master (port out p1_out_purple_master) {
 
 
 time32_t get_until_next_timeout_ticks (
+    const use_random_type_e   use_random_type,
     const random_unsigned32_t random_number,
     const random_consts_t     random_consts)
 {
-    #if (USE_SYMMETRIC)
+    if ((use_random_type == use_lib_random_sw_seed_symmetric) or (use_random_type == use_xorshift32_symmetric)) {
         return get_until_next_timeout_ticks_symmentric (random_number, random_consts);
-    #else
-        return get_until_next_timeout_ticks_rng (random_number, random_consts);
-    #endif
+    } else {
+       return get_until_next_timeout_ticks_rng (random_number, random_consts);
+    }
 }
 
 #endif // _FOLD functions..
@@ -532,9 +535,10 @@ void task_master (
     cnts_t             cnts;
     randoms_t          randoms;
     random_consts_t    random_consts;
+    use_random_type_e  use_random_type = use_xorshift32_symmetric;
 
     init_random_consts (random_consts, RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US); 
-    init_randoms       (randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
+    init_randoms       (use_random_type, randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
     
     init_debug_cnts (cnts); // Also sets print_time_ticks
     cnts.print_tmr :> cnts.print_time_ticks;  
@@ -587,8 +591,8 @@ void task_master (
 
             case tmr when timerafter (time_ticks) :> void : {       
                 const random_unsigned32_t random_number = 
-                    random_get_random_number_special (randoms);
-                time32_t delta_ticks = get_until_next_timeout_ticks (random_number, random_consts);
+                    random_get_random_number_special (use_random_type, randoms);
+                time32_t delta_ticks = get_until_next_timeout_ticks (use_random_type, random_number, random_consts);
                 time_ticks          += delta_ticks;
 
                 cnts.sum_ticks_u64 += (uint64_t) delta_ticks;
@@ -646,9 +650,10 @@ void task_slave (
     unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t          randoms;
     random_consts_t    random_consts;
+    use_random_type_e  use_random_type = use_xorshift32_symmetric;
 
     init_random_consts (random_consts, RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US); 
-    init_randoms       (randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
+    init_randoms       (use_random_type, randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
     data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
@@ -697,7 +702,7 @@ void task_slave (
 
             case tmr when timerafter (time_ticks) :> void: {
                 time_ticks += 
-                    get_until_next_timeout_ticks (random_get_random_number_special (randoms), random_consts);
+                    get_until_next_timeout_ticks (use_random_type, random_get_random_number_special (use_random_type, randoms), random_consts);
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
                     ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words

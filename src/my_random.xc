@@ -44,8 +44,6 @@ typedef struct { // _con = consecutive
 // xorshift32
 // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs"
 //
-// For use when USE_RANDOM_TYPE is XORSHIFT32 or XORSHIFT32_SYMMETRIC
-//
 // Started from https://en.wikipedia.org/wiki/Xorshift#Example_implementation
 // Linear polynomial function, a subset of the "clean" LFSR (linear-feedback-shift register).
 // It does not test the BigCrush test suite.
@@ -324,7 +322,9 @@ uint32_t find_max_consecutive_allbits_xorshift32
 
 // Different methods of random_create_generator needed during development phase
 //
-random_unsigned32_t random_create_generator (const random_unsigned32_t random_seed) {
+random_unsigned32_t random_create_generator_old (
+    const random_unsigned32_t random_seed) 
+{
     xassert (random_seed != 0);
     random_unsigned32_t random_generator = random_seed; // Some value when not used
     
@@ -343,13 +343,52 @@ random_unsigned32_t random_create_generator (const random_unsigned32_t random_se
     #endif
 
     return random_generator; // See random_ssgn
+} // random_create_generator_old
+
+
+random_unsigned32_t random_create_generator (
+    const use_random_type_e   use_random_type,
+    const random_unsigned32_t random_seed) 
+{
+    xassert (random_seed != 0);
+    random_unsigned32_t random_generator = random_seed; // Some value when not used
+    
+    switch (use_random_type) {
+        case use_lib_random_sw_seed: {
+            random_generator = random_create_generator_from_seed (random_seed);
+        } break;
+            
+        case use_lib_random_hw_seed: {
+            random_generator = random_create_generator_from_hw_seed (); 
+        } break;
+            
+        case use_lib_random_sw_seed_symmetric: {
+            random_generator = random_seed;
+        } break;
+            
+        case use_xorshift32: {
+            random_generator = random_seed;  
+        } break;
+            
+        case use_xorshift32_symmetric: {
+            random_generator = random_seed; 
+        } break;
+            
+        default: {
+            xassert(0); 
+        } break;
+    }
+
+    return random_generator; // See random_ssgn
 } // random_create_generator
 
 
 // Different methods of random_get_random_number_special needed during development phase
 //
-random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
-
+random_unsigned32_t random_get_random_number_special_old (
+    const use_random_type_e use_random_type,
+    randoms_t               &randoms)
+{
     #if (USE_RANDOM_TYPE == LIB_RANDOM_SW_SEED)
         random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
     #elif (USE_RANDOM_TYPE == LIB_RANDOM_HW_SEED)
@@ -365,16 +404,51 @@ random_unsigned32_t random_get_random_number_special (randoms_t &randoms) {
     #endif
 
     return randoms.random_ssgn;
+} // random_get_random_number_special_old
+
+
+random_unsigned32_t random_get_random_number_special (
+    const use_random_type_e use_random_type,
+    randoms_t               &randoms)
+{
+    switch (use_random_type) {
+        case use_lib_random_sw_seed: {
+            random_get_random_number (randoms.random_ssgn); // randoms.random_ssgn old value in and new value out (ignoring return value)
+        } break;
+            
+        case use_lib_random_hw_seed: {
+            random_get_random_number (randoms.random_ssgn); 
+        } break;
+            
+        case use_lib_random_sw_seed_symmetric: {
+            next_random_number_symmetric(randoms); // Uses random_get_random_number internally. Updates all of randoms because it needs it itself
+        } break;
+            
+        case use_xorshift32: {
+            xorshift32 (randoms); // // Updates randoms.random_ssgn only
+        } break;
+            
+        case use_xorshift32_symmetric: {
+            next_random_number_symmetric(randoms); // Uses xorshift32 internally. Updates all of randoms because it needs it itself
+        } break;
+            
+        default: {
+            xassert(0);
+        } break;
+    }
+
+    return randoms.random_ssgn;
 } // random_get_random_number_special
 
 
 // Only called at startup of tasks
 //
 void init_randoms (
+    const use_random_type_e   use_random_type,     
     randoms_t                 &randoms,
     const random_unsigned32_t random_seed)
 {
-    randoms.random_ssgn = random_create_generator (random_seed); 
+    randoms.random_ssgn = random_create_generator (use_random_type, random_seed); // [TODO] XMOS 11Aug2026 0.950 I did not get compiler error when params were switched
     
     randoms.use_random_negated        = false; 
     randoms.random_ssgn_prev          = randoms.random_ssgn;
