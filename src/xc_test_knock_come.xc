@@ -51,12 +51,14 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.956" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.957"
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+13Aug2026 0.957 
+Printing out VERSION_STR for all DO_COMPILE_RUN_MAIN as well
 13Aug2026 0.956 
 With DO_FIND_32BITS_DROP_CNT_MAX find_max_consecutive_allbits_xorshift32 log after 36 hours showed that all bits have 
 a max length og zeros of 31, whereas for ones all bits have max lengths of 32, using xorshift32. Concistent with theory  
@@ -797,6 +799,7 @@ int main()
 
 int main()
 {
+    printf ("DO_LIB_RANDOM_EXAMPLE v%s\n", VERSION_STR);
     lib_random_example();
     return 0;
 } // main
@@ -808,6 +811,7 @@ int main()
   
 int main()
 {
+    printf ("DO_FIND_BIT31_DROP_CNT_MAX v%s\n", VERSION_STR);
     find_max_consecutive_bit31_xorshift32 (1, p1_out_blue_slave);
     return 0;
 } // main
@@ -819,6 +823,7 @@ int main()
 
 int main()
 {
+    printf ("DO_FIND_32BITS_DROP_CNT_MAX v%s\n", VERSION_STR);
     find_max_consecutive_allbits_xorshift32 (1, p1_out_blue_slave);
     return 0;
 } // main
