@@ -58,7 +58,7 @@
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
 13Aug2026 0.957
-* Spelling
+* Spelling and layout
 * Printing out VERSION_STR for all DO_COMPILE_RUN_MAIN as well
 13Aug2026 0.956 
 With DO_FIND_32BITS_DROP_CNT_MAX find_max_consecutive_allbits_xorshift32 log after 36 hours showed that all bits have 
@@ -312,9 +312,9 @@ typedef struct {
 
 #if _FOLD // ========== Knock-Come state change ==========
 
+// The callee TASK starts with KNOCK and later SENDS data
 KnockCome_State_e
-Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS data
-(
+Slave_Set_KnockCome_State (
     const KnockCome_State_e PresentState,
     const KnockCome_State_e NewState)
 {
@@ -348,9 +348,9 @@ Slave_Set_KnockCome_State // The callee TASK starts with KNOCK and later SENDS d
 } // Slave_Set_KnockCome_State
 
 
+// The callee TASK responds with COME and then RECEIVES
 KnockCome_State_e
-Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIVES
-(
+Master_Set_KnockCome_State (
     const KnockCome_State_e PresentState,
     const KnockCome_State_e NewState)
 {
@@ -387,6 +387,7 @@ Master_Set_KnockCome_State // The callee TASK responds with COME and then RECEIV
 
 #if _FOLD // ========== print and debug functions ==========
 
+
 void reset_debug_cnts (cnts_t &cnts)
 {
     cnts.sent_cnt = 0;
@@ -400,6 +401,7 @@ void reset_debug_cnts (cnts_t &cnts)
     cnts.num_ticks     = 0;
 } // reset_debug_cnts
 
+
 void reset_debug_cnts_arr (cnts_t &cnts)
 {
     cnts.iof_arr = 0;
@@ -407,6 +409,7 @@ void reset_debug_cnts_arr (cnts_t &cnts)
         cnts.arr_delta_print_10ms [ix] = 0;
     }
 } // init_debug_cnts
+
 
 void init_debug_cnts (cnts_t &cnts)
 {
@@ -507,8 +510,8 @@ void print_ordered_banner()
 
 // To assure correct scope channel for pin. Start scope in roll mode and auto trig
 //
-void exercise_p1_out_purple_master (port out p1_out_purple_master) {
-    
+void exercise_p1_out_purple_master (port out p1_out_purple_master) 
+{    
     for (unsigned ix=0; ix<100; ix++) {
         p1_out_purple_master <: ix;
         delay_milliseconds (10); // 10 ms * 100 = 1 sec, so 50 pulses,
@@ -653,8 +656,8 @@ void task_master (
 // Must be able to accept DATA from task_master any time.
 //
 void task_slave (
-    chanend           ch_come_or_sdata,       // ch_come_or_sdata_t
-    STREAMING chanend ch_knock,       // ch_knock_t
+    chanend           ch_come_or_sdata,  // ch_come_or_sdata_t
+    STREAMING chanend ch_knock,          // ch_knock_t
     port out          p1_out_blue_slave) // bit0
 {
     timer              tmr;
@@ -790,6 +793,7 @@ int main()
                 p4_leds);             // LEDS for observing activity
         // (*) Same tile[0] so streaming chan does not occupy a route through the HW switch within the scope of the task
     }
+
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_KNOCK_COME)
@@ -802,6 +806,7 @@ int main()
 {
     printf ("DO_LIB_RANDOM_EXAMPLE v%s\n", VERSION_STR);
     lib_random_example();
+
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_LIB_RANDOM_EXAMPLE)
@@ -814,6 +819,7 @@ int main()
 {
     printf ("DO_FIND_BIT31_DROP_CNT_MAX v%s\n", VERSION_STR);
     find_max_consecutive_bit31_xorshift32 (1, p1_out_blue_slave);
+
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_FIND_BIT31_DROP_CNT_MAX)
@@ -826,6 +832,7 @@ int main()
 {
     printf ("DO_FIND_32BITS_DROP_CNT_MAX v%s\n", VERSION_STR);
     find_max_consecutive_allbits_xorshift32 (1, p1_out_blue_slave);
+
     return 0;
 } // main
 #endif // (DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX)

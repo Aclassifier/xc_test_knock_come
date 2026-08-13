@@ -15,7 +15,8 @@
 
 // Returns log10(num) or number of trailing zeroes
 //
-int get_trailing_zeros (const scale_factor_t num) {
+int get_trailing_zeros (const scale_factor_t num) 
+{
     switch (num) {
         case scale_unity:            return 0;
         case scale_ten:              return 1;
@@ -28,15 +29,18 @@ int get_trailing_zeros (const scale_factor_t num) {
             xassert(false); // If looped then remove this
         } break;
     }
+
     return 0; // // ..compiler requires this even if xassert never returns
-}
+} // get_trailing_zeros
 
 
-extern inline int get_integer_part (const unsigned value, const unsigned divisor) {
+extern inline int get_integer_part (const unsigned value, const unsigned divisor) 
+{
     return ((int) (value / divisor));
-}
+} // get_integer_part
 
 
-extern inline int get_fraction_part (const unsigned value, const unsigned modulus) {
+extern inline int get_fraction_part (const unsigned value, const unsigned modulus) 
+{
     return ((int) (value % modulus)); 
-}
+} // get_fraction_part

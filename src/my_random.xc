@@ -58,6 +58,7 @@ random_unsigned32_t xorshift32 (randoms_t &randoms) {
 	x ^= x >> 17;
 	x ^= x << 5;
     randoms.random_ssgn = x;
+
 	return x; // aliases randoms.random_ssgn. Somewhat strange programming practice for me
 }
 
@@ -123,8 +124,8 @@ void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
 //
 uint32_t find_max_consecutive_bit31_xorshift32 
     (const uint32_t initial_seed,
-    port out        p1_out_blue) {
-    
+    port out        p1_out_blue) 
+{    
     stats_t  stats;
     timer    tmr;
     time32_t time_ticks;
@@ -272,8 +273,8 @@ Sorted increasing in "time" and with hex values.
 */
 uint32_t find_max_consecutive_allbits_xorshift32 
     (const uint32_t initial_seed, // is 1
-    port out        p1_out_blue) {
-   
+    port out        p1_out_blue) 
+{   
     timer    tmr;
     time32_t time_ticks;
     unsigned num_seconds = 0;
@@ -340,7 +341,6 @@ uint32_t find_max_consecutive_allbits_xorshift32
     }
     
     return stats[0].bit_con_seq_cnt_max;
-
 } // find_max_consecutive_allbits_xorshift32
 
 
@@ -477,7 +477,7 @@ void init_random_consts (
 {
     random_consts.random_val_max_us         = random_val_max_us;
     random_consts.timer_factor_knockcome_us = timer_factor_knockcome_us;
-}
+} // init_random_consts
 
 
 // ============================================================================
@@ -501,8 +501,7 @@ void init_random_consts (
 void next_random_number_symmetric (
     const use_random_type_e use_random_type,
     randoms_t               &randoms) 
-
-    {
+{
     if (randoms.use_random_negated) {
         // Use negative value of last positive
         // This makes it symmetric around zero, seen as signed, however..
@@ -560,7 +559,6 @@ void next_random_number_symmetric (
                 xassert (randoms.max_loop_neg_cnt <= DROP_BIT_CNT_MAX);
             }
         }
-
     }
 } // next_symmetric_random_get_random_number
 
@@ -651,7 +649,8 @@ time32_t get_until_next_timeout_ticks_rng (
 // Taken from  /Users/teig/Documents/_Dokumenter/Oyvind/_PROSJEKT/GitHub/workspace/lib_random/examples/app_random/src/main.c 
 // See XMOS Ticket 339260 "lib_random seems to give repeated pattern" by me 26Jul2026
 //
-int lib_random_example() {
+int lib_random_example() 
+{
     #define RAND_SEED (8369)
     #define RAND_BUF_LEN (256) // Was 8. Since byte, it should not be repeated
 
@@ -693,6 +692,5 @@ int lib_random_example() {
     printstr("\n= done =\n");
 
     return 0;
-
     // Last log seen here is with v0.935
-}
+} // lib_random_example
