@@ -180,7 +180,7 @@ void init_con_sec_log (con_sec_log_t &con_sec_log) {
 // The two logs show that 
 // max consecutive ones  is 32 for all bits, and 
 // max consecutibe zeros is 31 for all bits.
-// 32 vs 31 is concistent with theory, since random value zero (0x00000000) is not part of a pseudo random generator
+// 32 vs 31 is consistent with theory, since random value zero (0x00000000) is not part of a pseudo random generator
 // xorshift32 since 0 xor 0 is 0, and it would have stayed zero forever.
 // 
 /* With DO_FIND_32BITS_ONES_CNT (standard up to then)

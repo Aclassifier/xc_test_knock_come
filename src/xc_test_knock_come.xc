@@ -57,11 +57,12 @@
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
-13Aug2026 0.957 
-Printing out VERSION_STR for all DO_COMPILE_RUN_MAIN as well
+13Aug2026 0.957
+* Spelling
+* Printing out VERSION_STR for all DO_COMPILE_RUN_MAIN as well
 13Aug2026 0.956 
 With DO_FIND_32BITS_DROP_CNT_MAX find_max_consecutive_allbits_xorshift32 log after 36 hours showed that all bits have 
-a max length og zeros of 31, whereas for ones all bits have max lengths of 32, using xorshift32. Concistent with theory  
+a max length og zeros of 31, whereas for ones all bits have max lengths of 32, using xorshift32. Consistent with theory  
 
 11Aug2026 0.955 Testing with DO_FIND_32BITS_DROP_CNT_MAX
 11Aug2026 0.954 XMOS_ISSUE_11AUG2026 is 0 (will be altogether removed in later commit)
