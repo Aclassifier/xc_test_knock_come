@@ -51,12 +51,17 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.954" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
+#define VERSION_STR "0.956" // Strictly only for DO_KNOCK_COME and DO_LIB_RANDOM_EXAMPLE
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+13Aug2026 0.956 
+With DO_FIND_32BITS_DROP_CNT_MAX find_max_consecutive_allbits_xorshift32 log after 36 hours showed that all bits have 
+a max length og zeros of 31, whereas for ones all bits have max lengths of 32, using xorshift32. Concistent with theory  
+
+11Aug2026 0.955 Testing with DO_FIND_32BITS_DROP_CNT_MAX
 11Aug2026 0.954 XMOS_ISSUE_11AUG2026 is 0 (will be altogether removed in later commit)
 11Aug2026 0.953 XMOS_ISSUE_11AUG2026 is new and 1 (generated Ticket # 341285 at XMOS)
 11Aug2026 0.952
@@ -83,6 +88,7 @@ Comments
 
 #include "_commit_texts.h" // Older versions (not compiled, include as such not needed)
 
+Keep thos here as well:
 21May2026 0.0.900 Initial version
 */
 
@@ -94,7 +100,7 @@ Comments
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
-#define DO_COMPILE_RUN_MAIN DO_KNOCK_COME  
+#define DO_COMPILE_RUN_MAIN DO_FIND_32BITS_DROP_CNT_MAX  
 #define USE_RANDOM_TYPE     use_xorshift32_symmetric 
 #endif // _FOLD WHICH..
 

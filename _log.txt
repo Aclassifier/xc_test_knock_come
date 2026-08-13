@@ -1,5 +1,53 @@
 Newest on top 
 
+Running xc_test_knock_come.xe
+Starting full state-space simulation with seed 1 in code at 14:05:42 Aug 11 2026.
+Counting zeros
+Please wait some 36 hours...
+hours:
+1..38 (137242 seconds = 38,12277778 h)
+
+=== Simulation Complete ===
+After 137242 seconds, total numbers checked:  4294967295 (2^32 - 1)
+Max consecutive zeros found:
+[0]=    31      into    31      at      3498687930
+[1]=    31      into    31      at      461091596
+[2]=    31      into    31      at      299184441
+[3]=    31      into    31      at      69975898
+[4]=    31      into    31      at      2910702491
+[5]=    31      into    31      at      3158101595
+[6]=    31      into    31      at      2841046281
+[7]=    31      into    31      at      2840298779
+[8]=    31      into    31      at      3593800527
+[9]=    31      into    31      at      598954052
+[10]=   31      into    31      at      2583869656
+[11]=   31      into    31      at      2266158355
+[12]=   31      into    31      at      1329655871
+[13]=   31      into    31      at      1664340092
+[14]=   31      into    31      at      3845804603
+[15]=   31      into    31      at      2811138893
+[16]=   31      into    31      at      3849932744
+[17]=   31      into    31      at      1784000768
+[18]=   31      into    31      at      3008475289
+[19]=   31      into    31      at      2995663860
+[20]=   31      into    31      at      1579535220
+[21]=   31      into    31      at      4111130826
+[22]=   31      into    31      at      1328983214
+[23]=   31      into    31      at      2327055155
+[24]=   31      into    31      at      2334370709
+[25]=   31      into    31      at      4065499985
+[26]=   31      into    31      at      3257942258
+[27]=   31      into    31      at      1978880908
+[28]=   31      into    31      at      1319985165
+[29]=   31      into    31      at      3855512257
+[30]=   31      into    31      at      945255004
+[31]=   31      into    31      at      3020331747
+
+ *  XCore Application completed successfully.
+ *  Terminal will be reused by future launches.
+
+ ===
+
 XCC 1503.1 KNOCK-COME v0.952 on date Aug 11 2026 13:03:12
 Time random max 100000 us cnt events at 1000
 Ordered select Master 0 Slave 0 PRINT_OR_SCOPE 0

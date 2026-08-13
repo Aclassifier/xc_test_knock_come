@@ -88,7 +88,6 @@ void init_stats (stats_t &stats, const uint32_t initial_seed) {
 // find_max_consecutive_bit31_xorshift32 and 
 // find_max_consecutive_allbits_xorshift32
 
-
 void do_xorshift32_and_stats (stats_t &stats, const uint32_t bitmask) {
     
     // Standard xorshift32 algorithm (Marsaglia triples: 13, 17, 5)
@@ -170,25 +169,29 @@ uint32_t find_max_consecutive_bit31_xorshift32
 void init_con_sec_log (con_sec_log_t &con_sec_log) {
     con_sec_log.bit_con_seq_cnt_max = 0;
     con_sec_log.bit_round_cnt       = 0;
-}
+} // init_con_sec_log
 
 
+// find_max_consecutive_allbits_xorshift32
+//
 // Find by brute force the values for "DROP_BIT_CNT_MAX" for all 32 bits. Those for bit0..bit30 are not really needed, this is just for fun.
 // That one for bit31 is DROP_BIT_CNT_MAX, but it's already found in find_max_consecutive_bit31_xorshift32.
 //
-// Loops every (30.51 us) as of _log.txt commited at 10AUg2026 0.946  since 4294967296 (2ˆ32 range) / 131028 secs
-// However, pasted this log also here, so it wont't get lost in futire deleted commits:
+// The two logs show that 
+// max consecutive ones  is 32 for all bits, and 
+// max consecutibe zeros is 31 for all bits.
+// 32 vs 31 is concistent with theory, since random value zero (0x00000000) is not part of a pseudo random generator
+// xorshift32 since 0 xor 0 is 0, and it would have stayed zero forever.
 // 
 /* With DO_FIND_32BITS_ONES_CNT (standard up to then)
-Starting full state-space simulation with seed 1 in code at 16:22:07 Aug  5 2026. Please wait some 25 hours...
-Counting ones (would have been the printput if 0.947)
+Starting full state-space simulation with seed 1 in code at 16:22:07 Aug  5 2026. Please wait some 36 hours...
+Counting ones
 hours:
-1..36 (131028 seconds = 36,39666667 hours, not 25 hours which was from a simpler version)
+1..36 (131028 seconds = 36,39666667 hours)
 === Simulation Complete ===
 After 131028 seconds, total numbers checked:  4294967295 (2^32 - 1)
-Max consecutive negatives found:
+Max consecutive ones found:
 Sorted increasing in "time" and with hex values. 
-
 [19] = 32 into 32 at   67059875	(0x03FF40A3)
 [18] = 32 into 32 at   79871304	(0x04C2BD48)
 [31] = 32 into 32 at   91727762	(0x0577A792)
@@ -222,6 +225,51 @@ Sorted increasing in "time" and with hex values.
  [6] = 32 into 32 at 4207409591	(0xFAC7F9B7)
  [4] = 32 into 32 at 4277065801	(0xFEEED849)
 */
+/*
+Running xc_test_knock_come.xe
+Starting full state-space simulation with seed 1 in code at 14:05:42 Aug 11 2026.
+Counting zeros
+Please wait some 36 hours...
+hours:
+1..38 (137242 seconds = 38,12277778 h, not 36 hours since I have gobe away from conditional compilation)
+
+=== Simulation Complete ===
+After 137242 seconds, total numbers checked:  4294967295 (2^32 - 1)
+Max consecutive zeros found:
+Sorted increasing in "time" and with hex values. 
+[ 3] = 31 into 31 at   69975898  (0x042BBF5A)
+[ 2] = 31 into 31 at  299184441  (0x11D53139)
+[ 1] = 31 into 31 at  461091596  (0x1B7BB30C)
+[ 9] = 31 into 31 at  598954052  (0x23B35044)
+[30] = 31 into 31 at  945255004  (0x3857725C)
+[28] = 31 into 31 at 1319985165  (0x4EAD600D)
+[22] = 31 into 31 at 1328983214  (0x4F36ACAE)
+[12] = 31 into 31 at 1329655871  (0x4F40F03F)
+[20] = 31 into 31 at 1579535220  (0x5E25CB74)
+[13] = 31 into 31 at 1664340092  (0x6333D07C)
+[17] = 31 into 31 at 1784000768  (0x6A55B100)
+[27] = 31 into 31 at 1978880908  (0x75F3538C)
+[11] = 31 into 31 at 2266158355  (0x8712D513)
+[23] = 31 into 31 at 2327055155  (0x8AB40B33)
+[24] = 31 into 31 at 2334370709  (0x8B23AB95)
+[10] = 31 into 31 at 2583869656  (0x9A02B8D8)
+[15] = 31 into 31 at 2811138893  (0xA78E934D)
+[ 7] = 31 into 31 at 2840298779  (0xA94B851B)
+[ 6] = 31 into 31 at 2841046281  (0xA956ED09)
+[ 4] = 31 into 31 at 2910702491  (0xAD7DCB9B)
+[19] = 31 into 31 at 2995663860  (0xB28E33F4)
+[18] = 31 into 31 at 3008475289  (0xB351B099)
+[31] = 31 into 31 at 3020331747  (0xB4069AE3)
+[ 5] = 31 into 31 at 3158101595  (0xBC3CCE5B)
+[26] = 31 into 31 at 3257942258  (0xC23040F2)
+[ 0] = 31 into 31 at 3498687930  (0xD089BDBA)
+[ 8] = 31 into 31 at 3593800527  (0xD6350B4F)
+[14] = 31 into 31 at 3845804603  (0xE53A523B)
+[16] = 31 into 31 at 3849932744  (0xE5794FC8)
+[29] = 31 into 31 at 3855512257  (0xE5CE72C1)
+[25] = 31 into 31 at 4065499985  (0xF2529B51)
+[21] = 31 into 31 at 4111130826  (0xF50AE0CA)
+*/
 uint32_t find_max_consecutive_allbits_xorshift32 
     (const uint32_t initial_seed, // is 1
     port out        p1_out_blue) {
@@ -231,7 +279,7 @@ uint32_t find_max_consecutive_allbits_xorshift32
     unsigned num_seconds = 0;
     bool     p1_val = false;
 
-    printf("Starting full state-space simulation with seed %u in code at %s %s.\nCounting %s\nPlease wait some 36 hours...\nhours:\n\n", 
+    printf("Starting full state-space simulation with seed %u in code at %s %s.\nCounting %s\nPlease wait some 38 hours...\nhours:\n\n", 
         initial_seed, __TIME__, __DATE__,
         (DO_CNT == DO_FIND_32BITS_ONES_CNT)  ? "ones"  :
         (DO_CNT == DO_FIND_32BITS_ZEROS_CNT) ? "zeros" : "?");
@@ -283,7 +331,9 @@ uint32_t find_max_consecutive_allbits_xorshift32
     // All terminal outputs are now grouped together here
     printf("\n=== Simulation Complete ===\n");
     printf("After %u seconds, total numbers checked:  %llu (2^32 - 1)\n", num_seconds, (unsigned long long)stats[0].bit_round_cnt);
-    printf("Max consecutive negatives found:\n");
+    printf("Max consecutive %s found:\n", 
+        (DO_CNT == DO_FIND_32BITS_ONES_CNT)  ? "ones"  :
+        (DO_CNT == DO_FIND_32BITS_ZEROS_CNT) ? "zeros" : "?");
 
     for (unsigned ix=0; ix<BITSNUM32; ix++){
         printf ("[%u]=\t%u\tinto\t%u\tat\t%u\n", ix, stats[ix].bit_con_seq_cnt_max, con_sec_log[ix].bit_con_seq_cnt_max, con_sec_log[ix].bit_round_cnt);
