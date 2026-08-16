@@ -7,6 +7,19 @@
 
 #if NOT_CODE_FOLD // ========== COMMITS OLDER ==========
 /*
+10Aug2026 0.949
+Lots of changes, see _log.txt. Now the mean is around RND CLK 50.00 ms. Better get_until_next_timeout_ticks
+10Aug2026 0.948
+* commits.h -> _commit_texts 
+* File "commits.h" made for older commit version texts, plus NOT_CODE_FOLD new
+* ALWAYS now is _FOLD etc. 
+* get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
+  See _log.txt, stil I think that "mean" should be around 50 ms, not 41 ms.
+10Aug2026 0.947 
+* _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX 
+DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
+10AUg2026 0.946 
+
 09Aug2026 0.946
 Layout and VS Code explicit "folding". Test with "command K 0" and "command K J"
 Also removed conditional compilation in random_get_random_number_special (will do more of the sort)

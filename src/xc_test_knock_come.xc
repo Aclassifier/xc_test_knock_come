@@ -57,6 +57,8 @@
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+16Aug2026 0.958 _a_, _b_ and _ab_ in names were still lurking, removed them
+
 13Aug2026 0.957
 * Spelling and layout
 * Printing out VERSION_STR for all DO_COMPILE_RUN_MAIN as well
@@ -74,24 +76,8 @@ a max length og zeros of 31, whereas for ones all bits have max lengths of 32, u
 Moved RANDOM_VAL_MAX_US, TIMER_FACTOR_KNOCKCOME_US out of my_random.xc with random_consts_t.
 Same for USE_SYMMETRIC usage in my_random.xc
 
-10Aug2026 0.949
-Lots of changes, see _log.txt. Now the mean is around RND CLK 50.00 ms. Better get_until_next_timeout_ticks
-10Aug2026 0.948
-* commits.h -> _commit_texts 
-* File "commits.h" made for older commit version texts, plus NOT_CODE_FOLD new
-* ALWAYS now is _FOLD etc. 
-* get_until_next_timeout_ticks new code, the other was plain wrong. "Folding" better. 
-  See _log.txt, stil I think that "mean" should be around 50 ms, not 41 ms.
-10AUg2026 0.947 
-* Comment
-* _log.txt added 36 hours log (started at 16:22:07 Aug  5 2026) with DO_COMPILE_RUN_MAIN == DO_FIND_32BITS_DROP_CNT_MAX 
-DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT are new
-10AUg2026 0.946 
-Comments
-
-#include "_commit_texts.h" // Older versions (not compiled, include as such not needed)
-
-Keep thos here as well:
+Keep these here as well:
+#include "_commit_texts.h" // Comments from older commits (not compiled, include as such not needed)
 21May2026 0.0.900 Initial version
 */
 
@@ -103,7 +89,7 @@ Keep thos here as well:
 #define DO_FIND_BIT31_DROP_CNT_MAX  2
 #define DO_FIND_32BITS_DROP_CNT_MAX 3 // Then: see DO_FIND_32BITS_ONES_CNT and DO_FIND_32BITS_ZEROS_CNT
 
-#define DO_COMPILE_RUN_MAIN DO_FIND_32BITS_DROP_CNT_MAX  
+#define DO_COMPILE_RUN_MAIN DO_KNOCK_COME  
 #define USE_RANDOM_TYPE     use_xorshift32_symmetric 
 #endif // _FOLD WHICH..
 
@@ -270,7 +256,7 @@ typedef enum {
 typedef enum {
     task_a,
     task_b
-} ab_src_e;
+} src_e;
 
 #endif // _FOLD enums
 
@@ -300,11 +286,11 @@ typedef struct {
 // task_slave sends important data and task_master some times adds like new menu changes
 //
 typedef struct {
-    ab_src_e source;
+    src_e source;
     KnockCome_Message_Type_e KnockCome_Message_Type;
     union {
-        unsigned data_from_task_a_slave;  // KC_TYP_SM_DATA source is task_slave
-        unsigned data_from_task_b_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_master
+        unsigned data_from_task_slave;  // KC_TYP_SM_DATA source is task_slave
+        unsigned data_from_task_master; // KC_TYP_NONE_DATA or KC_TYP_COME_DATA source is task_master
     } data;
 } ch_come_or_sdata_t;
 
@@ -547,10 +533,10 @@ void task_master (
 {
     timer              tmr;
     time32_t           time_ticks;
-    ch_come_or_sdata_t data_ch_ab_bidir;
-    ch_knock_t         data_ch_ab_knock;
-    unsigned           data_from_task_b_master = DATA_FIRST_AND_INC;
-    unsigned           data_from_task_a_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
+    ch_come_or_sdata_t data_ch_bidir;
+    ch_knock_t         data_ch_knock;
+    unsigned           data_from_task_master = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_slave  = 0; // So that the first received is DATA_FIRST_AND_INC more
     cnts_t             cnts;
     randoms_t          randoms;
     random_consts_t    random_consts;
@@ -569,7 +555,7 @@ void task_master (
     PRINT_DEADLOCK_BANNER;
     PRINT_AND_CLEAR_DEBUG_CNTS (use_random_type, cnts, randoms);
 
-    data_ch_ab_bidir.data.data_from_task_b_master = 0;
+    data_ch_bidir.data.data_from_task_master = 0;
 
     tmr :> time_ticks; // Almost immediately
 
@@ -582,30 +568,30 @@ void task_master (
                 cnts.from_10ms_delta_print_10ms += 1; 
             } break;
 
-            case ch_knock :> data_ch_ab_knock : {
-                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+            case ch_knock :> data_ch_knock : {
+                xassert (data_ch_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
                 // Build response
-                data_ch_ab_bidir.source = task_b;
-                // No need to add any data here, so       KC_TYP_COME_DATA is never used:
-                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_COME;
+                data_ch_bidir.source = task_b;
+                // No need to add any data here, so    KC_TYP_COME_DATA is never used:
+                data_ch_bidir.KnockCome_Message_Type = KC_TYP_COME;
 
                 // ==============================================================
                 // INSIDE THIS CASE CONTINUE WITH THIS ATOMIC KNOCK-COME SEQUENCE
                 // ==============================================================
 
-                ch_come_or_sdata <: data_ch_ab_bidir; // SEND and ATOMIC..
-                ch_come_or_sdata :> data_ch_ab_bidir; // ..RECEIVE
+                ch_come_or_sdata <: data_ch_bidir; // SEND and ATOMIC..
+                ch_come_or_sdata :> data_ch_bidir; // ..RECEIVE
 
-                unsigned data_from_task_a_slave_now = data_ch_ab_bidir.data.data_from_task_a_slave;
-                xassert (data_from_task_a_slave_now == (data_from_task_a_slave + DATA_FIRST_AND_INC));
-                data_from_task_a_slave = data_from_task_a_slave_now;
-                p4_leds <: data_from_task_a_slave_now / MEAN_LEDS_BLINKING_DIVISOR;
+                unsigned data_from_task_slave_now = data_ch_bidir.data.data_from_task_slave;
+                xassert (data_from_task_slave_now == (data_from_task_slave + DATA_FIRST_AND_INC));
+                data_from_task_slave = data_from_task_slave_now;
+                p4_leds <: data_from_task_slave_now / MEAN_LEDS_BLINKING_DIVISOR;
                 cnts.rec_cnt++;
                 cnts.sum_rec_cnt++;
 
                 // Analyze reponse
-                xassert (data_ch_ab_bidir.source == task_a);
-                xassert (data_ch_ab_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
+                xassert (data_ch_bidir.source == task_a);
+                xassert (data_ch_knock.KnockCome_Message_Type == KC_TYP_SM_KNOCK);
             } break;
 
             case tmr when timerafter (time_ticks) :> void : {       
@@ -627,14 +613,14 @@ void task_master (
                     }
                 #endif
 
-                data_ch_ab_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
-                data_ch_ab_bidir.source = task_b;
+                data_ch_bidir.KnockCome_Message_Type = KC_TYP_NONE_DATA;
+                data_ch_bidir.source = task_b;
 
-                data_ch_ab_bidir.data.data_from_task_b_master = data_from_task_b_master;
+                data_ch_bidir.data.data_from_task_master = data_from_task_master;
 
-                ch_come_or_sdata <: data_ch_ab_bidir; // SEND
-                p1_out_purple_master <: data_from_task_b_master; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
-                data_from_task_b_master = data_from_task_b_master + DATA_FIRST_AND_INC;
+                ch_come_or_sdata <: data_ch_bidir; // SEND
+                p1_out_purple_master <: data_from_task_master; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
+                data_from_task_master = data_from_task_master + DATA_FIRST_AND_INC;
 
                 cnts.sent_cnt++;
                 cnts.sum_sent_cnt++;
@@ -662,11 +648,11 @@ void task_slave (
 {
     timer              tmr;
     time32_t           time_ticks;
-    ch_come_or_sdata_t data_ch_ab_bidir;
+    ch_come_or_sdata_t data_ch_bidir;
     KnockCome_State_e  KnockCome_State;
-    ch_knock_t         data_ch_ab_knock;
-    unsigned           data_from_task_a_slave  = DATA_FIRST_AND_INC;
-    unsigned           data_from_task_b_master = 0; // So that the first received is DATA_FIRST_AND_INC more
+    ch_knock_t         data_ch_knock;
+    unsigned           data_from_task_slave  = DATA_FIRST_AND_INC;
+    unsigned           data_from_task_master = 0; // So that the first received is DATA_FIRST_AND_INC more
     randoms_t          randoms;
     random_consts_t    random_consts;
     use_random_type_e  use_random_type = USE_RANDOM_TYPE;
@@ -675,24 +661,24 @@ void task_slave (
     init_randoms       (use_random_type, randoms, RANDOM_SEED_SLAVE); // Contains random_create_generator
 
     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
-    data_ch_ab_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
+    data_ch_knock.KnockCome_Message_Type = KC_TYP_SM_KNOCK;
     p1_out_blue_slave <: PORT_LOW;
     tmr :> time_ticks;
 
     while (true) {
         ORDERED_PRI_SELECT_SLAVE // [[ordered]] or none
         select {
-            case ch_come_or_sdata :> data_ch_ab_bidir : { // RECEIVE
+            case ch_come_or_sdata :> data_ch_bidir : { // RECEIVE
                 bool knockCome_send_data = false;
                 bool got_data            = false;
 
-                xassert (data_ch_ab_bidir.source == task_b);
+                xassert (data_ch_bidir.source == task_b);
 
-                if (data_ch_ab_bidir.KnockCome_Message_Type == KC_TYP_NONE_DATA) {
+                if (data_ch_bidir.KnockCome_Message_Type == KC_TYP_NONE_DATA) {
                     got_data = true; // No knock-come
-                } else if (data_ch_ab_bidir.KnockCome_Message_Type == KC_TYP_COME) {
+                } else if (data_ch_bidir.KnockCome_Message_Type == KC_TYP_COME) {
                     knockCome_send_data = true;
-                } else if (data_ch_ab_bidir.KnockCome_Message_Type == KC_TYP_COME_DATA) {
+                } else if (data_ch_bidir.KnockCome_Message_Type == KC_TYP_COME_DATA) {
                     knockCome_send_data = true;
                     got_data = true; // Piggy-backed data on Come (Not used on Master side, though)
                 } else {
@@ -700,19 +686,19 @@ void task_slave (
                 }
 
                 if (got_data) {
-                   const unsigned data_from_task_b_master_now = data_ch_ab_bidir.data.data_from_task_b_master;
-                   xassert (data_from_task_b_master_now == data_from_task_b_master + DATA_FIRST_AND_INC);
-                   data_from_task_b_master = data_from_task_b_master_now;
+                   const unsigned data_from_task_master_now = data_ch_bidir.data.data_from_task_master;
+                   xassert (data_from_task_master_now == data_from_task_master + DATA_FIRST_AND_INC);
+                   data_from_task_master = data_from_task_master_now;
 
                 } else if (knockCome_send_data) {
                     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_GOT_COME);
-                    // Fill data_ch_ab_bidir with data
-                    data_ch_ab_bidir.source = task_a;
+                    // Fill data_ch_bidir with data
+                    data_ch_bidir.source = task_a;
 
-                    data_ch_ab_bidir.data.data_from_task_a_slave = data_from_task_a_slave;
-                    ch_come_or_sdata <: data_ch_ab_bidir; // ATOMIC SEND
-                    p1_out_blue_slave <: data_from_task_a_slave; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
-                    data_from_task_a_slave = data_from_task_a_slave + DATA_FIRST_AND_INC;
+                    data_ch_bidir.data.data_from_task_slave = data_from_task_slave;
+                    ch_come_or_sdata <: data_ch_bidir; // ATOMIC SEND
+                    p1_out_blue_slave <: data_from_task_slave; // bit0 (any single pulse in here is too short, just toggle on every new transaction)
+                    data_from_task_slave = data_from_task_slave + DATA_FIRST_AND_INC;
 
                     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_DATA_NOW_READY);
                 } else {}
@@ -724,9 +710,9 @@ void task_slave (
                     get_until_next_timeout_ticks (use_random_type, random_get_random_number_special (use_random_type, randoms), random_consts);
 
                 if (KnockCome_State == KC_STATE_SLAVE_SENT_DATA_NOW_READY) {
-                    ch_knock <: data_ch_ab_knock; // streaming chan buffers at least two 32 bits words
+                    ch_knock <: data_ch_knock; // streaming chan buffers at least two 32 bits words
                     #if (DOUBLE_KNOCK==1)
-                        ch_knock <: data_ch_ab_knock; // Will be buffered as two and cause an extra COME and rash
+                        ch_knock <: data_ch_knock; // Will be buffered as two and cause an extra COME and rash
                     #endif
                     SLAVE_SET_KNOCKCOME_STATE (KnockCome_State, KC_STATE_SLAVE_SENT_KNOCK);
                 } else {}
