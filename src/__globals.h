@@ -15,7 +15,7 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 
 #define BITSNUM32 32
 
-#define LOG_START_HEADING_STR "===LOG:" //Must be on a separate line
+#define LOG_START_HEADING_STR "===LOG:" // Must be on a separate line. For log analyzing scipts
 
 #ifndef ALWAYS 
     // ALWAYS is always 1, for VS Code "folding"
