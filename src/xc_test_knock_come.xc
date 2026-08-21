@@ -51,12 +51,14 @@
 
 #if _FOLD // ========== VERSION_STR ==========
 //
-#define VERSION_STR "0.957"
+#define VERSION_STR "0.958"
 //
 #endif // _FOLD VERSION_STR
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
+21Aug2026 0.958 See _log.txt analyzed with Google AI generated Python script analyze_xc_log_21Aug2026.py 
+
 16Aug2026 0.958 _a_, _b_ and _ab_ in names were still lurking, removed them
 
 13Aug2026 0.957
@@ -203,6 +205,8 @@ Keep these here as well:
 // (*) Since timimg is random then blinking also is (but divided by some factor it behaves rather average or mean)
 
 #define PRINT_WELCOME_BANNER(use_random_type) print_welcome_banner(use_random_type) // Always print this
+
+#define PRINT_LOG_START_HEADING print_log_start_heading()
 
 #if (SPEED_SLOW_AND_PRINT_12)
     #define PRINT_AND_CLEAR_DEBUG_CNTS(use_random_type,cnts,randoms) print_and_clear_debug_cnts(use_random_type,cnts,randoms) 
@@ -490,6 +494,12 @@ void print_ordered_banner()
             "But watch out for stopped log\n");
 } // print_ordered_banner
 
+
+void print_log_start_heading()
+{
+    printf ("%s\n", LOG_START_HEADING_STR);
+} // print_log_start_heading
+
 #endif // _FOLD print..
 
 #if _FOLD // ========== functions local ==========
@@ -554,6 +564,7 @@ void task_master (
     PRINT_ORDERED_BANNER;
     PRINT_DEADLOCK_BANNER;
     PRINT_AND_CLEAR_DEBUG_CNTS (use_random_type, cnts, randoms);
+    PRINT_LOG_START_HEADING;
 
     data_ch_bidir.data.data_from_task_master = 0;
 

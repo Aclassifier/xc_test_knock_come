@@ -15,6 +15,8 @@ typedef enum {PORT_LOW, PORT_HIGH} port_val_e;
 
 #define BITSNUM32 32
 
+#define LOG_START_HEADING_STR "===LOG:" //Must be on a separate line
+
 #ifndef ALWAYS 
     // ALWAYS is always 1, for VS Code "folding"
     // #region or // #region do not work as I want to and extension "Explicit Folding" by zokogun is not good enough, see
