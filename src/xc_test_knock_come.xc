@@ -59,7 +59,8 @@
 /*
 21Aug2026 0.958
 * Analysis results also above print_and_clear_debug_cnts
-* See _log.txt analyzed with Google AI generated Python script analyze_xc_log_21Aug2026.py 
+* See _log.txt analyzed with Google AI generated Python script analyze_xc_log_21Aug2026.py. 
+Full analyzed log at "2026 08 21 v0958 xc knock-come log.txt" (not GitHub)
 
 16Aug2026 0.958 _a_, _b_ and _ab_ in names were still lurking, removed them
 
