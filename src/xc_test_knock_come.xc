@@ -57,7 +57,9 @@
 
 #if NOT_CODE_FOLD // ========== COMMITS ==========
 /*
-21Aug2026 0.958 See _log.txt analyzed with Google AI generated Python script analyze_xc_log_21Aug2026.py 
+21Aug2026 0.958
+* Analysis results also above print_and_clear_debug_cnts
+* See _log.txt analyzed with Google AI generated Python script analyze_xc_log_21Aug2026.py 
 
 16Aug2026 0.958 _a_, _b_ and _ab_ in names were still lurking, removed them
 
@@ -411,6 +413,14 @@ void init_debug_cnts (cnts_t &cnts)
 } // init_debug_cnts
 
 
+// XCC 1503.1 KNOCK-COME v0.958
+// tm: SYM(P 1 N 10/10)    RX 998  TX 1000 ACC(RX 998      TX 1000)        TIME 50.00s sum, RND CLK 50.063ms mean
+// tm means task_master
+// analyze_xc_log_21Aug2026.py
+//     Total lines parsed: 834
+//     Average TIME: 49.89 s
+//     Average CLK : 50.010 ms
+//
 void print_and_clear_debug_cnts (
     const use_random_type_e use_random_type,
     cnts_t                  &cnts, 
@@ -427,9 +437,6 @@ void print_and_clear_debug_cnts (
 
         const bool use_symmetric = ((use_random_type == use_lib_random_sw_seed_symmetric) or (use_random_type == use_xorshift32_symmetric));
        
-        // From v0.941
-        // M: SYMCNT(P 1 N 9/9)        RX 997  TX 1000 ACC(RX 997      TX 1000)        TIME 49.09s sum, RND CLK 50.079ms mean
-        //       tm means task_master
         printf ("tm: %sRX %u\tTX %u\tACC(RX %u\tTX %u)\tTIME %u.%0*us sum, RND CLK %u.%0*ums mean\n",
             use_symmetric ? max_loop_drop_neg_cnt_str : "",
             cnts.rec_cnt,
